@@ -10,6 +10,17 @@ ma la pubblicazione reale è bloccata finché i file non sono online (Fase 5, re
   {% else %}<a href="{{ url_for('coda', quota=1) }}">Mostra quota pubblicazioni</a>{% endif %}
   · {{ posts|length }} post in coda
 </p>
+{% if plan_job.running %}<meta http-equiv="refresh" content="3">{% endif %}
+<div class="card" style="margin-bottom:12px">
+  <b>Palinsesto</b> <span class="piccolo">(1 post al giorno da <code>schedule/plan.yaml</code>, alternando immagine e reel)</span><br>
+  {% if plan_job.running %}
+    ⏳ Generazione bozze in corso… (la pagina si aggiorna da sola)
+  {% else %}
+    <form method="post" action="{{ url_for('bozze_genera') }}" style="display:inline"><button>Genera bozze per i prossimi giorni</button></form>
+    {% if bozze %}<form method="post" action="{{ url_for('approva_tutte') }}" style="display:inline"><button>✓ Approva tutte le bozze ({{ bozze }})</button></form>{% endif %}
+  {% endif %}
+  {% if plan_job.log %}<pre class="piccolo" style="white-space:pre-wrap;margin:6px 0 0">{{ plan_job.log|join('\n') }}</pre>{% endif %}
+</div>
 <form method="post" action="{{ url_for('sincronizza') }}">
   <button>⇅ Sincronizza con GitHub</button>
   <span class="piccolo">Invia coda e immagini a GitHub (necessario prima della pubblicazione automatica) e scarica lo stato aggiornato.</span>
@@ -29,11 +40,14 @@ ma la pubblicazione reale è bloccata finché i file non sono online (Fase 5, re
       {% if p.status != 'published' %}<button>Salva</button>{% endif %}
     </form>
   </td>
-  <td class="stato-{{ p.status }}">{{ {'pending':'in attesa','published':'pubblicato','error':'errore'}[p.status] }}
+  <td class="stato-{{ p.status }}">{{ {'draft':'bozza','pending':'in attesa','published':'pubblicato','error':'errore'}[p.status] }}
     {% if p.published_at %}<div class="piccolo">{{ p.published_at }}</div>{% endif %}
     {% if p.error %}<div class="piccolo">{{ p.error }}</div>{% endif %}
   </td>
   <td class="azioni">
+    {% if p.status == 'draft' %}
+    <form method="post" action="{{ url_for('approva', post_id=p.id) }}"><button>✓ Approva</button></form><br>
+    {% endif %}
     {% if p.status != 'published' %}
     <form method="post" action="{{ url_for('prova', post_id=p.id) }}"><button>Prova (dry-run)</button></form><br>
     <form method="post" action="{{ url_for('pubblica', post_id=p.id) }}">

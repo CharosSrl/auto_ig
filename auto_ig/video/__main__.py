@@ -9,10 +9,10 @@ from . import render, scenes
 
 
 def add_reel_to_queue(mp4: str, cover: str, when: str, caption: str,
-                      queue_path=queue.QUEUE_FILE) -> queue.Post:
+                      queue_path=queue.QUEUE_FILE, status: str = "pending") -> queue.Post:
     posts = queue.load(queue_path)
     post = queue.Post(id=queue.next_id(posts), when=when, type="reel", media=[mp4],
-                      caption=caption, extra={"cover": cover} if cover else {})
+                      caption=caption, extra={"cover": cover} if cover else {}, status=status)
     if errs := post.validate():
         raise ValueError("; ".join(errs))
     posts.append(post)
@@ -27,7 +27,7 @@ def main() -> None:
     ap.add_argument("--colore", default="", help="sfondo, es. #1d3557")
     ap.add_argument("--accento", default="", help="colore principale, es. #e63946")
     ap.add_argument("--durata", type=float, default=8)
-    ap.add_argument("--coda", metavar="DATA_ISO")
+    ap.add_argument("--coda", metavar="DATA_ISO", help="aggiunge alla coda come BOZZA")
     ap.add_argument("--caption", default="")
     a = ap.parse_args()
 
@@ -39,8 +39,8 @@ def main() -> None:
                         a.durata, progress=progress)
     print(f"\nSalvato media/{mp4} (copertina media/{cover})")
     if a.coda:
-        post = add_reel_to_queue(mp4, cover, a.coda, a.caption)
-        print(f"Aggiunto alla coda come post {post.id}")
+        post = add_reel_to_queue(mp4, cover, a.coda, a.caption, status="draft")   # da CLI/chat: sempre bozza
+        print(f"Aggiunto alla coda come BOZZA {post.id} (da approvare nella UI)")
 
 
 if __name__ == "__main__":

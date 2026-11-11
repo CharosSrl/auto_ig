@@ -10,7 +10,7 @@ import yaml
 from .config import QUEUE_FILE
 
 TYPES = ("image", "reel", "carousel")
-STATUSES = ("pending", "published", "error")
+STATUSES = ("draft", "pending", "published", "error")   # draft = bozza, mai pubblicata
 
 
 @dataclass
@@ -69,7 +69,7 @@ def save(posts: list[Post], path: Path = QUEUE_FILE) -> None:
     header = ("# Coda dei post. Modificabile a mano o dall'interfaccia.\n"
               "# type: image | reel | carousel\n"
               "# media: nomi file dentro media/ (o URL completi https://...)\n"
-              "# status: pending | published | error\n")
+              "# status: draft (bozza, non si pubblica) | pending | published | error\n")
     body = yaml.safe_dump({"posts": [asdict(p) for p in posts]}, allow_unicode=True, sort_keys=False)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(header + body)

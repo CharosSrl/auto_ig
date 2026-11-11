@@ -32,13 +32,14 @@ def slugify(text: str, maxlen: int = 40) -> str:
 
 
 def fit_to_feed(img: Image.Image, size: tuple[int, int] = FEED_SIZE) -> Image.Image:
-    """Ritaglio centrato al rapporto di `size` e ridimensionamento; output RGB."""
+    """Ritaglio al rapporto di `size` e ridimensionamento; output RGB."""
     img = ImageOps.exif_transpose(img)
     if img.mode != "RGB":
         bg = Image.new("RGB", img.size, "white")
         bg.paste(img, mask=img.convert("RGBA").split()[-1])
         img = bg
-    return ImageOps.fit(img, size, Image.LANCZOS, centering=(0.5, 0.5))
+    # centro un po' alto: nei ritratti i volti stanno di solito nella parte superiore
+    return ImageOps.fit(img, size, Image.LANCZOS, centering=(0.5, 0.4))
 
 
 def download_bytes(url: str, session=None) -> bytes:
@@ -88,7 +89,9 @@ def credit_line(filename: str, path: Path = CREDITS_FILE) -> str:
     if not c:
         return ""
     lic = license_label(c["license"])
-    return f"📷 {c['creator']} via {c['source'].capitalize()} ({lic})"
+    who = c.get("creator") or ""
+    who = "" if who.lower() in ("", "sconosciuto", "unknown", "unknown author") else who + " "
+    return f"📷 {who}via {c['source'].capitalize()} ({lic})"
 
 
 def save_result(res: ImageResult, media_dir: Path = MEDIA_DIR, session=None) -> str:
@@ -104,11 +107,13 @@ def save_result(res: ImageResult, media_dir: Path = MEDIA_DIR, session=None) -> 
 
 
 def add_to_queue(filename: str, when: str, caption: str, with_credit: bool = True,
-                 queue_path: Path = queue.QUEUE_FILE, credits_path: Path = CREDITS_FILE) -> queue.Post:
+                 queue_path: Path = queue.QUEUE_FILE, credits_path: Path = CREDITS_FILE,
+                 status: str = "pending") -> queue.Post:
     posts = queue.load(queue_path)
     if with_credit and (line := credit_line(filename, credits_path)):
         caption = f"{caption}\n\n{line}".strip()
-    post = queue.Post(id=queue.next_id(posts), when=when, type="image", media=[filename], caption=caption)
+    post = queue.Post(id=queue.next_id(posts), when=when, type="image", media=[filename], caption=caption,
+                      status=status)
     if errs := post.validate():
         raise ValueError("; ".join(errs))
     posts.append(post)
@@ -127,7 +132,7 @@ def main() -> None:
     b.add_argument("query")
     b.add_argument("numero", type=int, help="numero mostrato da 'cerca'")
     b.add_argument("--fonte", default="auto", choices=["auto", "wikimedia", "openverse", "pixabay"])
-    b.add_argument("--coda", metavar="DATA_ISO", help="aggiunge alla coda con questa data")
+    b.add_argument("--coda", metavar="DATA_ISO", help="aggiunge alla coda come BOZZA con questa data")
     b.add_argument("--caption", default="")
     args = ap.parse_args()
 
@@ -145,8 +150,8 @@ def main() -> None:
     name = save_result(results[args.numero - 1])
     print(f"Salvato media/{name}")
     if args.coda:
-        post = add_to_queue(name, args.coda, args.caption)
-        print(f"Aggiunto alla coda come post {post.id} per {post.when}")
+        post = add_to_queue(name, args.coda, args.caption, status="draft")   # da CLI/chat: sempre bozza
+        print(f"Aggiunto alla coda come BOZZA {post.id} per {post.when} (da approvare nella UI)")
 
 
 if __name__ == "__main__":

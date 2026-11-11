@@ -19,6 +19,20 @@
 5. Le richieste nuove di Antonio stanno in fondo, in **📥 Richieste nuove**: smistale nella fase giusta.
 6. Non fare commit/push se il task non lo dice esplicitamente.
 
+**Modalità chat (richieste di contenuti)**
+Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, niente API a pagamento):
+"fammi un reel con…", "cerca immagini di…", "crea una scena nuova…". Regole:
+- Claude **genera**, Antonio **decide**: nulla va mai in coda come `pending` da parte di Claude,
+  solo come **bozza** (`--coda` dei comandi crea sempre `draft`) oppure resta tra i "Video pronti".
+- Claude **non pubblica** e **non approva** mai: approvazione e "Pubblica ora" li fa Antonio dalla UI.
+- Comandi da usare (sempre con `.venv/bin/python`):
+  - reel: `-m auto_ig.video <testo|oggetto|particelle> --testo "…" --colore "#hex" --accento "#hex" --durata 8 [--coda DATA_ISO --caption "…"]`
+  - immagini: `-m auto_ig.images cerca "…"` poi `scarica "…" N [--coda DATA_ISO --caption "…"]`
+  - settimana: `-m auto_ig.planner [--mostra]`
+- Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
+- Scene nuove: nuovo file in `auto_ig/video/scenes/`, render di prova, poi la propone.
+- Antonio vede tutto nella UI (`./avvia.sh`): Video → "Video pronti", Coda → bozze.
+
 **Vincoli tecnici**
 - Pubblicazione **solo** tramite API ufficiale Meta: *Instagram API with Instagram Login*
   (`graph.instagram.com`). Vietati bot che simulano login/browser su Instagram (rischio ban).
@@ -127,9 +141,15 @@
 - [x] Bottone "Sincronizza" nella UI + CLI `python -m auto_ig.sync` (pull --rebase, commit di schedule/ e media/, push).
 
 ## Fase 6 — Palinsesto
-- [ ] Definire con Antonio: tema pagina, frequenza, orari, tipi di contenuto.
-- [ ] `schedule/plan.yaml`: regole ricorrenti (es. "lun/mer/ven 18:00 immagine tema X") che
-      generano voci in coda.
+- [x] Definire con Antonio: tema pagina, frequenza, orari, tipi di contenuto.
+      > nota: tema **moda/abbigliamento**; **1 post al giorno alle 18:00**; **alternanza immagine / reel**;
+      > i post nascono come **bozze da approvare** (status `draft`, mai pubblicate da sole).
+- [x] `schedule/plan.yaml`: orario, giorni, alternanza, hashtag, ricerche immagini, frasi caption,
+      scene/colori/testi dei reel. Modificabile a mano.
+      > nota: `auto_ig/planner.py` (CLI `python -m auto_ig.planner [--mostra]`) riempie i prossimi 7 giorni liberi;
+      > rotazione stabile per data; immagini mai ripetute (`schedule/usati.txt`). 26 test OK.
+- [x] UI Coda: "Genera bozze", "✓ Approva" / "Approva tutte", stato *bozza*.
+      > nota: flusso settimanale → Genera bozze → controlla/modifica/elimina → Approva → Sincronizza.
 
 ---
 

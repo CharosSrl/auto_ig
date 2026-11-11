@@ -15,7 +15,7 @@ from pathlib import Path
 import requests
 from flask import Flask, abort, flash, redirect, render_template, request, send_from_directory, url_for
 
-from . import images, queue, sync, video as vid
+from . import images, planner, queue, sync, video as vid
 from .video.__main__ import add_reel_to_queue
 from .config import MEDIA_DIR, QUEUE_FILE, Config
 from .publish_due import SAFE_DAILY_LIMIT, make_client, publish_one
@@ -59,7 +59,8 @@ def media_base_ok(cfg: Config) -> bool:
 
 def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: Config | None = None,
                search_fn=default_search, client_factory=make_client, check_url=None,
-               sync_fn=sync.sync, render_fn=vid.render) -> Flask:
+               sync_fn=sync.sync, render_fn=vid.render, plan_file: Path = planner.PLAN_FILE,
+               used_file: Path = planner.USED_FILE) -> Flask:
     app = Flask(__name__)
     app.secret_key = os.urandom(24)
     cfg = cfg or Config.from_env()
@@ -124,14 +125,15 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
     # --- Coda ----------------------------------------------------------
     @app.route("/coda")
     def coda():
-        posts = sorted(queue.load(queue_file), key=lambda p: p.when)
+        posts = sorted(queue.load(queue_file), key=lambda p: p.when_dt())
         quota = None
         if cfg.access_token and request.args.get("quota") == "1":
             try:
                 quota = client_factory(cfg).publishing_limit().get("quota_usage", 0)
             except Exception as e:
                 flash(f"Quota non disponibile: {e}", "errore")
-        return render_template("coda.html", posts=posts, quota=quota, limite=SAFE_DAILY_LIMIT,
+        return render_template("coda.html", posts=posts, quota=quota, limite=SAFE_DAILY_LIMIT, plan_job=plan_job,
+                               bozze=sum(p.status == "draft" for p in posts),
                                media_ok=media_base_ok(cfg), base_url=cfg.media_base_url)
 
     @app.post("/coda/<post_id>/modifica")
@@ -207,6 +209,52 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         flash(msg, "ok" if ok else "errore")
         return redirect(url_for("coda"))
 
+    job: dict = {"running": False}            # un solo render alla volta
+    job_lock = threading.Lock()
+
+    # --- Palinsesto / bozze --------------------------------------------
+    plan_job: dict = {"running": False, "log": []}
+
+    def run_planner():
+        try:
+            planner.generate(plan_file, queue_file, media_dir, used_file, search_fn, render_fn,
+                             log=plan_job["log"].append)
+        except Exception as e:
+            plan_job["log"].append(f"ERRORE: {e}")
+        finally:
+            plan_job["running"] = False
+
+    @app.post("/bozze/genera")
+    def bozze_genera():
+        with job_lock:
+            if plan_job["running"] or job["running"]:
+                flash("C'è già una generazione o un render in corso.", "errore")
+                return redirect(url_for("coda"))
+            plan_job.update(running=True, log=[])
+            threading.Thread(target=run_planner, daemon=True).start()
+        return redirect(url_for("coda"))
+
+    @app.post("/coda/<post_id>/approva")
+    def approva(post_id):
+        posts = queue.load(queue_file)
+        post = find(posts, post_id)
+        if post.status == "draft":
+            post.status = "pending"
+            queue.save(posts, queue_file)
+            flash(f"Post {post.id} approvato: sarà pubblicato all'orario (dopo Sincronizza).", "ok")
+        return redirect(url_for("coda"))
+
+    @app.post("/bozze/approva-tutte")
+    def approva_tutte():
+        posts = queue.load(queue_file)
+        n = 0
+        for p in posts:
+            if p.status == "draft":
+                p.status, n = "pending", n + 1
+        queue.save(posts, queue_file)
+        flash(f"{n} bozze approvate. Ricordati di sincronizzare.", "ok")
+        return redirect(url_for("coda"))
+
     @app.post("/sincronizza")
     def sincronizza():
         try:
@@ -216,8 +264,6 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         return redirect(url_for("coda"))
 
     # --- Video ---------------------------------------------------------
-    job: dict = {"running": False}            # un solo render alla volta
-    job_lock = threading.Lock()
 
     def run_render(scene, params, seconds):
         def progress(i, n):

@@ -66,6 +66,12 @@ class TestImages(unittest.TestCase):
         self.assertEqual(credits[name]["creator"], "Mario")
         self.assertEqual(images.credit_line(name, d / "credits.json"), "📷 Mario via Openverse (CC0)")
 
+    def test_credit_without_author(self):
+        d = Path(tempfile.mkdtemp())
+        res = ImageResult("wikimedia", "1", "u", "t", "p", "sconosciuto", "Public domain", "", 2000, 2000, "x")
+        images.save_credit("a.jpg", res, d / "c.json")
+        self.assertEqual(images.credit_line("a.jpg", d / "c.json"), "📷 via Wikimedia (Pubblico dominio)")
+
     def test_license_label(self):
         self.assertEqual(images.license_label("Public domain"), "Pubblico dominio")
         self.assertEqual(images.license_label("pdm 1.0"), "Pubblico dominio")
