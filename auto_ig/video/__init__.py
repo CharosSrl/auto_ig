@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import base64
 import functools
+import re
 import http.server
 import subprocess
 import threading
@@ -24,25 +25,39 @@ VIDEO_DIR = Path(__file__).resolve().parent
 SCENES_DIR = VIDEO_DIR / "scenes"
 W, H = 1080, 1920
 FPS = 30
-MAX_SECONDS = 60
+MAX_SECONDS = 90
 
 
 def scenes() -> list[str]:
     return sorted(p.stem for p in SCENES_DIR.glob("*.html"))
 
 
-def ffmpeg_cmd(out: Path, fps: int = FPS) -> list[str]:
-    """Specifiche Reels: H.264 yuv420p, 30 fps, AAC, moov all'inizio (faststart)."""
-    return [
-        "ffmpeg", "-y", "-loglevel", "error",
-        "-f", "image2pipe", "-framerate", str(fps), "-c:v", "mjpeg", "-i", "-",
-        "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
-        "-shortest", "-map", "0:v", "-map", "1:a",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-profile:v", "high",
-        "-pix_fmt", "yuv420p", "-r", str(fps),
-        "-c:a", "aac", "-b:a", "128k",
-        "-movflags", "+faststart", str(out),
-    ]
+def ffmpeg_cmd(out: Path, fps: int = FPS, audio: Path | None = None, ass: Path | None = None,
+               seconds: float | None = None) -> list[str]:
+    """Specifiche Reels: H.264 yuv420p, 30 fps, AAC 48 kHz, moov all'inizio (faststart).
+    audio: voce (wav) allungata con silenzio fino alla fine del video; senza audio traccia muta.
+    ass: sottotitoli disegnati sul video (libass). ffmpeg va lanciato con cwd = ass.parent:
+    nel filtro passa solo il nome del file (niente escape di percorsi)."""
+    cmd = ["ffmpeg", "-y", "-loglevel", "error",
+           "-f", "image2pipe", "-framerate", str(fps), "-c:v", "mjpeg", "-i", "-"]
+    if audio:
+        cmd += ["-i", str(audio)]
+        a_filter = "[1:a]aresample=48000,aformat=channel_layouts=stereo,apad[a]"
+    else:
+        cmd += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"]
+        a_filter = "[1:a]anull[a]"
+    if ass and not re.fullmatch(r"[A-Za-z0-9._-]+", ass.name):
+        raise ValueError(f"Nome file sottotitoli non valido: {ass.name}")
+    v_filter = f"[0:v]ass={ass.name}[v]" if ass else "[0:v]null[v]"
+    # -t: durata esatta (con filter_complex -shortest non ferma apad, che è infinito)
+    cmd += ["-filter_complex", f"{v_filter};{a_filter}", "-map", "[v]", "-map", "[a]", "-shortest",
+            *(["-t", f"{seconds:.3f}"] if seconds else []),
+            "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-maxrate", "6M", "-bufsize", "12M",
+            "-profile:v", "high",
+            "-pix_fmt", "yuv420p", "-r", str(fps),
+            "-c:a", "aac", "-b:a", "128k", "-ar", "48000",
+            "-movflags", "+faststart", str(out)]
+    return cmd
 
 
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -59,8 +74,10 @@ def _serve(directory: Path) -> tuple[http.server.ThreadingHTTPServer, int]:
 
 
 def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: Path = MEDIA_DIR,
-           fps: int = FPS, progress: Callable[[int, int], None] | None = None) -> tuple[str, str]:
-    """Renderizza la scena. Ritorna (nome mp4, nome copertina jpg) dentro out_dir."""
+           fps: int = FPS, progress: Callable[[int, int], None] | None = None,
+           audio: Path | None = None, ass: Path | None = None, name: str | None = None) -> tuple[str, str]:
+    """Renderizza la scena. Ritorna (nome mp4, nome copertina jpg) dentro out_dir.
+    Con audio/ass aggiunge voce e sottotitoli; `name` fissa il nome dei file (senza estensione)."""
     if scene not in scenes():
         raise ValueError(f"Scena '{scene}' inesistente. Disponibili: {', '.join(scenes())}")
     if not 3 <= seconds <= MAX_SECONDS:
@@ -71,12 +88,16 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
 
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    mp4, cover = out_dir / f"reel-{scene}-{stamp}.mp4", out_dir / f"reel-{scene}-{stamp}.jpg"
+    base = name or f"reel-{scene}-{stamp}"
+    mp4, cover = out_dir / f"{base}.mp4", out_dir / f"{base}.jpg"
     frames = int(round(seconds * fps))
     cover_frame = min(frames - 1, int(fps * min(2.5, seconds / 2)))
 
     srv, port = _serve(VIDEO_DIR)
-    ff = subprocess.Popen(ffmpeg_cmd(mp4, fps), stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    mp4, cover = mp4.resolve(), cover.resolve()
+    audio = audio.resolve() if audio else None
+    ff = subprocess.Popen(ffmpeg_cmd(mp4, fps, audio, ass, frames / fps), stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+                          cwd=ass.parent if ass else None)
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(channel="chrome", headless=True,
@@ -101,6 +122,9 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
         ff.stdin.close()
         if ff.wait(timeout=300) != 0:
             raise RuntimeError(f"ffmpeg: {ff.stderr.read().decode()[-500:]}")
+        if ass:   # copertina presa dal video finale, così include il testo
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{cover_frame / fps:.2f}",
+                            "-i", str(mp4), "-frames:v", "1", "-q:v", "2", str(cover)], check=True)
     except BaseException:
         ff.kill()
         mp4.unlink(missing_ok=True)

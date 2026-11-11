@@ -10,3 +10,7 @@ venv/
 .pytest_cache/
 # temporanei del render video
 auto_ig/video/_frames/
+# voci TTS scaricate (grandi)
+.voci/
+# risultati generati delle richieste (voce, video): pesanti, si rigenerano
+richieste/*/out/

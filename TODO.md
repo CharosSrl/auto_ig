@@ -25,8 +25,14 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - Claude **genera**, Antonio **decide**: nulla va mai in coda come `pending` da parte di Claude,
   solo come **bozza** (`--coda` dei comandi crea sempre `draft`) oppure resta tra i "Video pronti".
 - Claude **non pubblica** e **non approva** mai: approvazione e "Pubblica ora" li fa Antonio dalla UI.
+- **Ogni richiesta ha la sua cartella** `richieste/<AAAA-MM-GG>-<titolo>/` con `richiesta.yaml`
+  (richiesta originale di Antonio, scena, colori, voce, **copione** frase per frase, pubblicazione) e `out/`
+  (voce.wav, sottotitoli.ass, tempi.json, video.mp4, video.jpg — non committati).
 - Comandi da usare (sempre con `.venv/bin/python`):
-  - reel: `-m auto_ig.video <testo|oggetto|particelle> --testo "…" --colore "#hex" --accento "#hex" --durata 8 [--coda DATA_ISO --caption "…"]`
+  - **reel con voce** (preferito): `-m auto_ig.richieste nuova "Titolo"` → compilare `richiesta.yaml` →
+    `-m auto_ig.richieste crea <cartella>` → controllare i fotogrammi → Antonio lo vede in Video › Richieste.
+    `-m auto_ig.richieste coda <cartella> --quando ISO` lo mette in coda come BOZZA.
+  - reel senza voce: `-m auto_ig.video <testo|oggetto|particelle> --testo "…" --colore "#hex" --accento "#hex" --durata 8 [--coda DATA_ISO --caption "…"]`
   - immagini: `-m auto_ig.images cerca "…"` poi `scarica "…" N [--coda DATA_ISO --caption "…"]`
   - settimana: `-m auto_ig.planner [--mostra]`
 - Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
@@ -152,6 +158,18 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       > nota: flusso settimanale → Genera bozze → controlla/modifica/elimina → Approva → Sincronizza.
 
 ---
+
+## Fase 7 — Voice-over e richieste strutturate
+- [x] Cartelle dedicate per richiesta: `auto_ig/richieste.py` (CLI `nuova` / `crea` / `coda` / `lista`).
+- [x] Voce TTS **locale** con Piper (`auto_ig/voce.py`), voce italiana femminile `it_IT-paola-medium`
+      (dataset CC0) in `.voci/` (non committata; scaricare da huggingface.co/rhasspy/piper-voices).
+      > nota: una frase alla volta → durata reale; tempi delle parole stimati dalla lunghezza.
+- [x] Testo sincronizzato: sottotitoli ASS con **parola evidenziata** (colore accento), sopra la zona caption IG;
+      la scena three.js continua sotto. Scene `testo`/`oggetto` si spostano in alto con `voce=1`.
+- [x] Video: audio voce AAC 48 kHz, durata esatta (`-t`), bitrate max 6 Mbit/s, copertina con testo.
+      > nota: bug trovato e corretto: con `-filter_complex` `-shortest` non ferma `apad` → audio infinito.
+- [x] UI › Video › **Richieste**: player, copione, "Metti in coda", "Scarta". 33 test OK.
+- [x] Esempio reale: `richieste/2026-11-12-esempio-voice-over/` (scena testo, 4 frasi, 8,7 s).
 
 ## 📥 Richieste nuove
 <!-- Antonio: scrivi qui sotto, una riga per richiesta. Claude le smista nelle fasi. -->

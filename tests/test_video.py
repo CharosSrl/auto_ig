@@ -17,6 +17,14 @@ class TestVideoBasics(unittest.TestCase):
         for part in ("libx264", "yuv420p", "-r 30", "aac", "+faststart"):
             self.assertIn(part, cmd)
 
+    def test_ffmpeg_cmd_voice_has_exact_duration(self):
+        cmd = video.ffmpeg_cmd(Path("x.mp4"), audio=Path("v.wav"), ass=Path("sottotitoli.ass"), seconds=6.5)
+        self.assertIn("-t", cmd)
+        self.assertEqual(cmd[cmd.index("-t") + 1], "6.500")
+        self.assertIn("ass=sottotitoli.ass", " ".join(cmd))
+        with self.assertRaises(ValueError):
+            video.ffmpeg_cmd(Path("x.mp4"), ass=Path("nome con spazi.ass"))
+
     def test_render_validates(self):
         with self.assertRaises(ValueError):
             video.render("inesistente")

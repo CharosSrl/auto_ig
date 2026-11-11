@@ -3,6 +3,36 @@
 {% block corpo %}
 {% if job.running %}<meta http-equiv="refresh" content="2">{% endif %}
 
+<h3>Richieste (preparate in chat)</h3>
+{% if not richieste %}<p class="piccolo">Nessuna. Chiedile a Claude in chat: finiscono in <code>richieste/</code>.</p>{% endif %}
+<div class="griglia">
+{% for f, d, err in richieste %}
+  <div class="card">
+    {% if not d %}
+      <b>{{ f.name }}</b><div class="msg errore">{{ err }}</div>
+    {% else %}
+      <b>{{ d.titolo }}</b> <span class="piccolo">· {{ d.stato }} · {{ d.scena }}</span>
+      {% if has_video(f) %}
+        <video src="{{ url_for('richiesta_file', name=f.name, kind='video.mp4') }}" controls style="width:100%;max-height:420px;background:#000"></video>
+      {% else %}<p class="piccolo">Video non ancora generato.</p>{% endif %}
+      <details><summary class="piccolo">Copione</summary><ol class="piccolo">{% for l in d.copione %}<li>{{ l }}</li>{% endfor %}</ol></details>
+      {% if has_video(f) and d.stato != 'in_coda' %}
+      <form method="post" action="{{ url_for('richiesta_coda', name=f.name) }}">
+        <input type="datetime-local" name="quando" value="{{ to_input(d.pubblicazione.quando) if d.pubblicazione and d.pubblicazione.quando else quando }}" required>
+        <textarea name="caption" rows="2" placeholder="Caption">{{ d.pubblicazione.caption if d.pubblicazione else '' }}</textarea>
+        <button>Metti in coda</button>
+      </form>
+      {% endif %}
+      {% if d.stato != 'in_coda' %}
+      <form method="post" action="{{ url_for('richiesta_scarta', name=f.name) }}">
+        <label class="piccolo"><input type="checkbox" name="confermo"> confermo</label> <button>Scarta</button>
+      </form>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endfor %}
+</div>
+
 <h3>1. Crea un video</h3>
 {% if job.running %}
   <div class="avviso">⏳ Render di <b>{{ job.scene }}</b> in corso: {{ job.done }}/{{ job.total }} fotogrammi

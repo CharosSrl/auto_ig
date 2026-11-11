@@ -12,7 +12,7 @@ start({ testo: '', colore: '#0b0c10', accento: '#66fcf1', durata: '8' }, (THREE,
   camera.position.set(0, 0, 12);
   const obj = new THREE.Mesh(new THREE.TorusKnotGeometry(2, 0.6, 220, 32),
     new THREE.MeshStandardMaterial({ color: p.accento, metalness: 0.6, roughness: 0.25 }));
-  obj.position.y = 1.4;
+  obj.position.y = p.voce ? 2.0 : 1.4;   // con voice-over: oggetto più in alto
   scene.add(obj);
   scene.add(new THREE.AmbientLight(0xffffff, 0.35));
   const l1 = new THREE.DirectionalLight(0xffffff, 2.2); l1.position.set(5, 6, 8); scene.add(l1);

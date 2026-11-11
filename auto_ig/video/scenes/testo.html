@@ -19,6 +19,7 @@ start({ testo: 'Scrivi qui il tuo testo', colore: '#1d3557', accento: '#e63946',
     scene.add(m); shapes.push(m);
   }
   const text = textPlane(p.testo, viewSize(camera, 10).w * 0.88, { fontSize: 96 });
+  const y0 = p.voce ? viewSize(camera, 10).h * 0.22 : 0;   // con voice-over: titolo in alto, sottotitoli sotto
   scene.add(text);
   const bar = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.08), new THREE.MeshBasicMaterial({ color: p.accento }));
   scene.add(bar);
@@ -29,9 +30,9 @@ start({ testo: 'Scrivi qui il tuo testo', colore: '#1d3557', accento: '#e63946',
       m.rotation.set(t * 0.5 + i, t * 0.3 + i, 0);
     });
     const k = ease(t / 1.2);
-    text.position.y = (1 - k) * -1.2;
+    text.position.y = y0 + (1 - k) * -1.2;
     text.material.opacity = k;
-    bar.position.y = -text.geometry.parameters.height / 2 - 0.4;
+    bar.position.y = y0 - text.geometry.parameters.height / 2 - 0.4;
     bar.scale.x = 0.01 + ease((t - 0.6) / 1.2) * 4;
   } };
 });

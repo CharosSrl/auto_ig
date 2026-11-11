@@ -15,7 +15,7 @@ from pathlib import Path
 import requests
 from flask import Flask, abort, flash, redirect, render_template, request, send_from_directory, url_for
 
-from . import images, planner, queue, sync, video as vid
+from . import images, planner, queue, richieste, sync, video as vid
 from .video.__main__ import add_reel_to_queue
 from .config import MEDIA_DIR, QUEUE_FILE, Config
 from .publish_due import SAFE_DAILY_LIMIT, make_client, publish_one
@@ -60,7 +60,7 @@ def media_base_ok(cfg: Config) -> bool:
 def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: Config | None = None,
                search_fn=default_search, client_factory=make_client, check_url=None,
                sync_fn=sync.sync, render_fn=vid.render, plan_file: Path = planner.PLAN_FILE,
-               used_file: Path = planner.USED_FILE) -> Flask:
+               used_file: Path = planner.USED_FILE, req_dir: Path = richieste.REQ_DIR) -> Flask:
     app = Flask(__name__)
     app.secret_key = os.urandom(24)
     cfg = cfg or Config.from_env()
@@ -283,8 +283,42 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
 
     @app.route("/video")
     def video():
+        reqs = [(f, d, e) for f, d, e in richieste.all_requests(req_dir) if not d or d.get("stato") != "scartato"]
         return render_template("video.html", scene=vid.scenes(), job=job, video=unqueued_videos(),
-                               quando=default_when(), max_sec=vid.MAX_SECONDS)
+                               quando=default_when(), max_sec=vid.MAX_SECONDS, richieste=reqs,
+                               has_video=lambda f: richieste.outputs(f)["mp4"].exists())
+
+    def req_folder(name: str) -> Path:
+        folder = (req_dir / name).resolve()
+        if folder.parent != req_dir.resolve() or not (folder / "richiesta.yaml").exists():
+            abort(404)
+        return folder
+
+    @app.route("/richieste/<name>/<kind>")
+    def richiesta_file(name, kind):
+        if kind not in ("video.mp4", "video.jpg"):
+            abort(404)
+        return send_from_directory(req_folder(name) / "out", kind)
+
+    @app.post("/richieste/<name>/coda")
+    def richiesta_coda(name):
+        try:
+            post = richieste.enqueue(req_folder(name), to_iso(request.form["quando"]),
+                                     clean(request.form.get("caption", "")), status="pending",
+                                     media_dir=media_dir, queue_path=queue_file)
+            flash(f"Reel in coda: post {post.id}. Ricordati di sincronizzare.", "ok")
+        except Exception as e:
+            flash(f"Impossibile mettere in coda: {e}", "errore")
+        return redirect(url_for("video"))
+
+    @app.post("/richieste/<name>/scarta")
+    def richiesta_scarta(name):
+        if "confermo" not in request.form:
+            flash("Spunta 'confermo' per scartare.", "errore")
+        else:
+            richieste.set_state(req_folder(name), "scartato")
+            flash(f"Richiesta {name} scartata.", "ok")
+        return redirect(url_for("video"))
 
     @app.route("/video/s/<path:name>")
     def video_static(name):
