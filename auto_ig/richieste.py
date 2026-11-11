@@ -1,9 +1,11 @@
 """Richieste di contenuti: una sottocartella per richiesta, con copione e risultati.
 
     richieste/<AAAA-MM-GG>-<titolo>/
-        richiesta.yaml      # cosa fare: scena, colori, voce, copione, pubblicazione (si committa)
-        out/                # risultati generati (non si committa)
+        richiesta.yaml      # cosa fare: scena, colori, voce, copione, pubblicazione
+        out/                # risultati generati
             voce.wav  sottotitoli.ass  tempi.json  video.mp4  video.jpg
+
+    Tutta la cartella richieste/ resta solo in locale (.gitignore): su GitHub va solo ciò che entra in media/.
 
     python -m auto_ig.richieste nuova "Nuova collezione"     # crea cartella + richiesta.yaml da compilare
     python -m auto_ig.richieste crea <cartella>              # voce + sottotitoli + video
@@ -45,7 +47,8 @@ testo_scena: ""           # testo fisso della scena (vuoto = nessuno; per 'testo
 voce:
   modello: it_IT-paola-medium
   velocita: 1.0           # 0.8 più lenta, 1.2 più veloce
-copione:
+  # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole
+copione:                  # riga semplice, oppure {{testo: "...", tono: arrabbiata|felice}}
 {copione}
 
 # Pubblicazione (facoltativa): usata da "coda", entra sempre come BOZZA
@@ -76,8 +79,11 @@ def new(title: str, lines: list[str] | None = None, scene: str = "particelle", b
 def load(folder: Path) -> dict:
     data = yaml.safe_load((folder / "richiesta.yaml").read_text()) or {}
     errs = []
-    if not [l for l in data.get("copione") or [] if str(l).strip()]:
-        errs.append("copione vuoto")
+    try:
+        if not voce.normalize_lines(data.get("copione")):
+            errs.append("copione vuoto")
+    except ValueError as e:
+        errs.append(str(e))
     if data.get("stato", "da_fare") not in STATES:
         errs.append(f"stato non valido ({', '.join(STATES)})")
     for k in ("sfondo", "accento"):
@@ -114,14 +120,17 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     o = outputs(folder)
     o["wav"].parent.mkdir(exist_ok=True)
     v = data.get("voce") or {}
-    sentences, seconds = speak_fn([str(l) for l in data["copione"]], o["wav"],
-                                  v.get("modello", voce.DEFAULT_VOICE), float(v.get("velocita", 1.0)))
+    kw = {"pronuncia": v["pronuncia"]} if v.get("pronuncia") else {}
+    sentences, seconds = speak_fn(data["copione"], o["wav"],
+                                  v.get("modello", voce.DEFAULT_VOICE), float(v.get("velocita", 1.0)), **kw)
     colors = data["colori"]
     o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"]))
     o["tempi"].write_text(json.dumps(voce.timings_dict(sentences), indent=2, ensure_ascii=False))
     scene_text = data.get("testo_scena") or (data.get("titolo", "") if data["scena"] == "testo" else "")
     render_fn(data["scena"], {"testo": scene_text, "colore": colors["sfondo"], "accento": colors["accento"],
-                              "voce": "1"},
+                              "voce": "1", "fine": f"{seconds:.2f}",
+                              # inizio di ogni frase: le scene a più atti si sincronizzano con la voce
+                              "atti": ",".join(f"{x.start:.2f}" for x in sentences)},
               max(3.0, seconds), o["mp4"].parent, progress=progress, audio=o["wav"], ass=o["ass"], name="video")
     set_state(folder, "generato")
     return o["mp4"]

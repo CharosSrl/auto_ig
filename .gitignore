@@ -12,5 +12,5 @@ venv/
 auto_ig/video/_frames/
 # voci TTS scaricate (grandi)
 .voci/
-# risultati generati delle richieste (voce, video): pesanti, si rigenerano
-richieste/*/out/
+# richieste di contenuti (copioni, voce, video): solo in locale, non vanno su GitHub
+richieste/

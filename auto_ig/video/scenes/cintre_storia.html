@@ -1,0 +1,392 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>cintre_storia</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+// Storia in 8 atti, uno per frase del copione (parametro `atti` = inizio di ogni frase, in secondi):
+// 0-1 camera da letto (arrabbiata) · 2-3 computer → trova Cintre · 4 app sul telefono ·
+// 5 mille outfit · 6 passerella con fotografi · 7 cartello finale.
+// Il contenuto importante sta nel 58% alto dell'immagine: sotto ci sono i sottotitoli.
+import { start, ease, hash } from './common.js';
+import { makePerson } from './personaggio.js';
+
+const BORDEAUX = '#6d1a36', CIPRIA = '#e8c4c0', SCURO = '#1a0710';
+const OUTFITS = [
+  { top: '#ffffff', bottom: '#1d3557', scarpe: '#111111' }, { top: '#e8c4c0', bottom: '#6d1a36', scarpe: '#6d1a36' },
+  { top: '#f4a261', bottom: '#264653', scarpe: '#ffffff' }, { top: '#2a9d8f', bottom: '#e9c46a', scarpe: '#3b2219' },
+  { top: '#111111', bottom: '#111111', scarpe: '#d4af37' }, { top: '#a8dadc', bottom: '#457b9d', scarpe: '#ffffff' },
+  { top: '#ffb4a2', bottom: '#6d6875', scarpe: '#111111' }, { top: '#fefae0', bottom: '#bc6c25', scarpe: '#283618' },
+];
+
+start({ colore: BORDEAUX, accento: CIPRIA, atti: '0.6,3.1,5.6,8.0,10.1,12.7,15.0,17.6', fine: '21' }, (THREE, p) => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1080 / 1920, 0.1, 200);
+  scene.add(camera);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x664455, 1.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(3, 8, 9); scene.add(sun);
+
+  // --- tempi degli atti ------------------------------------------------------
+  const A = String(p.atti).split(',').map(Number).filter((x) => !isNaN(x));
+  const END = parseFloat(p.fine) || (A[A.length - 1] + 3);
+  const S = [0, ...A.slice(1)];                         // l'atto 0 parte da t = 0
+  const SET = ['letto', 'letto', 'pc', 'pc', 'app', 'outfit', 'passerella', 'fine'];
+  function actAt(t) {
+    let i = 0;
+    for (let k = 0; k < S.length; k++) if (t >= S[k]) i = k;
+    const n = Math.min(i, 7);                           // copioni più lunghi: restano sul finale
+    return { i: n, u: t - S[i], len: (S[i + 1] ?? END) - S[i] };
+  }
+
+  // --- utilità ---------------------------------------------------------------
+  const toon = (c) => new THREE.MeshToonMaterial({ color: c });
+  const basic = (c, o = {}) => new THREE.MeshBasicMaterial({ color: c, ...o });
+  const box = (w, h, d, m, x, y, z, parent = scene) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); parent.add(b); return b;
+  };
+  function canvasTex(w, h) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    return { c, ctx: c.getContext('2d'), tex };
+  }
+  const font = (px, w = 700, fam = '"DejaVu Sans", sans-serif') => `${w} ${px}px ${fam}`;
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function hanger(ctx, cx, cy, s, color, lw) {          // icona gruccia = "cintre"
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.arc(cx, cy - s * 0.42, s * 0.14, Math.PI * 1.05, Math.PI * 2.3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - s * 0.22); ctx.lineTo(cx - s * 0.62, cy + s * 0.25);
+    ctx.lineTo(cx + s * 0.62, cy + s * 0.25); ctx.closePath(); ctx.stroke(); ctx.restore();
+  }
+  function outfitFigure(ctx, cx, top, h, o) {           // mini figurino per le card
+    const w = h * 0.42;
+    ctx.fillStyle = '#f1c7a5'; ctx.beginPath(); ctx.arc(cx, top + h * 0.09, h * 0.08, 0, 7); ctx.fill();
+    ctx.fillStyle = o.top; roundRect(ctx, cx - w * 0.35, top + h * 0.19, w * 0.7, h * 0.3, 10); ctx.fill();
+    ctx.fillStyle = o.bottom; ctx.beginPath(); ctx.moveTo(cx - w * 0.33, top + h * 0.47);
+    ctx.lineTo(cx + w * 0.33, top + h * 0.47); ctx.lineTo(cx + w * 0.55, top + h * 0.82);
+    ctx.lineTo(cx - w * 0.55, top + h * 0.82); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = o.scarpe; ctx.fillRect(cx - w * 0.3, top + h * 0.9, w * 0.22, h * 0.07);
+    ctx.fillRect(cx + w * 0.08, top + h * 0.9, w * 0.22, h * 0.07);
+    ctx.strokeStyle = 'rgba(0,0,0,.15)'; ctx.lineWidth = 3; ctx.stroke();
+  }
+  function room(x, wall, floor) {
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(16, 14), toon(floor));
+    f.rotation.x = -Math.PI / 2; f.position.set(x, 0, 0); scene.add(f);
+    const w = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), toon(wall)); w.position.set(x, 5, -3); scene.add(w);
+    return { f, w };
+  }
+
+  // --- personaggio ------------------------------------------------------------
+  const lei = makePerson(THREE, { pelle: '#f1c7a5', capelli: '#3b2219', ...OUTFITS[0] });
+  scene.add(lei.root);
+
+  // --- SET letto (x = 0) ---------------------------------------------------------
+  const letto = room(0, '#f3e6e0', '#c9b2a6');
+  box(2.4, 0.5, 1.7, toon('#8d6e63'), -0.75, 0.25, -1.4);
+  box(2.3, 0.25, 1.6, toon('#ffffff'), -0.75, 0.62, -1.4);
+  box(0.8, 0.18, 0.45, toon('#f8edeb'), -1.55, 0.83, -1.95);
+  box(2.4, 1.1, 0.12, toon('#8d6e63'), -0.75, 0.9, -2.25);
+  const PANNI = [];
+  const coloriPanni = ['#e63946', '#457b9d', '#f4a261', '#2a9d8f', '#ffb4a2', '#6d6875', '#e9c46a', '#1d3557', '#ffffff', '#bc6c25'];
+  for (let k = 0; k < 16; k++) {
+    const pants = k % 3 === 0;
+    const m = box(pants ? 0.28 : 0.55, 0.05, pants ? 0.8 : 0.45, toon(coloriPanni[k % coloriPanni.length]), 0, 0, 0);
+    m.userData = {
+      x: -1.7 + hash(k) * 1.9, z: -2.0 + hash(k + 20) * 1.2, y: 0.78 + (k % 4) * 0.05, ry: hash(k + 40) * 3,
+      vx: (hash(k + 60) - 0.35) * 3.2, vy: 3.5 + hash(k + 80) * 2.5, vz: 1.2 + hash(k + 100) * 2.2, d: hash(k + 120) * 0.9,
+    };
+    PANNI.push(m);
+  }
+  const FUMO = [];
+  for (let k = 0; k < 6; k++) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), basic('#ffffff', { transparent: true }));
+    scene.add(m); FUMO.push(m);
+  }
+
+  // --- SET computer (x = 30) -----------------------------------------------------
+  room(30, '#ece6f2', '#b8aec6');
+  box(2.2, 0.08, 0.9, toon('#ffffff'), 30.7, 1.95, -0.6);
+  for (const dx of [-1, 1]) box(0.08, 1.95, 0.8, toon('#bbbbbb'), 30.7 + dx * 1.0, 0.97, -0.6);
+  box(0.9, 0.04, 0.3, toon('#333333'), 30.4, 2.01, -0.4);
+  box(0.1, 0.5, 0.1, toon('#222222'), 31.1, 2.25, -0.8);
+  const monitor = box(1.75, 1.15, 0.08, toon('#222222'), 31.1, 2.95, -0.85);
+  monitor.rotation.y = -0.35;
+  const schermoPC = canvasTex(900, 580);
+  const pcScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 1.04), basic('#ffffff', { map: schermoPC.tex }));
+  pcScreen.position.z = 0.045; monitor.add(pcScreen);
+  const RICERCA = 'cosa mi metto oggi?';
+  function disegnaPC(u, len) {
+    const { ctx, c } = schermoPC;
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = '#e0e0e0'; ctx.fillRect(0, 0, c.width, 50);
+    for (const [i, col] of ['#ff5f57', '#febc2e', '#28c840'].entries()) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(30 + i * 28, 25, 9, 0, 7); ctx.fill(); }
+    ctx.strokeStyle = '#bbbbbb'; ctx.lineWidth = 4; roundRect(ctx, 70, 95, 760, 80, 40); ctx.stroke();
+    const n = Math.min(RICERCA.length, Math.floor(u * 11));
+    ctx.fillStyle = '#222'; ctx.font = font(40, 400); ctx.textBaseline = 'middle';
+    ctx.fillText(RICERCA.slice(0, n) + (Math.floor(u * 3) % 2 ? '|' : ''), 110, 136);
+    if (u > 1.9) {                      // risultati: il primo è Cintre
+      const k = ease((u - 1.9) / 0.4);
+      ctx.globalAlpha = k;
+      ctx.fillStyle = '#f7e9e7'; roundRect(ctx, 60, 210, 780, 120, 18); ctx.fill();
+      hanger(ctx, 120, 272, 60, BORDEAUX, 7);
+      ctx.fillStyle = BORDEAUX; ctx.font = font(40); ctx.fillText('Cintre', 175, 250);
+      ctx.fillStyle = '#444'; ctx.font = font(28, 400); ctx.fillText("L'app che ti aiuta a vestirti", 175, 295);
+      ctx.fillStyle = '#ddd';
+      for (let r = 0; r < 3; r++) { ctx.fillRect(70, 370 + r * 60, 560 - r * 90, 18); ctx.fillRect(70, 395 + r * 60, 380, 12); }
+      ctx.globalAlpha = 1;
+    }
+    schermoPC.tex.needsUpdate = true;
+  }
+
+  // Telefono (usato nel set computer e nel set app)
+  function makePhone(w, h) {
+    const g = new THREE.Group();
+    box(w, h, 0.08, toon('#1b1b1b'), 0, 0, 0, g);
+    const ct = canvasTex(540, Math.round(540 * h / w));
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.9, h * 0.93), basic('#ffffff', { map: ct.tex }));
+    scr.position.z = 0.045; g.add(scr);
+    return { g, ct };
+  }
+  function disegnaSplash(ct, k) {        // logo Cintre sul telefono
+    const { ctx, c } = ct;
+    ctx.fillStyle = BORDEAUX; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.globalAlpha = k;
+    hanger(ctx, c.width / 2, c.height * 0.4, 230, CIPRIA, 16);
+    ctx.fillStyle = CIPRIA; ctx.font = font(96, 700, '"DejaVu Serif", serif'); ctx.textAlign = 'center';
+    ctx.fillText('Cintre', c.width / 2, c.height * 0.6);
+    ctx.font = font(30, 400); ctx.fillText('ti aiuta a vestirti', c.width / 2, c.height * 0.66);
+    ctx.globalAlpha = 1; ctx.textAlign = 'left';
+    ct.tex.needsUpdate = true;
+  }
+  const telPiccolo = makePhone(0.42, 0.85);
+  scene.add(telPiccolo.g);
+
+  // --- SET app (x = 60): telefono grande con l'interfaccia --------------------------
+  room(60, '#f7e9e7', '#e0c9c6');
+  const telGrande = makePhone(1.55, 3.1);
+  telGrande.g.position.set(60, 3.45, 0); scene.add(telGrande.g);
+  const STILI = ['Casual', 'Elegante', 'Sport', 'Serata'];
+  function disegnaApp(u, len) {
+    const { ctx, c } = telGrande.ct;
+    ctx.fillStyle = '#fffaf9'; ctx.fillRect(0, 0, c.width, c.height);
+    const scelto = u > 0.9 ? 1 : -1;
+    // card degli outfit (scorrono sotto l'intestazione)
+    const scroll = ease((u - 1.1) / Math.max(0.8, len - 1.3)) * 520;
+    for (let k = 0; k < 10; k++) {
+      const col = k % 2, row = Math.floor(k / 2);
+      const x = 22 + col * 255, y = 260 + row * 330 - scroll;
+      if (y > c.height || y < -330) continue;
+      ctx.fillStyle = '#f7e1dd'; roundRect(ctx, x, y, 240, 310, 22); ctx.fill();
+      outfitFigure(ctx, x + 120, y + 25, 250, OUTFITS[(k + (scelto > 0 ? 1 : 0)) % OUTFITS.length]);
+      ctx.fillStyle = BORDEAUX; ctx.font = font(30); ctx.textBaseline = 'middle'; ctx.fillText('♥', x + 198, y + 36);
+    }
+    // intestazione + filtri di stile (sempre sopra)
+    ctx.fillStyle = '#fffaf9'; ctx.fillRect(0, 150, c.width, 100);
+    ctx.fillStyle = BORDEAUX; ctx.fillRect(0, 0, c.width, 150);
+    hanger(ctx, 70, 85, 70, CIPRIA, 8);
+    ctx.fillStyle = CIPRIA; ctx.font = font(56, 700, '"DejaVu Serif", serif'); ctx.textBaseline = 'middle';
+    ctx.fillText('Cintre', 125, 82);
+    STILI.forEach((st, i) => {
+      const x = 22 + i * 128;
+      ctx.fillStyle = i === scelto ? BORDEAUX : '#f1dcd9'; roundRect(ctx, x, 175, 118, 56, 28); ctx.fill();
+      ctx.fillStyle = i === scelto ? '#fff' : BORDEAUX; ctx.font = font(21, 600); ctx.textAlign = 'center';
+      ctx.fillText(st, x + 59, 204); ctx.textAlign = 'left';
+    });
+    if (u > 0.55 && u < 1.25) {          // dito che tocca "Elegante"
+      const k = 1 - Math.abs((u - 0.9) / 0.35);
+      ctx.fillStyle = `rgba(109,26,54,${0.35 * k})`; ctx.beginPath(); ctx.arc(22 + 128 + 59, 204, 40 + 30 * (1 - k), 0, 7); ctx.fill();
+    }
+    telGrande.ct.tex.needsUpdate = true;
+  }
+
+  // --- SET mille outfit (x = 60, dietro al telefono) ----------------------------------
+  const CARDS = [];
+  const cardTex = OUTFITS.map((o) => {
+    const ct = canvasTex(260, 340);
+    ct.ctx.fillStyle = '#fffaf9'; roundRect(ct.ctx, 6, 6, 248, 328, 26); ct.ctx.fill();
+    ct.ctx.strokeStyle = CIPRIA; ct.ctx.lineWidth = 8; ct.ctx.stroke();
+    outfitFigure(ct.ctx, 130, 30, 285, o); ct.tex.needsUpdate = true; return ct.tex;
+  });
+  for (let k = 0; k < 18; k++) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.98), basic('#ffffff', { map: cardTex[k % cardTex.length], transparent: true }));
+    scene.add(m); CARDS.push(m);
+  }
+  const contatore = canvasTex(900, 220);
+  const contatorePiano = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.78), basic('#ffffff', { map: contatore.tex, transparent: true }));
+  scene.add(contatorePiano);
+  function disegnaContatore(n) {
+    const { ctx, c } = contatore;
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.fillStyle = BORDEAUX; ctx.font = font(112, 800); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(255,255,255,.8)'; ctx.shadowBlur = 18;
+    ctx.fillText(`${n}${n >= 1000 ? '+' : ''} outfit`, c.width / 2, c.height / 2);
+    ctx.shadowBlur = 0; contatore.tex.needsUpdate = true;
+  }
+
+  // --- SET passerella (x = 90) ------------------------------------------------------
+  const pav = new THREE.Mesh(new THREE.PlaneGeometry(20, 50), toon('#140509'));
+  pav.rotation.x = -Math.PI / 2; pav.position.set(90, -0.01, -15); scene.add(pav);
+  box(2.2, 0.16, 34, toon('#f3e6e0'), 90, 0.08, -14);
+  for (const s of [-1, 1]) box(0.06, 0.05, 34, basic('#fff2c4'), 90 + s * 1.12, 0.18, -14);
+  const FLASH = [];
+  for (let k = 0; k < 16; k++) {
+    const side = k % 2 ? 1 : -1, z = -22 + Math.floor(k / 2) * 2.8;
+    const g = new THREE.Group(); g.position.set(90 + side * (2.3 + hash(k) * 0.6), 0, z); scene.add(g);
+    g.rotation.y = side * -Math.PI / 2 * 0.8;
+    const scuro = toon('#2a1a22');
+    const b = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.9, 4, 8), scuro); b.position.y = 1.0; g.add(b);
+    const h = new THREE.Mesh(new THREE.SphereGeometry(0.27, 10, 8), scuro); h.position.y = 2.0; g.add(h);
+    box(0.32, 0.22, 0.26, toon('#111111'), 0, 1.85, 0.32, g);
+    const fl = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), basic('#ffffff', { transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    fl.position.set(0, 1.85, 0.5); g.add(fl);
+    FLASH.push({ fl, k });
+  }
+  const lampo = new THREE.PointLight(0xffffff, 0, 12); scene.add(lampo);
+
+  // --- SET finale (x = 120) ----------------------------------------------------------
+  const fondoFine = new THREE.Mesh(new THREE.PlaneGeometry(20, 30), basic(BORDEAUX)); fondoFine.position.set(120, 2.5, -2); scene.add(fondoFine);
+  const logo = canvasTex(1000, 760);
+  (() => {
+    const { ctx, c } = logo;
+    hanger(ctx, c.width / 2, 230, 330, CIPRIA, 20);
+    ctx.fillStyle = CIPRIA; ctx.font = font(190, 700, '"DejaVu Serif", serif'); ctx.textAlign = 'center';
+    ctx.fillText('Cintre', c.width / 2, 560);
+    ctx.fillStyle = '#ffffff'; ctx.font = font(52, 400); ctx.fillText("L'app che ti aiuta a vestirti", c.width / 2, 680);
+    logo.tex.needsUpdate = true;
+  })();
+  const logoPiano = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.43), basic('#ffffff', { map: logo.tex, transparent: true }));
+  logoPiano.position.set(120, 3.6, 0); scene.add(logoPiano);
+  const CORIANDOLI = [];
+  for (let k = 0; k < 40; k++) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.14), basic(k % 3 ? CIPRIA : '#ffffff', { side: THREE.DoubleSide }));
+    scene.add(m); CORIANDOLI.push(m);
+  }
+
+  // --- dissolvenza tra i set ------------------------------------------------------------
+  const velo = new THREE.Mesh(new THREE.PlaneGeometry(10, 10), basic(SCURO, { transparent: true, opacity: 0, depthTest: false }));
+  velo.position.z = -1; velo.renderOrder = 999; camera.add(velo);
+
+  function cam(x, y, z, lx, ly, lz) { camera.position.set(x, y, z); camera.lookAt(lx, ly, lz); }
+
+  return { scene, camera, update(t) {
+    const { i, u, len } = actAt(t);
+    const set = SET[i];
+    const nuovo = i === 0 || SET[i - 1] !== set;
+    velo.material.opacity = nuovo && i > 0 ? 1 - ease(u / 0.35) : 0;
+    if (i === 0) velo.material.opacity = 1 - ease(t / 0.4);
+    lei.root.visible = ['letto', 'pc', 'outfit', 'passerella'].includes(set);
+    telPiccolo.g.visible = i === 3;
+    lampo.intensity = 0;
+    FUMO.forEach((m) => (m.visible = false));
+    CARDS.forEach((m) => (m.visible = false));
+    contatorePiano.visible = false;
+    CORIANDOLI.forEach((m) => (m.visible = false));
+    scene.background = new THREE.Color(set === 'passerella' ? '#0d0306' : set === 'fine' ? BORDEAUX : '#f3e6e0');
+
+    if (set === 'letto') {
+      // 0: pesta i piedi davanti al letto pieno di vestiti · 1: i vestiti volano, mani nei capelli
+      lei.setMood('arrabbiata'); lei.setOutfit({ top: '#d9d9d9', bottom: '#8a8a8a', scarpe: '#555555' });
+      lei.root.position.set(0.55, 0, 0.45); lei.root.rotation.y = -0.3;
+      if (i === 0) lei.pose.pestaPiedi(t); else lei.pose.maniNeiCapelli(t);
+      const rosso = 0.5 + 0.5 * Math.sin(t * 6);
+      letto.w.material.color.set('#f3e6e0').lerp(new THREE.Color('#f2a7a7'), (i === 0 ? 0.35 : 0.6) * rosso);
+      PANNI.forEach((m) => {
+        const d = m.userData;
+        let tau = i === 1 ? u - d.d : -1;
+        if (tau <= 0) { m.position.set(d.x, d.y, d.z); m.rotation.set(0, d.ry, 0); return; }
+        const land = (d.vy + Math.sqrt(d.vy * d.vy + 2 * 9.8 * d.y)) / 9.8;   // istante in cui tocca terra
+        const ta = Math.min(tau, land);
+        m.position.set(d.x + d.vx * ta, Math.max(0.03, d.y + d.vy * ta - 4.9 * ta * ta), d.z + d.vz * ta);
+        m.rotation.set(ta * 5 * (hash(d.ry) - 0.5), d.ry + ta * 4, ta * 6 * (hash(d.x) - 0.5));
+      });
+      FUMO.forEach((m, k) => {                             // sbuffi di rabbia sopra la testa
+        const ph = (t * 1.3 + k / 6) % 1;
+        m.visible = true;
+        m.position.set(0.55 + (k % 2 ? 0.25 : -0.25) + Math.sin(ph * 6 + k) * 0.08, 3.55 + ph * 1.1, 0.45);
+        m.scale.setScalar(0.6 + ph * 1.4); m.material.opacity = 0.85 * (1 - ph);
+      });
+      const shake = i === 1 ? Math.sin(t * 47) * 0.04 : 0;
+      cam(-0.2 + shake, 2.3, 9.6 - ease(u / 2.5) * 0.8, -0.2, 1.25, -0.3);
+    }
+
+    if (set === 'pc') {
+      // 2: digita la ricerca · 3: trova Cintre, si gira verso di noi col telefono e sorride
+      lei.setOutfit({ top: '#d9d9d9', bottom: '#8a8a8a', scarpe: '#555555' });
+      if (i === 2) {
+        lei.setMood('neutra'); lei.pose.digita(t);
+        lei.root.position.set(29.55, 0, 0.55); lei.root.rotation.y = 2.35;
+        disegnaPC(u, len);
+        cam(29.9, 2.75, 7.6 - ease(u / len) * 1.2, 30.4, 2.3, -0.5);
+      } else {
+        lei.setMood('felice'); lei.pose.telefono(t);
+        const giro = ease(u / 0.6);
+        lei.root.position.set(29.55, 0, 0.55); lei.root.rotation.y = 2.35 * (1 - giro);
+        disegnaPC(9, 9);
+        const k = ease((u - 0.3) / 0.6);
+        telPiccolo.g.position.set(29.55, 2.25, 0.55 + 0.95); telPiccolo.g.rotation.set(-0.2, 0, 0);   // davanti alle mani
+        telPiccolo.g.scale.setScalar(0.3 + 0.7 * k);
+        disegnaSplash(telPiccolo.ct, k);
+        cam(29.6, 2.45, 7.6 - ease(u / len) * 2.0, 29.6, 2.05, 0.5);   // lei e il telefono sopra i sottotitoli
+      }
+    }
+
+    if (set === 'app') {
+      // 4: primo piano sull'app, tocca "Elegante", scorrono gli outfit
+      disegnaApp(u, len);
+      telGrande.g.visible = true;
+      telGrande.g.rotation.set(0.04, Math.sin(u * 1.4) * 0.07, Math.sin(u * 0.9) * 0.015);
+      cam(60, 3.2, 6.9 - ease(u / len) * 0.5, 60, 3.0, 0);
+    } else telGrande.g.visible = false;
+
+    if (set === 'outfit') {
+      // 5: mille outfit: card che girano intorno a lei, che cambia vestito di continuo
+      lei.setMood('felice'); lei.pose.gioia(t);
+      lei.root.position.set(60, 0, -1.5); lei.root.rotation.y = Math.sin(u * 2) * 0.3;
+      lei.setOutfit(OUTFITS[Math.floor(u / 0.3) % OUTFITS.length]);
+      CARDS.forEach((m, k) => {
+        const col = k % 6, row = Math.floor(k / 6);
+        const appear = ease((u - k * 0.06) / 0.55);
+        const tx = 60 + (col - 2.5) * 0.95, ty = 1.0 + row * 1.12, tz = -2.75;   // davanti al muro (z = -3)
+        m.visible = appear > 0;
+        m.position.set(60 + (tx - 60) * appear, 2.3 + (ty - 2.3) * appear, -1.5 + (tz + 1.5) * appear);
+        m.rotation.set(0, Math.sin(u * 2 + k) * 0.15, (1 - appear) * 3 + Math.sin(u * 3 + k) * 0.04);
+        m.scale.setScalar(0.2 + 0.8 * appear);
+      });
+      contatorePiano.visible = true;
+      contatorePiano.position.set(60, 4.55, -0.2);
+      disegnaContatore(Math.round(Math.min(1, ease(u / 1.2)) * 1000));
+      cam(60, 2.9, 7.4, 60, 2.75, -1.5);
+    }
+
+    if (set === 'passerella') {
+      // 6: sfila verso di noi, fotografi con i flash
+      lei.setMood('felice'); lei.setOutfit({ top: BORDEAUX, bottom: BORDEAUX, scarpe: '#111111' });
+      lei.pose.cammina(t, 7);
+      lei.root.position.set(90, 0.16, Math.min(0.2, -9 + u * 3.6)); lei.root.rotation.y = 0;
+      let flash = 0;
+      FLASH.forEach(({ fl, k }) => {
+        const on = ((u * 2.3 + hash(k + 7)) % 1) < 0.09;
+        fl.material.opacity = on ? 1 : 0;
+        if (on) flash = 1;
+      });
+      lampo.position.set(90, 3, lei.root.position.z + 1.5); lampo.intensity = flash * 30;
+      cam(90, 2.6, 6.8, 90, 2.15, -6);
+    }
+
+    if (set === 'fine') {
+      // 7: logo Cintre + slogan, coriandoli
+      const k = ease(u / 0.8);
+      logoPiano.scale.setScalar(0.85 + 0.15 * k); logoPiano.material.opacity = k;
+      CORIANDOLI.forEach((m, n) => {
+        m.visible = true;
+        const fall = (u * (0.5 + hash(n) * 0.5) + hash(n + 3)) % 1;
+        m.position.set(118.2 + hash(n + 9) * 3.6, 6.0 - fall * 6.5, -0.5 + hash(n + 11));
+        m.rotation.set(u * 3 + n, u * 2 + n * 0.5, u * 4);
+      });
+      cam(120, 2.6, 7.4, 120, 2.6, 0);
+    }
+  } };
+});
+</script>
+</body></html>

@@ -27,7 +27,8 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - Claude **non pubblica** e **non approva** mai: approvazione e "Pubblica ora" li fa Antonio dalla UI.
 - **Ogni richiesta ha la sua cartella** `richieste/<AAAA-MM-GG>-<titolo>/` con `richiesta.yaml`
   (richiesta originale di Antonio, scena, colori, voce, **copione** frase per frase, pubblicazione) e `out/`
-  (voce.wav, sottotitoli.ass, tempi.json, video.mp4, video.jpg — non committati).
+  (voce.wav, sottotitoli.ass, tempi.json, video.mp4, video.jpg). **Tutta `richieste/` è solo locale** (.gitignore):
+  su GitHub arriva solo il video messo in coda, copiato in `media/` (serve a Instagram per scaricarlo).
 - Comandi da usare (sempre con `.venv/bin/python`):
   - **reel con voce** (preferito): `-m auto_ig.richieste nuova "Titolo"` → compilare `richiesta.yaml` →
     `-m auto_ig.richieste crea <cartella>` → controllare i fotogrammi → Antonio lo vede in Video › Richieste.
@@ -170,6 +171,17 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       > nota: bug trovato e corretto: con `-filter_complex` `-shortest` non ferma `apad` → audio infinito.
 - [x] UI › Video › **Richieste**: player, copione, "Metti in coda", "Scarta". 33 test OK.
 - [x] Esempio reale: `richieste/2026-11-12-esempio-voice-over/` (scena testo, 4 frasi, 8,7 s).
+
+## Fase 8 — Reel narrativi
+- [x] Tono per frase nel copione: `{testo: "...", tono: arrabbiata|felice}` → voce più veloce/variabile,
+      parola evidenziata rossa e frase che "trema" (arrabbiata), accento (felice).
+- [x] Parole TUTTE MAIUSCOLE lette normalmente (Piper le compitava: "MAI" = "emme a i"); a schermo restano maiuscole.
+      `voce.pronuncia` in richiesta.yaml per cambiare la pronuncia solo nell'audio (es. `{Cintre: "Sèntr"}`).
+- [x] Personaggio 3D riutilizzabile `auto_ig/video/scenes/personaggio.js` (umore, outfit, pose:
+      pestaPiedi, maniNeiCapelli, digita, telefono, gioia, cammina, fermo).
+- [x] Scena a 8 atti `cintre_storia` sincronizzata con le frasi (`atti` = inizio frasi passato da `richieste.build`).
+- [x] Richiesta `richieste/2026-11-12-non-so-cosa-mettermi/`: video generato (18 s), **da valutare da Antonio**.
+- [ ] Antonio: decidere la pronuncia di "Cintre" (ora all'italiana /tʃintre/).
 
 ## 📥 Richieste nuove
 <!-- Antonio: scrivi qui sotto, una riga per richiesta. Claude le smista nelle fasi. -->

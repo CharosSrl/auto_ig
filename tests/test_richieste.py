@@ -8,11 +8,11 @@ from auto_ig.config import Config
 from auto_ig.ui import create_app
 
 
-def fake_speak(lines, out_wav, model, speed):
+def fake_speak(lines, out_wav, model, speed, pronuncia=None):
     out_wav.write_bytes(b"RIFF")
     t, sents = 0.6, []
-    for l in lines:
-        sents.append(voce.Sentence(l, t, t + 1.5, voce.word_timings(l, t, t + 1.5)))
+    for l, tone in voce.normalize_lines(lines):
+        sents.append(voce.Sentence(l, t, t + 1.5, voce.word_timings(l, t, t + 1.5), tone))
         t += 1.85
     return sents, t + 1
 
@@ -56,7 +56,7 @@ class TestVoce(unittest.TestCase):
 
     def test_speak_concatenates_with_timings(self):
         rate = 22050
-        synth = lambda text: (b"\x01\x00" * int(rate * 0.1 * len(text.split())), rate, 2, 1)
+        synth = lambda text, tone: (b"\x01\x00" * int(rate * 0.1 * len(text.split())), rate, 2, 1)
         out = Path(tempfile.mkdtemp()) / "v.wav"
         sents, total = voce.speak(["uno due", "tre"], out, synth=synth)
         self.assertEqual(sents[0].start, voce.LEAD_IN)
@@ -64,6 +64,32 @@ class TestVoce(unittest.TestCase):
         self.assertAlmostEqual(sents[1].start, sents[0].end + voce.PAUSE, places=2)
         self.assertAlmostEqual(total, sents[1].end + voce.TAIL, places=2)
         self.assertTrue(out.exists())
+
+
+class TestToni(unittest.TestCase):
+    def test_normalize_and_angry_style(self):
+        lines = voce.normalize_lines(["Ciao.", {"testo": "Basta!", "tono": "Arrabbiata"}, {"testo": " "}])
+        self.assertEqual(lines, [("Ciao.", ""), ("Basta!", "arrabbiata")])
+        with self.assertRaises(ValueError):
+            voce.normalize_lines([{"testo": "x", "tono": "triste"}])
+        s = [voce.Sentence("Basta adesso!", 0.5, 2.0, voce.word_timings("Basta adesso!", 0.5, 2.0), "arrabbiata"),
+             voce.Sentence("Che bello.", 2.5, 3.5, voce.word_timings("Che bello.", 2.5, 3.5), "")]
+        ev = [l for l in voce.build_ass(s, "#E8C4C0").splitlines() if l.startswith("Dialogue:")]
+        self.assertIn(r"{\frz-3}", ev[0])
+        self.assertIn(r"{\frz3}", ev[1])
+        self.assertIn("&H00303BFF", ev[0])          # rosso #FF3B30 in BGR
+        self.assertIn("&H00C0C4E8", ev[2])          # accento normale
+        self.assertNotIn("frz", ev[2])
+
+
+class TestPronuncia(unittest.TestCase):
+    def test_tts_text(self):
+        self.assertEqual(voce.tts_text("Non sapevo MAI cosa mettermi!"), "Non sapevo mai cosa mettermi!")
+        self.assertEqual(voce.tts_text("Cintre. Ciao Cintrella", {"Cintre": "Sèntr"}), "Sèntr. Ciao Cintrella")
+        heard = []
+        voce.speak(["Basta COSÌ"], Path(tempfile.mkdtemp()) / "v.wav",
+                   synth=lambda text, tone: (heard.append(text) or (b"\x00\x00" * 2205, 22050, 2, 1)))
+        self.assertEqual(heard, ["Basta così"])
 
 
 class TestRichieste(Base):
@@ -77,6 +103,7 @@ class TestRichieste(Base):
         richieste.build(f, render_fn=self.render, speak_fn=fake_speak)
         c = self.calls[0]
         self.assertEqual((c["scene"], c["name"]), ("particelle", "video"))
+        self.assertEqual(c["params"]["atti"], "0.60,2.45")
         self.assertAlmostEqual(c["seconds"], 0.6 + 1.85 * 2 + 1)
         self.assertTrue(c["ass"].read_text().count("Dialogue:") >= 8)
         self.assertEqual(richieste.load(f)["stato"], "generato")
