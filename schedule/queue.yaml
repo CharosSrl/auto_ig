@@ -2,4 +2,16 @@
 # type: image | reel | carousel
 # media: nomi file dentro media/ (o URL completi https://...)
 # status: pending | published | error
-posts: []
+posts:
+- id: '1'
+  when: 2026-11-12T18:00+01:00
+  type: image
+  media:
+  - wikimedia-wardrobe-57849684.jpg
+  caption: "Bellissimo guardaroba\r\n\r\n\U0001F4F7 Herter Brothers via Wikimedia\
+    \ (CC0)"
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra: {}
