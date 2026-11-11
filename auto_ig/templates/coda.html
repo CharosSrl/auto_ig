@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block titolo %}Coda{% endblock %}
+{% block corpo %}
+{% if not media_ok %}
+<div class="avviso">⚠ <b>MEDIA_BASE_URL</b> non configurato ({{ base_url or "vuoto" }}): puoi preparare la coda e fare prove,
+ma la pubblicazione reale è bloccata finché i file non sono online (Fase 5, repo GitHub pubblico).</div>
+{% endif %}
+<p>
+  {% if quota is not none %}Quota usata nelle ultime 24h: <b>{{ quota }}</b> (limite di sicurezza {{ limite }}).
+  {% else %}<a href="{{ url_for('coda', quota=1) }}">Mostra quota pubblicazioni</a>{% endif %}
+  · {{ posts|length }} post in coda
+</p>
+<form method="post" action="{{ url_for('sincronizza') }}">
+  <button>⇅ Sincronizza con GitHub</button>
+  <span class="piccolo">Invia coda e immagini a GitHub (necessario prima della pubblicazione automatica) e scarica lo stato aggiornato.</span>
+</form>
+<p></p>
+{% if not posts %}<p>La coda è vuota. Vai su <a href="{{ url_for('cerca') }}">Cerca immagini</a>.</p>{% else %}
+<table>
+<tr><th>#</th><th>Media</th><th>Quando / caption</th><th>Stato</th><th>Azioni</th></tr>
+{% for p in posts %}
+<tr>
+  <td>{{ p.id }}<br><span class="piccolo">{{ p.type }}</span></td>
+  <td>{% for m in p.media[:3] %}{% if m.startswith('http') %}<img src="{{ m }}" alt="">{% else %}<a href="{{ url_for('media', name=m) }}" target="_blank"><img src="{{ url_for('media', name=m) }}" alt=""></a>{% endif %}{% endfor %}</td>
+  <td>
+    <form method="post" action="{{ url_for('modifica', post_id=p.id) }}">
+      <input type="datetime-local" name="quando" value="{{ to_input(p.when) }}" required {{ 'disabled' if p.status == 'published' }}>
+      <textarea name="caption" rows="3" {{ 'disabled' if p.status == 'published' }}>{{ p.caption }}</textarea>
+      {% if p.status != 'published' %}<button>Salva</button>{% endif %}
+    </form>
+  </td>
+  <td class="stato-{{ p.status }}">{{ {'pending':'in attesa','published':'pubblicato','error':'errore'}[p.status] }}
+    {% if p.published_at %}<div class="piccolo">{{ p.published_at }}</div>{% endif %}
+    {% if p.error %}<div class="piccolo">{{ p.error }}</div>{% endif %}
+  </td>
+  <td class="azioni">
+    {% if p.status != 'published' %}
+    <form method="post" action="{{ url_for('prova', post_id=p.id) }}"><button>Prova (dry-run)</button></form><br>
+    <form method="post" action="{{ url_for('pubblica', post_id=p.id) }}">
+      <label class="piccolo"><input type="checkbox" name="confermo"> confermo</label>
+      <button>Pubblica ora</button>
+    </form><br>
+    {% endif %}
+    <form method="post" action="{{ url_for('elimina', post_id=p.id) }}">
+      <label class="piccolo"><input type="checkbox" name="confermo"> confermo</label>
+      <button>Elimina</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</table>
+{% endif %}
+{% endblock %}

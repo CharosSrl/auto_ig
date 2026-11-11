@@ -1,0 +1,56 @@
+# Pubblica i post scaduti di schedule/queue.yaml e committa lo stato aggiornato.
+name: Pubblica post Instagram
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"      # ogni 30 minuti (GitHub può ritardare di qualche minuto)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Solo prova (non pubblica)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write                # serve per committare queue.yaml
+
+concurrency:
+  group: publish                 # mai due pubblicazioni in parallelo
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - run: pip install requests PyYAML Pillow
+
+      - name: Pubblica
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          MEDIA_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/media/
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python -m auto_ig.publish_due --dry-run
+          else
+            python -m auto_ig.publish_due
+          fi
+
+      - name: Salva stato coda
+        if: always()
+        run: |
+          if git diff --quiet schedule/queue.yaml; then echo "Coda invariata"; exit 0; fi
+          git config user.name "auto_ig bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add schedule/queue.yaml
+          git commit -m "coda: aggiorna stato post [skip ci]"
+          git pull --rebase --autostash
+          git push

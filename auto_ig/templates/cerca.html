@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titolo %}Cerca{% endblock %}
+{% block corpo %}
+<form method="get">
+  <input name="q" value="{{ q }}" placeholder="es. mountain lake (meglio in inglese)" size="40" autofocus>
+  <select name="fonte">
+    {% for f in ["auto", "wikimedia", "openverse", "pixabay"] %}<option {{ 'selected' if f == fonte }}>{{ f }}</option>{% endfor %}
+  </select>
+  <button>Cerca</button>
+  <span class="piccolo">Solo immagini CC0 / pubblico dominio (Pixabay: licenza Pixabay).</span>
+</form>
+<p></p>
+{% if q and not risultati %}<p>Nessun risultato.</p>{% endif %}
+<div class="griglia">
+{% for chiave, r in risultati.items() %}
+  <div class="card">
+    <a href="{{ r.page_url }}" target="_blank" rel="noopener"><img src="{{ r.thumbnail }}" alt="" loading="lazy"></a>
+    <div><strong>{{ r.title[:60] }}</strong></div>
+    <div class="piccolo">{{ r.creator }} · {{ r.license }} · {{ r.source }} · {{ r.width }}×{{ r.height }}</div>
+    <form method="post" action="{{ url_for('aggiungi') }}">
+      <input type="hidden" name="chiave" value="{{ chiave }}">
+      <input type="datetime-local" name="quando" value="{{ quando }}" required>
+      <textarea name="caption" rows="2" placeholder="Caption"></textarea>
+      <label class="piccolo"><input type="checkbox" name="crediti" checked> aggiungi crediti</label>
+      <button>Aggiungi alla coda</button>
+    </form>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}
