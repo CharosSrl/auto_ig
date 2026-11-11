@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>testo</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+import { start, textPlane, ease, viewSize, hash } from './common.js';
+// Testo animato su sfondo colorato con forme che fluttuano.
+start({ testo: 'Scrivi qui il tuo testo', colore: '#1d3557', accento: '#e63946', durata: '8' }, (THREE, p) => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1080 / 1920, 0.1, 100);
+  camera.position.z = 10;
+  scene.background = new THREE.Color(p.colore);
+  const geos = [new THREE.IcosahedronGeometry(0.6), new THREE.TorusGeometry(0.5, 0.18, 16, 48), new THREE.OctahedronGeometry(0.6)];
+  const view = viewSize(camera, 13);   // piano delle forme (z = -3)
+  const shapes = [];
+  for (let i = 0; i < 14; i++) {
+    const m = new THREE.Mesh(geos[i % 3], new THREE.MeshBasicMaterial({ color: p.accento, wireframe: true, transparent: true, opacity: 0.35 }));
+    m.userData = { x: (hash(i) - 0.5) * view.w * 0.9, y: hash(i + 50) * 18 - 9, s: 0.3 + hash(i + 99) * 0.6 };
+    scene.add(m); shapes.push(m);
+  }
+  const text = textPlane(p.testo, viewSize(camera, 10).w * 0.88, { fontSize: 96 });
+  scene.add(text);
+  const bar = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.08), new THREE.MeshBasicMaterial({ color: p.accento }));
+  scene.add(bar);
+  return { scene, camera, update(t) {
+    shapes.forEach((m, i) => {
+      const u = m.userData;
+      m.position.set(u.x + Math.sin(t * 0.6 + i) * 0.3, ((u.y + t * u.s + 9) % 18) - 9, -3);
+      m.rotation.set(t * 0.5 + i, t * 0.3 + i, 0);
+    });
+    const k = ease(t / 1.2);
+    text.position.y = (1 - k) * -1.2;
+    text.material.opacity = k;
+    bar.position.y = -text.geometry.parameters.height / 2 - 0.4;
+    bar.scale.x = 0.01 + ease((t - 0.6) / 1.2) * 4;
+  } };
+});
+</script>
+</body></html>

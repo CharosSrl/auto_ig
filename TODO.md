@@ -38,7 +38,8 @@
   **Wikimedia Commons** (principale, senza chiave), **Openverse** (senza chiave, spesso lento),
   **Pixabay** (opzionale, chiave gratuita). Pexels escluso: nuove chiavi sospese.
 - Per ogni media salvare in `media/credits.json`: fonte, autore, URL originale, licenza.
-- Video: generati **a codice con three.js** (scene 2D/3D), renderizzati headless in mp4.
+- Video: generati **a codice con three.js** (scene 2D/3D in `auto_ig/video/scenes/`), renderizzati headless in mp4.
+  Nuove scene: copiare una esistente, usare `start()` di `common.js`, tenere testi lontani dal 25% basso (caption IG).
 - Formati: feed 1080×1350 JPEG; Reels 1080×1920, H.264, ≤ 90 s.
 
 **Stack**
@@ -64,8 +65,11 @@
       > Nessuna conversione necessaria. Se in futuro il token cambia, rilanciare lo script.
 - [ ] (Opzionale) Chiave API gratuita Pixabay (pixabay.com/api/docs) → `PIXABAY_API_KEY` in `.env`.
       > nota: Pexels non rilascia più nuove chiavi; non serve, Openverse funziona senza chiave.
-- [ ] Creare repo GitHub **pubblico** (serve per gli URL pubblici dei media) e aggiungere i Secrets:
-      `IG_ACCESS_TOKEN`, `IG_USER_ID`.
+- [x] Creare repo GitHub **pubblico**: `CharosSrl/auto_ig` (reso pubblico da Antonio).
+      > nota: `MEDIA_BASE_URL=https://raw.githubusercontent.com/CharosSrl/auto_ig/main/media/` (verificato 200).
+- [!] Aggiungere i Secrets `IG_ACCESS_TOKEN`, `IG_USER_ID` al repo.
+      > bloccato: Claude non ha il permesso di scrivere segreti. Antonio lancia:
+      > `for k in IG_ACCESS_TOKEN IG_USER_ID; do grep -m1 "^$k=" .env | cut -d= -f2- | tr -d '\n' | gh secret set "$k" --repo CharosSrl/auto_ig; done`
 
 ## Fase 1 — Core
 - [x] Struttura progetto, `.gitignore`, `requirements.txt`, `.env.example`.
@@ -96,23 +100,31 @@
       > nota: avvio `.venv/bin/python -m auto_ig.ui` → http://127.0.0.1:5000. File: `auto_ig/ui.py`, `auto_ig/templates/`.
 - [x] Tab **Coda**: tabella post (data, tipo, caption, stato), modifica, elimina, anteprima.
       > nota: elimina richiede la spunta "confermo" e rimuove anche il file media se non usato altrove.
-- [ ] Tab **Video**: scegli scena three.js, parametri, render, anteprima.
-      > nota: per ora segnaposto; si completa insieme alla Fase 4.
+- [x] Tab **Video**: scegli scena three.js, parametri, render, anteprima.
+      > nota: render in background con avanzamento; anteprima dal vivo della scena; video pronti → "Aggiungi alla coda" come Reel.
 - [x] Bottoni "Prova (dry-run)" e "Pubblica ora" (spunta "confermo" obbligatoria; bloccato se `MEDIA_BASE_URL`
       non è configurato o il file non è raggiungibile online). Quota 24h su richiesta.
       > nota: logica condivisa con la CLI tramite `publish_due.publish_one`. 15 test OK + prova dal vivo.
-- [ ] Bottone "Sincronizza" (commit + push di coda e media) → spostato in Fase 5, serve il repo GitHub.
+- [x] Bottone "Sincronizza" → fatto in Fase 5.
 
 ## Fase 4 — Video three.js
-- [ ] Template scena in `auto_ig/video/scenes/*.html` (three.js da CDN con versione fissa).
-- [ ] Render headless con Playwright: frame per frame deterministico → PNG → ffmpeg → mp4 1080×1920.
-- [ ] 2–3 scene di esempio (testo animato, oggetto 3D rotante, particelle).
+- [x] Template scena in `auto_ig/video/scenes/*.html` + `common.js` (renderer 1080×1920, `renderFrame(t)` deterministico).
+      > nota: three.js r170 copiato in `auto_ig/video/vendor/` (niente CDN: funziona offline e non cambia da solo).
+- [x] Render headless con Playwright (Chrome di sistema): frame per frame → JPEG in pipe → ffmpeg → mp4 1080×1920.
+      > nota: H.264 yuv420p 30 fps + AAC muto + faststart, copertina JPEG automatica (`extra.cover`).
+      > ~20 s di render per 4 s di video. CLI: `python -m auto_ig.video <scena> --testo ... [--coda DATA --caption ...]`.
+- [x] 3 scene: `testo`, `oggetto`, `particelle`. Testo che si adatta da solo alla larghezza, fuori dalla zona caption.
+      > nota: verificate a occhio le copertine; 21 test OK.
 
 ## Fase 5 — GitHub Actions
-- [ ] `.github/workflows/publish.yml`: cron ogni 30 min + `workflow_dispatch`; esegue `publish_due`,
+- [x] `.github/workflows/publish.yml`: cron ogni 30 min + `workflow_dispatch`; esegue `publish_due`,
       committa `queue.yaml` aggiornato.
-- [ ] Workflow mensile di refresh token (aggiorna il Secret via `gh` con un PAT dedicato).
-- [ ] Prima esecuzione manuale in dry-run, poi reale.
+      > nota: avvio manuale = dry-run di default. Prima esecuzione su GitHub: successo (run 43103606176).
+- [x] ~~Workflow mensile di refresh token~~ non serve.
+      > nota: il token è System User e non scade. Se il token smette di funzionare, il workflow fallisce e GitHub manda una mail.
+- [x] Prima esecuzione manuale in dry-run.
+- [x] Primo post **reale**: pubblicato da Antonio dalla UI l'11/11/2026 → https://www.instagram.com/p/Dfnd41tF9J1/
+- [x] Bottone "Sincronizza" nella UI + CLI `python -m auto_ig.sync` (pull --rebase, commit di schedule/ e media/, push).
 
 ## Fase 6 — Palinsesto
 - [ ] Definire con Antonio: tema pagina, frequenza, orari, tipi di contenuto.

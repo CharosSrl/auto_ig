@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>particelle</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+import { start, textPlane, ease, viewSize } from './common.js';
+// Nuvola di particelle che ruota e si espande, con testo opzionale.
+start({ testo: '', colore: '#000000', accento: '#ffd166', durata: '8' }, (THREE, p) => {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(p.colore);
+  const camera = new THREE.PerspectiveCamera(60, 1080 / 1920, 0.1, 100);
+  camera.position.z = 14;
+  const N = 6000, pos = new Float32Array(N * 3);
+  let seed = 1; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;   // deterministico
+  for (let i = 0; i < N; i++) {
+    const r = 3 + rnd() * 5, th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1);
+    pos.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph) * 1.6, r * Math.sin(ph) * Math.sin(th)], i * 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: p.accento, size: 0.06, transparent: true, opacity: 0.9 }));
+  scene.add(pts);
+  let text = null;
+  if (p.testo) { text = textPlane(p.testo, viewSize(camera, 14).w * 0.85, { fontSize: 90 }); scene.add(text); }
+  return { scene, camera, update(t) {
+    pts.rotation.y = t * 0.25;
+    pts.rotation.x = Math.sin(t * 0.3) * 0.2;
+    pts.scale.setScalar(0.4 + ease(t / 2) * 0.6);
+    if (text) { const k = ease((t - 1) / 1.2); text.material.opacity = k; text.position.z = 3 - k * 1.5; }
+  } };
+});
+</script>
+</body></html>

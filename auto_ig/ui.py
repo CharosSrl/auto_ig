@@ -8,13 +8,15 @@ from __future__ import annotations
 
 import json
 import os
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import requests
 from flask import Flask, abort, flash, redirect, render_template, request, send_from_directory, url_for
 
-from . import images, queue, sync
+from . import images, queue, sync, video as vid
+from .video.__main__ import add_reel_to_queue
 from .config import MEDIA_DIR, QUEUE_FILE, Config
 from .publish_due import SAFE_DAILY_LIMIT, make_client, publish_one
 from .sources import search as default_search
@@ -46,13 +48,18 @@ def default_when() -> str:
     return target.strftime("%Y-%m-%dT%H:%M")
 
 
+def clean(text: str) -> str:
+    """Normalizza gli a capo del browser (\r\n -> \n) e toglie spazi ai bordi."""
+    return text.replace("\r\n", "\n").replace("\r", "\n").strip()
+
+
 def media_base_ok(cfg: Config) -> bool:
     return bool(cfg.media_base_url) and "UTENTE/REPO" not in cfg.media_base_url
 
 
 def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: Config | None = None,
                search_fn=default_search, client_factory=make_client, check_url=None,
-               sync_fn=sync.sync) -> Flask:
+               sync_fn=sync.sync, render_fn=vid.render) -> Flask:
     app = Flask(__name__)
     app.secret_key = os.urandom(24)
     cfg = cfg or Config.from_env()
@@ -106,7 +113,7 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
             return redirect(url_for("cerca"))
         try:
             name = images.save_result(res, media_dir)
-            post = images.add_to_queue(name, to_iso(request.form["quando"]), request.form.get("caption", ""),
+            post = images.add_to_queue(name, to_iso(request.form["quando"]), clean(request.form.get("caption", "")),
                                        with_credit="crediti" in request.form,
                                        queue_path=queue_file, credits_path=credits_file)
             flash(f"Aggiunto alla coda: post {post.id} ({name})", "ok")
@@ -133,7 +140,7 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         post = find(posts, post_id)
         try:
             post.when = to_iso(request.form["quando"])
-            post.caption = request.form.get("caption", "")
+            post.caption = clean(request.form.get("caption", ""))
         except ValueError:
             flash("Data non valida.", "errore")
             return redirect(url_for("coda"))
@@ -154,9 +161,10 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         posts = queue.load(queue_file)
         post = find(posts, post_id)
         posts.remove(post)
-        still_used = {m for p in posts for m in p.media}
+        files_of = lambda p: list(p.media) + ([p.extra["cover"]] if p.extra.get("cover") else [])
+        still_used = {m for p in posts for m in files_of(p)}
         credits = images.load_credits(credits_file)
-        for m in post.media:
+        for m in files_of(post):
             path = (media_dir / m).resolve()
             if m not in still_used and path.parent == media_dir.resolve() and path.exists():
                 path.unlink()
@@ -189,7 +197,8 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         if post.status == "published":
             flash(f"Post {post.id} è già pubblicato.", "errore")
             return redirect(url_for("coda"))
-        missing = [m for m in post.media if not check_url(cfg.media_url(m))]
+        needed = list(post.media) + ([post.extra["cover"]] if post.extra.get("cover") else [])
+        missing = [m for m in needed if not check_url(cfg.media_url(m))]
         if missing:
             flash(f"File non raggiungibili all'URL pubblico (fai prima il push): {', '.join(missing)}", "errore")
             return redirect(url_for("coda"))
@@ -207,9 +216,83 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         return redirect(url_for("coda"))
 
     # --- Video ---------------------------------------------------------
+    job: dict = {"running": False}            # un solo render alla volta
+    job_lock = threading.Lock()
+
+    def run_render(scene, params, seconds):
+        def progress(i, n):
+            job.update(done=i, total=n)
+        try:
+            mp4, cover = render_fn(scene, params, seconds, media_dir, progress=progress)
+            job.update(result=(mp4, cover), error=None)
+        except Exception as e:
+            job.update(error=str(e), result=None)
+        finally:
+            job["running"] = False
+
+    def unqueued_videos():
+        used = {m for p in queue.load(queue_file) for m in p.media}
+        vids = sorted(media_dir.glob("reel-*.mp4"), key=lambda f: f.stat().st_mtime, reverse=True)
+        return [v.name for v in vids if v.name not in used]
+
     @app.route("/video")
     def video():
-        return render_template("video.html")
+        return render_template("video.html", scene=vid.scenes(), job=job, video=unqueued_videos(),
+                               quando=default_when(), max_sec=vid.MAX_SECONDS)
+
+    @app.route("/video/s/<path:name>")
+    def video_static(name):
+        # Solo i file delle scene e three.js (per l'anteprima dal vivo nel browser)
+        ok = (name.startswith("scenes/") and name.endswith((".html", ".js"))) or name.startswith("vendor/")
+        if not ok or ".." in name:
+            abort(404)
+        return send_from_directory(vid.VIDEO_DIR, name)
+
+    @app.post("/video/render")
+    def video_render():
+        f = request.form
+        try:
+            seconds = float(f.get("durata", 8))
+        except ValueError:
+            seconds = 0
+        if f.get("scena") not in vid.scenes() or not 3 <= seconds <= vid.MAX_SECONDS:
+            flash(f"Scena o durata non valida (3-{vid.MAX_SECONDS} s).", "errore")
+            return redirect(url_for("video"))
+        with job_lock:
+            if job["running"]:
+                flash("C'è già un render in corso.", "errore")
+                return redirect(url_for("video"))
+            params = {k: f.get(k, "") for k in ("testo", "colore", "accento")}
+            job.clear()
+            job.update(running=True, scene=f["scena"], done=0, total=int(seconds * vid.FPS), result=None, error=None)
+            threading.Thread(target=run_render, args=(f["scena"], params, seconds), daemon=True).start()
+        return redirect(url_for("video"))
+
+    @app.post("/video/aggiungi")
+    def video_aggiungi():
+        name = request.form.get("video", "")
+        cover = name[:-4] + ".jpg"
+        if name not in unqueued_videos():
+            flash("Video non trovato.", "errore")
+            return redirect(url_for("video"))
+        try:
+            post = add_reel_to_queue(name, cover if (media_dir / cover).exists() else "",
+                                     to_iso(request.form["quando"]), clean(request.form.get("caption", "")), queue_file)
+            flash(f"Reel aggiunto alla coda: post {post.id}. Ricordati di sincronizzare.", "ok")
+        except Exception as e:
+            flash(f"Impossibile aggiungere: {e}", "errore")
+        return redirect(url_for("video"))
+
+    @app.post("/video/elimina")
+    def video_elimina():
+        name = request.form.get("video", "")
+        if name in unqueued_videos() and "confermo" in request.form:
+            (media_dir / name).unlink(missing_ok=True)
+            (media_dir / (name[:-4] + ".jpg")).unlink(missing_ok=True)
+            flash(f"{name} eliminato.", "ok")
+        else:
+            flash("Spunta 'confermo' per eliminare.", "errore")
+        return redirect(url_for("video"))
 
     return app
 
