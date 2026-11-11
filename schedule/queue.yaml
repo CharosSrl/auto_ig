@@ -2,4 +2,21 @@
 # type: image | reel | carousel
 # media: nomi file dentro media/ (o URL completi https://...)
 # status: draft (bozza, non si pubblica) | pending | published | error
-posts: []
+posts:
+- id: '1'
+  when: 2026-11-12T18:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-12-non-so-cosa-mettermi.mp4
+  caption: 'Mai più «non ho niente da mettermi» 👗✨
+
+    Cintre, l''app che ti aiuta a vestirti.
+
+
+    #cintre #outfit #moda #stile #ootd'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-12-non-so-cosa-mettermi.jpg
