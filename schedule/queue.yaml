@@ -1,5 +1,5 @@
 # Coda dei post. Modificabile a mano o dall'interfaccia.
 # type: image | reel | carousel
 # media: nomi file dentro media/ (o URL completi https://...)
-# status: pending | published | error
+# status: draft (bozza, non si pubblica) | pending | published | error
 posts: []

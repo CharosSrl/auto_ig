@@ -1,0 +1,59 @@
+# Palinsesto di @cintre_official — modificabile a mano.
+# "Genera bozze" (UI o `python -m auto_ig.planner`) riempie i giorni liberi con BOZZE:
+# niente viene pubblicato finché non premi "Approva" nella pagina Coda.
+
+orario: "18:00"            # ora locale di pubblicazione
+giorni_avanti: 7           # quanti giorni futuri riempire
+giorni: [lun, mar, mer, gio, ven, sab, dom]
+alternanza: [image, reel]  # tipo di post a rotazione, un giorno ciascuno
+
+hashtag: "#moda #fashion #stile #outfit #cintre"
+
+immagini:
+  fonte: wikimedia         # wikimedia | openverse | pixabay | auto
+  crediti: true            # aggiunge "📷 autore via fonte (licenza)" alla caption
+  # Ricerche in inglese (più risultati). Usate a rotazione.
+  ricerche:
+    - fashion plate
+    - vintage dress
+    - fashion illustration
+    - hat fashion
+    - haute couture
+    - vintage shoes
+    - embroidery textile
+    - kimono
+    - fashion photography 1950s
+    - wardrobe
+    - textile pattern
+    - vintage handbag
+  caption:
+    - "Lo stile non passa mai di moda. ✨"
+    - "Ispirazione del giorno: dettagli che fanno la differenza."
+    - "Ogni capo racconta una storia. Qual è la tua?"
+    - "Eleganza senza tempo. 🖤"
+    - "Il guardaroba perfetto parte da un'idea."
+    - "Tessuti, forme, colori: la moda è arte da indossare."
+    - "Vintage oggi, ispirazione per domani."
+    - "Salva questo post per il tuo prossimo outfit. 📌"
+
+reel:
+  durata: 8                # secondi
+  scene: [testo, particelle, oggetto]
+  # Coppie [sfondo, accento] a rotazione
+  colori:
+    - ["#1d3557", "#e63946"]
+    - ["#111111", "#d4af37"]
+    - ["#f1e3d3", "#8c5e58"]
+    - ["#0b0c10", "#66fcf1"]
+  testi:
+    - "Il tuo stile, il tuo armadio."
+    - "Meno cose, più stile."
+    - "Un capo giusto vale dieci capi a caso."
+    - "Cambia il tuo look al meglio."
+    - "Ordina l'armadio, libera lo stile."
+    - "Ogni giorno è un buon giorno per vestirsi bene."
+  caption:
+    - "Un pensiero di stile per oggi. ✨"
+    - "Ti ritrovi? Scrivilo nei commenti 👇"
+    - "Condividilo con chi ha bisogno di sentirlo. 💬"
+    - "Salvalo per quando serve. 📌"
