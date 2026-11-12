@@ -37,7 +37,10 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
   - immagini: `-m auto_ig.images cerca "…"` poi `scarica "…" N [--coda DATA_ISO --caption "…"]`
   - settimana: `-m auto_ig.planner [--mostra]`
 - Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
-- Scene nuove: nuovo file in `auto_ig/video/scenes/`, render di prova, poi la propone.
+- **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `modella.js` (la modella Cintre, protagonista
+  fissa di tutti i video), `ambienti.js`, `oggetti.js`, `brand.js`, `regia.js`, `qualita.js`.
+  Scena nuova = file in `auto_ig/video/scenes/` con solo la regia (vedi `cintre_storia.html`), anteprima
+  fotogrammi → correzioni → render. Nuovi pezzi riutilizzabili vanno nei preset, non nella scena.
 - Antonio vede tutto nella UI (`./avvia.sh`): Video → "Video pronti", Coda → bozze.
 
 **Vincoli tecnici**
@@ -182,6 +185,20 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - [x] Scena a 8 atti `cintre_storia` sincronizzata con le frasi (`atti` = inizio frasi passato da `richieste.build`).
 - [x] Richiesta `richieste/2026-11-12-non-so-cosa-mettermi/`: video generato (18 s), **da valutare da Antonio**.
 - [ ] Antonio: decidere la pronuncia di "Cintre" (ora all'italiana /tʃintre/).
+
+## Fase 9 — Preset e qualità alta
+- [x] **Modella Cintre** (`preset/modella.js`): bambola fashion castana, capelli lunghi mossi (ciocche animate),
+      occhi con iride/ciglia/palpebre (battito), 4 umori (neutra, felice, arrabbiata, sorpresa), outfit
+      gonna/abito/pantaloni, pose: fermo, posa, pestaPiedi, maniNeiCapelli, digita, telefono, gioia, cammina.
+      Foglio modella per controllarla: scena `foglio_modella` (`umore`, `posa`, `tipo`, `zoom=1|2`).
+- [x] Preset `brand.js` (colori, logo gruccia, OUTFITS), `oggetti.js` (telefono app Cintre, monitor ricerca, card,
+      contatore), `ambienti.js` (camera da letto, scrivania, studio, parete outfit, passerella, cartello finale,
+      studio fotografico), `regia.js` (atti, dissolvenze, inquadrature), `qualita.js` (ACES, ombre, luci 3 punti).
+- [x] Qualità `alta` (predefinita): supersampling 2× + lanczos, CRF 18. `bozza` per prove veloci.
+      In `richiesta.yaml`: `qualita: alta|bozza`; UI e CLI `--qualita`.
+- [x] Render su **GPU Intel (Vulkan)** con ripiego automatico su CPU: 18 s di reel in alta ≈ 2 min
+      (prima: 3,5 min in qualità base su CPU).
+- [x] `cintre_storia` riscritta con i preset (solo regia) e rigenerata in alta qualità.
 
 ## 📥 Richieste nuove
 <!-- Antonio: scrivi qui sotto, una riga per richiesta. Claude le smista nelle fasi. -->

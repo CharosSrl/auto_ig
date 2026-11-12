@@ -27,6 +27,7 @@ def main() -> None:
     ap.add_argument("--colore", default="", help="sfondo, es. #1d3557")
     ap.add_argument("--accento", default="", help="colore principale, es. #e63946")
     ap.add_argument("--durata", type=float, default=8)
+    ap.add_argument("--qualita", choices=["alta", "bozza"], default="alta")
     ap.add_argument("--coda", metavar="DATA_ISO", help="aggiunge alla coda come BOZZA")
     ap.add_argument("--caption", default="")
     a = ap.parse_args()
@@ -36,7 +37,7 @@ def main() -> None:
             print(f"\r{i}/{n} fotogrammi", end="", flush=True)
 
     mp4, cover = render(a.scena, {"testo": a.testo, "colore": a.colore, "accento": a.accento},
-                        a.durata, progress=progress)
+                        a.durata, progress=progress, quality=a.qualita, log=print)
     print(f"\nSalvato media/{mp4} (copertina media/{cover})")
     if a.coda:
         post = add_reel_to_queue(mp4, cover, a.coda, a.caption, status="draft")   # da CLI/chat: sempre bozza

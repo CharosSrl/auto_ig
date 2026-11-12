@@ -47,7 +47,8 @@
     <p>Testo<br><textarea name="testo" rows="2" placeholder="(vuoto = testo predefinito della scena)"></textarea></p>
     <p>Sfondo <input type="color" name="colore" value="#1d3557">
        Accento <input type="color" name="accento" value="#e63946">
-       Durata <input type="number" name="durata" value="8" min="3" max="{{ max_sec }}" step="1" style="width:4em"> s</p>
+       Durata <input type="number" name="durata" value="8" min="3" max="{{ max_sec }}" step="1" style="width:4em"> s
+       Qualità <select name="qualita"><option value="alta" selected>alta</option><option value="bozza">bozza (veloce)</option></select></p>
     <button>Crea video</button>
     <span class="piccolo">Circa 1–3 minuti per 8 secondi di video.</span>
   </form>

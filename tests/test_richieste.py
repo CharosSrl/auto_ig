@@ -24,8 +24,8 @@ class Base(unittest.TestCase):
         self.md.mkdir()
         self.calls = []
 
-    def render(self, scene, params, seconds, out_dir, progress=None, audio=None, ass=None, name=None):
-        self.calls.append(dict(scene=scene, params=params, seconds=seconds, audio=audio, ass=ass, name=name))
+    def render(self, scene, params, seconds, out_dir, progress=None, audio=None, ass=None, name=None, **kw):
+        self.calls.append(dict(scene=scene, params=params, seconds=seconds, audio=audio, ass=ass, name=name, **kw))
         (out_dir / f"{name}.mp4").write_bytes(b"mp4")
         (out_dir / f"{name}.jpg").write_bytes(b"jpg")
         return f"{name}.mp4", f"{name}.jpg"
@@ -104,6 +104,7 @@ class TestRichieste(Base):
         c = self.calls[0]
         self.assertEqual((c["scene"], c["name"]), ("particelle", "video"))
         self.assertEqual(c["params"]["atti"], "0.60,2.45")
+        self.assertEqual(c["quality"], "alta")
         self.assertAlmostEqual(c["seconds"], 0.6 + 1.85 * 2 + 1)
         self.assertTrue(c["ass"].read_text().count("Dialogue:") >= 8)
         self.assertEqual(richieste.load(f)["stato"], "generato")

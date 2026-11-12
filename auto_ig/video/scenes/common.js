@@ -66,13 +66,15 @@ export const ease = (x) => 1 - Math.pow(1 - Math.min(Math.max(x, 0), 1), 3);
 export function start(defaults, build) {
   const p = params(defaults);
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(1);
+  // qualita=alta: supersampling 2x (2160x3840), poi ffmpeg riduce a 1080x1920 -> bordi più puliti
+  renderer.setPixelRatio(p.qualita === 'alta' ? 2 : 1);
   renderer.setSize(W, H, false);
+  window.__setRatio = (r) => { renderer.setPixelRatio(r); renderer.setSize(W, H, false); };
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   const cv = renderer.domElement;
   if (!p.render) { cv.style.height = '90vh'; cv.style.width = 'auto'; }
   document.body.appendChild(cv);
-  const ctx = build(THREE, p);
+  const ctx = build(THREE, p, renderer);
   window.renderFrame = (t) => { ctx.update(t); renderer.render(ctx.scene, ctx.camera); };
   window.grabFrame = (t, q = 0.92) => { window.renderFrame(t); return cv.toDataURL('image/jpeg', q); };
   window.sceneReady = true;

@@ -10,7 +10,7 @@ from auto_ig.ui import create_app
 
 class TestVideoBasics(unittest.TestCase):
     def test_scenes_present(self):
-        self.assertEqual(video.scenes(), ["cintre_storia", "oggetto", "particelle", "testo"])
+        self.assertEqual(video.scenes(), ["cintre_storia", "foglio_modella", "oggetto", "particelle", "testo"])
 
     def test_ffmpeg_cmd_reels_specs(self):
         cmd = " ".join(video.ffmpeg_cmd(Path("x.mp4")))
@@ -25,11 +25,40 @@ class TestVideoBasics(unittest.TestCase):
         with self.assertRaises(ValueError):
             video.ffmpeg_cmd(Path("x.mp4"), ass=Path("nome con spazi.ass"))
 
+    def test_quality_scaling_and_backends(self):
+        alta = " ".join(video.ffmpeg_cmd(Path("x.mp4"), quality="alta"))
+        bozza = " ".join(video.ffmpeg_cmd(Path("x.mp4"), quality="bozza"))
+        self.assertIn("scale=1080:1920:flags=lanczos", alta)
+        self.assertIn("-crf 18", alta)
+        self.assertIn("-crf 21", bozza)
+        self.assertEqual(list(video.BACKENDS)[-1], "cpu")             # SwiftShader sempre come ultima scelta
+
+    def test_launch_falls_back_to_cpu(self):
+        class Page:
+            def __init__(self, gpu): self.gpu = gpu
+            def evaluate(self, js): return self.gpu
+            def close(self): pass
+        class Browser:
+            def __init__(self, gpu): self.gpu, self.closed = gpu, False
+            def new_page(self): return Page(self.gpu)
+            def close(self): self.closed = True
+        class Chromium:
+            def launch(self, channel, headless, args):
+                if "--use-angle=vulkan" in args: raise RuntimeError("niente vulkan")
+                return Browser("ANGLE (Google, SwiftShader)" if "--use-angle=gl" in args else "SwiftShader CPU")
+        pw = type("PW", (), {"chromium": Chromium()})()
+        log = []
+        browser, name = video.launch_browser(pw, log.append)
+        self.assertEqual(name, "cpu")
+        self.assertTrue(any("gpu-vulkan" in m for m in log) and any("gpu-gl" in m for m in log))
+
     def test_render_validates(self):
         with self.assertRaises(ValueError):
             video.render("inesistente")
         with self.assertRaises(ValueError):
             video.render("testo", seconds=1)
+        with self.assertRaises(ValueError):
+            video.render("testo", seconds=5, quality="ultra")
 
 
 class TestVideoUI(unittest.TestCase):
@@ -38,7 +67,7 @@ class TestVideoUI(unittest.TestCase):
         self.qf, self.md = d / "queue.yaml", d / "media"
         self.md.mkdir()
 
-        def fake_render(scene, params, seconds, out_dir, progress=None):
+        def fake_render(scene, params, seconds, out_dir, progress=None, **kw):
             self.params = params
             (out_dir / f"reel-{scene}-1.mp4").write_bytes(b"mp4")
             (out_dir / f"reel-{scene}-1.jpg").write_bytes(b"jpg")

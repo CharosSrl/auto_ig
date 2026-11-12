@@ -42,6 +42,7 @@ colori:
   sfondo: "{sfondo}"
   accento: "{accento}"      # anche colore della parola evidenziata
 testo_scena: ""           # testo fisso della scena (vuoto = nessuno; per 'testo' usa il titolo)
+qualita: alta             # alta (supersampling 2x, ombre) | bozza (veloce, per provare)
 
 # Voce (Piper, locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
@@ -112,7 +113,7 @@ def outputs(folder: Path) -> dict:
 
 
 def build(folder: Path, render_fn=None, speak_fn=voce.speak,
-          progress: Callable[[int, int], None] | None = None) -> Path:
+          progress: Callable[[int, int], None] | None = None, log: Callable[[str], None] = lambda m: None) -> Path:
     """Voce + sottotitoli + video. Ritorna il percorso del video."""
     if render_fn is None:
         from .video import render as render_fn
@@ -131,7 +132,8 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
                               "voce": "1", "fine": f"{seconds:.2f}",
                               # inizio di ogni frase: le scene a più atti si sincronizzano con la voce
                               "atti": ",".join(f"{x.start:.2f}" for x in sentences)},
-              max(3.0, seconds), o["mp4"].parent, progress=progress, audio=o["wav"], ass=o["ass"], name="video")
+              max(3.0, seconds), o["mp4"].parent, progress=progress, audio=o["wav"], ass=o["ass"], name="video",
+              quality=str(data.get("qualita") or "alta"), log=log)
     set_state(folder, "generato")
     return o["mp4"]
 
@@ -194,7 +196,7 @@ def main() -> None:
         def prog(i, n):
             if i % 30 == 0 or i == n:
                 print(f"\r{i}/{n} fotogrammi", end="", flush=True)
-        mp4 = build(resolve(args.cartella), progress=prog)
+        mp4 = build(resolve(args.cartella), progress=prog, log=lambda m: print("\n" + m))
         print(f"\nVideo: {mp4.relative_to(ROOT)}")
     elif args.cmd == "coda":
         post = enqueue(resolve(args.cartella), args.quando, args.caption)

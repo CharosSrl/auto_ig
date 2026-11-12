@@ -41,7 +41,7 @@ class Base(unittest.TestCase):
         return [ImageResult("wikimedia", f"{term}-{i}", "https://x/i.jpg", "t", "p", "Autore", "CC0", "",
                             2000, 2000, f"{term} {i}") for i in range(3)]
 
-    def render(self, scene, params, seconds, out_dir):
+    def render(self, scene, params, seconds, out_dir, **kw):
         self.rendered = (scene, params)
         (out_dir / f"reel-{scene}.mp4").write_bytes(b"x")
         (out_dir / f"reel-{scene}.jpg").write_bytes(b"x")

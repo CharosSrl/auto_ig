@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>foglio_modella</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+// Foglio modella: la modella Cintre di fronte, 3/4 e profilo. Parametri: umore, posa, outfit (tipo).
+import { start } from './common.js';
+import { creaModella } from '../preset/modella.js';
+import { applicaQualita } from '../preset/qualita.js';
+
+start({ umore: 'neutra', posa: 'fermo', tipo: 'gonna', zoom: '0', durata: '6' }, (THREE, p, renderer) => {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#f3e6e0');
+  const camera = new THREE.PerspectiveCamera(30, 1080 / 1920, 0.1, 100);
+  const luci = applicaQualita(THREE, renderer, scene, p.qualita || 'alta');
+  const pav = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: '#e8d6cf' }));
+  pav.rotation.x = -Math.PI / 2; scene.add(pav); luci.ombre(pav);
+  const modelle = [0, 0.7, Math.PI / 2].map((ry, k) => {
+    const m = creaModella(THREE, { outfit: { tipo: p.tipo, top: '#e8c4c0', bottom: '#6d1a36', scarpe: '#6d1a36' } });
+    m.root.position.x = (k - 1) * 1.25; m.root.rotation.y = ry; scene.add(m.root); return m;
+  });
+  return { scene, camera, update(t) {
+    modelle.forEach((m) => { m.setMood(p.umore); (m.pose[p.posa] || m.pose.fermo)(t); m.tick(t); });
+    if (p.zoom === '2') { camera.position.set(-1.25, 3.33, 1.5); camera.lookAt(-1.25, 3.31, 0); }
+    else if (p.zoom === '1') { camera.position.set(-1.25, 3.3, 3.0); camera.lookAt(-1.25, 3.28, 0); }
+    else { camera.position.set(0, 2.0, 13.5); camera.lookAt(0, 1.85, 0); }
+  } };
+});
+</script>
+</body></html>

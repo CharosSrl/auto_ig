@@ -265,11 +265,11 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
 
     # --- Video ---------------------------------------------------------
 
-    def run_render(scene, params, seconds):
+    def run_render(scene, params, seconds, quality="alta"):
         def progress(i, n):
             job.update(done=i, total=n)
         try:
-            mp4, cover = render_fn(scene, params, seconds, media_dir, progress=progress)
+            mp4, cover = render_fn(scene, params, seconds, media_dir, progress=progress, quality=quality)
             job.update(result=(mp4, cover), error=None)
         except Exception as e:
             job.update(error=str(e), result=None)
@@ -323,7 +323,8 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
     @app.route("/video/s/<path:name>")
     def video_static(name):
         # Solo i file delle scene e three.js (per l'anteprima dal vivo nel browser)
-        ok = (name.startswith("scenes/") and name.endswith((".html", ".js"))) or name.startswith("vendor/")
+        ok = ((name.startswith(("scenes/", "preset/")) and name.endswith((".html", ".js")))
+              or name.startswith("vendor/"))
         if not ok or ".." in name:
             abort(404)
         return send_from_directory(vid.VIDEO_DIR, name)
@@ -345,7 +346,8 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
             params = {k: f.get(k, "") for k in ("testo", "colore", "accento")}
             job.clear()
             job.update(running=True, scene=f["scena"], done=0, total=int(seconds * vid.FPS), result=None, error=None)
-            threading.Thread(target=run_render, args=(f["scena"], params, seconds), daemon=True).start()
+            quality = "bozza" if f.get("qualita") == "bozza" else "alta"
+            threading.Thread(target=run_render, args=(f["scena"], params, seconds, quality), daemon=True).start()
         return redirect(url_for("video"))
 
     @app.post("/video/aggiungi")

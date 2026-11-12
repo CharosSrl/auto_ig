@@ -33,11 +33,12 @@ def scenes() -> list[str]:
 
 
 def ffmpeg_cmd(out: Path, fps: int = FPS, audio: Path | None = None, ass: Path | None = None,
-               seconds: float | None = None) -> list[str]:
+               seconds: float | None = None, quality: str = "alta") -> list[str]:
     """Specifiche Reels: H.264 yuv420p, 30 fps, AAC 48 kHz, moov all'inizio (faststart).
     audio: voce (wav) allungata con silenzio fino alla fine del video; senza audio traccia muta.
     ass: sottotitoli disegnati sul video (libass). ffmpeg va lanciato con cwd = ass.parent:
-    nel filtro passa solo il nome del file (niente escape di percorsi)."""
+    nel filtro passa solo il nome del file (niente escape di percorsi).
+    quality="alta": i fotogrammi arrivano a 2160x3840 e vengono ridotti a 1080x1920 (lanczos)."""
     cmd = ["ffmpeg", "-y", "-loglevel", "error",
            "-f", "image2pipe", "-framerate", str(fps), "-c:v", "mjpeg", "-i", "-"]
     if audio:
@@ -48,16 +49,49 @@ def ffmpeg_cmd(out: Path, fps: int = FPS, audio: Path | None = None, ass: Path |
         a_filter = "[1:a]anull[a]"
     if ass and not re.fullmatch(r"[A-Za-z0-9._-]+", ass.name):
         raise ValueError(f"Nome file sottotitoli non valido: {ass.name}")
-    v_filter = f"[0:v]ass={ass.name}[v]" if ass else "[0:v]null[v]"
+    steps = [f"scale={W}:{H}:flags=lanczos"] + ([f"ass={ass.name}"] if ass else [])
+    v_filter = f"[0:v]{','.join(steps)}[v]"
+    crf, maxrate = ("18", "8M") if quality == "alta" else ("21", "6M")
     # -t: durata esatta (con filter_complex -shortest non ferma apad, che è infinito)
     cmd += ["-filter_complex", f"{v_filter};{a_filter}", "-map", "[v]", "-map", "[a]", "-shortest",
             *(["-t", f"{seconds:.3f}"] if seconds else []),
-            "-c:v", "libx264", "-preset", "medium", "-crf", "21", "-maxrate", "6M", "-bufsize", "12M",
+            "-c:v", "libx264", "-preset", "medium", "-crf", crf, "-maxrate", maxrate, "-bufsize", "16M",
             "-profile:v", "high",
             "-pix_fmt", "yuv420p", "-r", str(fps),
             "-c:a", "aac", "-b:a", "128k", "-ar", "48000",
             "-movflags", "+faststart", str(out)]
     return cmd
+
+
+# Backend WebGL per Chrome headless, in ordine di preferenza. La GPU Intel (Vulkan) è ~7x più veloce
+# di SwiftShader (CPU); se la GPU non c'è o non risponde si torna a SwiftShader.
+BACKENDS = {
+    "gpu-vulkan": ["--use-angle=vulkan", "--enable-features=Vulkan", "--enable-gpu", "--ignore-gpu-blocklist"],
+    "gpu-gl": ["--use-angle=gl", "--enable-gpu", "--ignore-gpu-blocklist"],
+    "cpu": ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+}
+_RENDERER_JS = """() => { const gl = document.createElement('canvas').getContext('webgl2');
+  if (!gl) return ''; const e = gl.getExtension('WEBGL_debug_renderer_info');
+  return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : 'sconosciuto'; }"""
+
+
+def launch_browser(pw, log: Callable[[str], None] = lambda m: None):
+    """Avvia Chrome headless col miglior backend disponibile. Ritorna (browser, nome backend)."""
+    for name, args in BACKENDS.items():
+        try:
+            browser = pw.chromium.launch(channel="chrome", headless=True, args=args)
+        except Exception as e:
+            log(f"backend {name}: avvio fallito ({str(e)[:80]})")
+            continue
+        page = browser.new_page()
+        gpu = page.evaluate(_RENDERER_JS)
+        page.close()
+        if name == "cpu" or (gpu and "SwiftShader" not in gpu):
+            log(f"backend {name}: {gpu}")
+            return browser, name
+        log(f"backend {name}: non disponibile ({gpu or 'niente WebGL'})")
+        browser.close()
+    raise RuntimeError("Nessun backend WebGL disponibile")
 
 
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -75,7 +109,8 @@ def _serve(directory: Path) -> tuple[http.server.ThreadingHTTPServer, int]:
 
 def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: Path = MEDIA_DIR,
            fps: int = FPS, progress: Callable[[int, int], None] | None = None,
-           audio: Path | None = None, ass: Path | None = None, name: str | None = None) -> tuple[str, str]:
+           audio: Path | None = None, ass: Path | None = None, name: str | None = None,
+           quality: str = "alta", log: Callable[[str], None] = lambda m: None) -> tuple[str, str]:
     """Renderizza la scena. Ritorna (nome mp4, nome copertina jpg) dentro out_dir.
     Con audio/ass aggiunge voce e sottotitoli; `name` fissa il nome dei file (senza estensione)."""
     if scene not in scenes():
@@ -83,7 +118,9 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
     if not 3 <= seconds <= MAX_SECONDS:
         raise ValueError(f"Durata tra 3 e {MAX_SECONDS} secondi")
     params = {k: v for k, v in (params or {}).items() if v not in (None, "")}
-    params.update(render="1", durata=str(seconds))
+    if quality not in ("alta", "bozza"):
+        raise ValueError("qualità: alta | bozza")
+    params.update(render="1", durata=str(seconds), qualita=quality)
     from playwright.sync_api import sync_playwright   # import qui: serve solo per il render
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -96,12 +133,11 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
     srv, port = _serve(VIDEO_DIR)
     mp4, cover = mp4.resolve(), cover.resolve()
     audio = audio.resolve() if audio else None
-    ff = subprocess.Popen(ffmpeg_cmd(mp4, fps, audio, ass, frames / fps), stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+    ff = subprocess.Popen(ffmpeg_cmd(mp4, fps, audio, ass, frames / fps, quality), stdin=subprocess.PIPE, stderr=subprocess.PIPE,
                           cwd=ass.parent if ass else None)
     try:
         with sync_playwright() as pw:
-            browser = pw.chromium.launch(channel="chrome", headless=True,
-                                         args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader"])
+            browser, backend = launch_browser(pw, log)
             page = browser.new_page(viewport={"width": W, "height": H})
             errors: list[str] = []
             page.on("pageerror", lambda e: errors.append(str(e)))
@@ -114,17 +150,16 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
                 data_url = page.evaluate("t => window.grabFrame(t)", i / fps)
                 jpg = base64.b64decode(data_url.split(",", 1)[1])
                 ff.stdin.write(jpg)
-                if i == cover_frame:
-                    cover.write_bytes(jpg)
                 if progress:
                     progress(i + 1, frames)
             browser.close()
         ff.stdin.close()
         if ff.wait(timeout=300) != 0:
             raise RuntimeError(f"ffmpeg: {ff.stderr.read().decode()[-500:]}")
-        if ass:   # copertina presa dal video finale, così include il testo
-            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{cover_frame / fps:.2f}",
-                            "-i", str(mp4), "-frames:v", "1", "-q:v", "2", str(cover)], check=True)
+        # copertina presa dal video finale: dimensione giusta e include il testo
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{cover_frame / fps:.2f}",
+                       "-i", str(mp4), "-frames:v", "1", "-q:v", "2", str(cover)], check=True)
+        log(f"render: {frames} fotogrammi, backend {backend}, qualità {quality}")
     except BaseException:
         ff.kill()
         mp4.unlink(missing_ok=True)
