@@ -59,7 +59,7 @@ def media_base_ok(cfg: Config) -> bool:
 
 def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: Config | None = None,
                search_fn=default_search, client_factory=make_client, check_url=None,
-               sync_fn=sync.sync, render_fn=vid.render, plan_file: Path = planner.PLAN_FILE,
+               sync_fn=sync.sync, align_fn=sync.allineamento, render_fn=vid.render, plan_file: Path = planner.PLAN_FILE,
                used_file: Path = planner.USED_FILE, req_dir: Path = richieste.REQ_DIR) -> Flask:
     app = Flask(__name__)
     app.secret_key = os.urandom(24)
@@ -204,9 +204,21 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         if missing:
             flash(f"File non raggiungibili all'URL pubblico (fai prima il push): {', '.join(missing)}", "errore")
             return redirect(url_for("coda"))
+        # PC e GitHub devono avere la stessa coda, altrimenti GitHub Actions può ripubblicare il post
+        problemi = align_fn(post.id)
+        if problemi:
+            flash("Non pubblico: PC e GitHub non sono allineati — " + "; ".join(problemi)
+                  + ". Premi Sincronizza e riprova.", "errore")
+            return redirect(url_for("coda"))
         ok, msg = publish_one(client_factory(cfg), cfg, post)
         queue.save(posts, queue_file)
         flash(msg, "ok" if ok else "errore")
+        if ok:                                  # subito su GitHub: così le Actions sanno che è uscito
+            try:
+                flash(sync_fn(), "ok")
+            except Exception as e:  # noqa: BLE001
+                flash(f"ATTENZIONE: pubblicato, ma la coda non è su GitHub ({e}). Premi Sincronizza ORA, "
+                      "altrimenti GitHub Actions lo pubblica di nuovo.", "errore")
         return redirect(url_for("coda"))
 
     job: dict = {"running": False}            # un solo render alla volta

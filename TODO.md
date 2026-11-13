@@ -220,6 +220,12 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       `oggetti.js` → `calice`, `scintille` (`.burst`), app con `ricerca`/`outfits`/`evidenzia`; modella: posa
       `seduta(t, brindisi)`; `brand.js` → `OUTFIT_CASA`, `OUTFIT_CENA_LAVORO`. Scena `armadio_infinito`.
 
+## Fase 11 — Sicurezza pubblicazione dal PC
+- [x] "Pubblica ora" controlla prima che PC e GitHub siano allineati (`sync.allineamento`): PC non indietro,
+      nessuna modifica a coda/media non inviata, post presente su GitHub e non già pubblicato. Altrimenti blocca.
+- [x] Dopo una pubblicazione riuscita sincronizza subito, così GitHub Actions non lo ripubblica
+      (causa del doppione del 2026-11-12). Se il push fallisce: avviso rosso "Premi Sincronizza ORA".
+
 ## 📥 Richieste nuove
 <!-- Antonio: scrivi qui sotto, una riga per richiesta. Claude le smista nelle fasi. -->
 

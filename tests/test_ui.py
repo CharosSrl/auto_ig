@@ -39,12 +39,17 @@ class TestUI(unittest.TestCase):
         self.qf, self.md = d / "queue.yaml", d / "media"
         self.md.mkdir()
         self.client = FakeClient()
+        self.problemi, self.sincronizzati = [], []
         self.cfg = Config("EAAtok", "123", "v23.0", "https://cdn.example/media/")
         app = create_app(self.qf, self.md, self.cfg, search_fn=lambda q, n, f: [RES],
                          client_factory=lambda cfg, dry_run=False: self.client, check_url=lambda u: True,
-                         sync_fn=lambda: "Sincronizzato: finto")
+                         sync_fn=self.fake_sync, align_fn=lambda pid: list(self.problemi))
         app.testing = True
         self.c = app.test_client()
+
+    def fake_sync(self):
+        self.sincronizzati.append(1)
+        return "Sincronizzato: finto"
 
     def add(self):
         self.c.get("/cerca?q=lago")
@@ -70,6 +75,7 @@ class TestUI(unittest.TestCase):
         self.c.post(f"/coda/{post.id}/pubblica", data={"confermo": "on"})
         self.assertEqual(self.client.posted, ["https://cdn.example/media/" + post.media[0]])
         self.assertEqual(queue.load(self.qf)[0].status, "published")
+        self.assertEqual(self.sincronizzati, [1])          # dopo la pubblicazione va subito su GitHub
 
         self.c.post(f"/coda/{post.id}/elimina", data={"confermo": "on"})
         self.assertEqual(queue.load(self.qf), [])
@@ -84,6 +90,15 @@ class TestUI(unittest.TestCase):
         r = self.c.post("/coda/1/pubblica", data={"confermo": "on"}, follow_redirects=True)
         self.assertIn(b"MEDIA_BASE_URL", r.data)
         self.assertEqual(self.client.posted, [])
+
+    def test_not_aligned_blocks_publish(self):
+        self.add()
+        self.problemi = ["su GitHub il post 1 risulta già pubblicato"]
+        r = self.c.post("/coda/1/pubblica", data={"confermo": "on"}, follow_redirects=True)
+        self.assertIn("non sono allineati".encode(), r.data)
+        self.assertIn("già pubblicato".encode(), r.data)
+        self.assertEqual(self.client.posted, [])
+        self.assertEqual(queue.load(self.qf)[0].status, "pending")
 
     def test_sync_button(self):
         r = self.c.post("/sincronizza", follow_redirects=True)
