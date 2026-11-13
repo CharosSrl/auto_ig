@@ -1,0 +1,70 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>guardaroba</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+// Guardaroba: foglio di controllo dei capi e base per i reel "prodotto".
+//   vista=modella  -> la modella con sopra/sotto/scarpe, di fronte, 3/4 e retro (zona=intera|busto|gambe|piedi)
+//   vista=sfilata  -> una sola modella che gira su se stessa (posa a scelta)
+//   vista=stender  -> capi=camicia,maglione,jeans  (colori: c=fff,e8c4c0,... nello stesso ordine)
+//   vista=vetrina  -> capo=blazer su pedana girevole
+// Colori dei capi indossati: csopra, csotto, cscarpe, cinterno (esadecimali senza #).
+import { start } from './common.js';
+import { creaModella } from '../preset/modella.js';
+import { applicaQualita } from '../preset/qualita.js';
+import { stender, vetrinaCapo } from '../preset/ambienti.js';
+
+start({ vista: 'modella', sopra: 'camicia', sotto: 'jeans', scarpe: 'sneakers', zona: 'intera', posa: 'posa',
+        umore: 'felice', capi: 'camicia,maglione,blazer', c: '', capo: 'blazer', durata: '8' }, (THREE, p, renderer) => {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#f3e6e0');
+  const camera = new THREE.PerspectiveCamera(30, 1080 / 1920, 0.1, 100);
+  const luci = applicaQualita(THREE, renderer, scene, p.qualita || 'alta');
+  const hex = (v) => (v ? '#' + String(v).replace('#', '') : undefined);
+  let update = () => {};
+
+  if (p.vista === 'modella' || p.vista === 'sfilata') {
+    const pav = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: '#e8d6cf' }));
+    pav.rotation.x = -Math.PI / 2; scene.add(pav); luci.ombre(pav);
+    const sopraCol = p.cinterno ? { colore: hex(p.csopra), interno: hex(p.cinterno) } : hex(p.csopra);
+    const vesti = { sopra: p.sopra, sotto: p.sotto, scarpe: p.scarpe, colori: { sopra: sopraCol, sotto: hex(p.csotto), scarpe: hex(p.cscarpe) } };
+    const angoli = p.vista === 'sfilata' ? [0] : [0, 0.7, Math.PI];
+    const modelle = angoli.map((ry, k) => {
+      const m = creaModella(THREE); m.indossa(vesti);
+      m.root.position.x = angoli.length === 1 ? 0 : (k - 1) * 1.25; m.root.rotation.y = ry; scene.add(m.root); return m;
+    });
+    const Z = {          // inquadrature: [posizione camera, punto guardato] (sulla modella centrale)
+      intera: [[0, 2.0, 13.5], [0, 1.85, 0]], busto: [[0, 2.6, 4.4], [0, 2.5, 0]],
+      gambe: [[0, 1.15, 5.2], [0, 1.1, 0]], piedi: [[0, 0.4, 2.2], [0, 0.18, 0]],
+    };
+    const [cp, cl] = p.vista === 'sfilata' ? [[0, 2.1, 9.5], [0, 1.95, 0]] : (Z[p.zona] || Z.intera);
+    update = (t) => {
+      modelle.forEach((m) => { m.setMood(p.umore); (m.pose[p.posa] || m.pose.fermo)(t); m.tick(t); });
+      if (p.vista === 'sfilata') modelle[0].root.rotation.y = t * 0.8;
+      camera.position.set(...cp); camera.lookAt(...cl);
+    };
+  } else if (p.vista === 'stender') {
+    const colori = String(p.c || '').split(',');
+    const s = stender(THREE, 0, String(p.capi).split(',').filter(Boolean).map((capo, i) => ({ capo, colori: hex(colori[i]) })));
+    const studio = new THREE.Group(); scene.add(studio, s.gruppo);
+    const pav = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: '#e8d6cf' }));
+    pav.rotation.x = -Math.PI / 2; studio.add(pav);
+    const muro = new THREE.Mesh(new THREE.PlaneGeometry(30, 12), new THREE.MeshStandardMaterial({ color: '#f3e6e0' }));
+    muro.position.set(0, 6, -2.2); studio.add(muro);
+    luci.ombre(studio);
+    update = (t) => { s.aggiorna(t); camera.position.set(0, 2.15, 10.6); camera.lookAt(0, 2.05, 0); };
+  } else {
+    const v = vetrinaCapo(THREE, 0, { capo: p.capo, colori: hex(p.c) });
+    scene.add(v.gruppo); luci.ombre(v.gruppo);
+    const scarpe = v.capo.categoria === 'scarpe';
+    update = (t) => {
+      v.aggiorna(t);
+      if (scarpe) { camera.position.set(0, 1.6, 5.2); camera.lookAt(0, 0.75, 0); }
+      else { camera.position.set(0, 2.4, 9.0); camera.lookAt(0, 2.0, 0); }
+    };
+  }
+  luci.segui(new THREE.Vector3(0, 0, 0));
+  return { scene, camera, update: (t) => update(t) };
+});
+</script>
+</body></html>

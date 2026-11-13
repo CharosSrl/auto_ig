@@ -38,7 +38,8 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
   - settimana: `-m auto_ig.planner [--mostra]`
 - Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
 - **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `modella.js` (la modella Cintre, protagonista
-  fissa di tutti i video), `ambienti.js`, `oggetti.js`, `brand.js`, `regia.js`, `qualita.js`.
+  fissa di tutti i video), `guardaroba.js` (capi: `lei.indossa({sopra, sotto, scarpe, colori})`, capi singoli
+  su gruccia/stender/vetrina), `ambienti.js`, `oggetti.js`, `brand.js`, `regia.js`, `qualita.js`.
   Scena nuova = file in `auto_ig/video/scenes/` con solo la regia (vedi `cintre_storia.html`), anteprima
   fotogrammi → correzioni → render. Nuovi pezzi riutilizzabili vanno nei preset, non nella scena.
 - Antonio vede tutto nella UI (`./avvia.sh`): Video → "Video pronti", Coda → bozze.
@@ -199,6 +200,25 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - [x] Render su **GPU Intel (Vulkan)** con ripiego automatico su CPU: 18 s di reel in alta ≈ 2 min
       (prima: 3,5 min in qualità base su CPU).
 - [x] `cintre_storia` riscritta con i preset (solo regia) e rigenerata in alta qualità.
+
+## Fase 10 — Guardaroba (capi riutilizzabili)
+- [x] Preset `preset/guardaroba.js`: capi 3D toon con contorno e tessuti procedurali (maglia a coste, denim,
+      lana, jersey, popeline), costruiti sullo scheletro della modella → seguono tutte le pose.
+  - **Sopra**: tshirt, camicia, maglione, dolcevita, cropTop, blazer (con top interno), cappotto.
+  - **Sotto**: jeans, pantaloni (con piega), palazzo, shorts, minigonna, gonnaPieghe.
+  - **Scarpe**: decollete, sneakers, stivali, mocassini (le scarpe basse abbassano la modella).
+  - Gonne e cappotto seguono le gambe quando cammina (deformazione continua).
+- [x] Modella: `lei.indossa({ sopra: 'camicia', sotto: 'jeans', scarpe: 'sneakers', colori: { sopra: '#fff' } })`;
+      `setOutfit` compatibile (un outfit con `capi` passa da `indossa`). `brand.js`: 12 OUTFITS con capi; figurini aggiornati.
+- [x] Capi da soli: `capoSingolo(THREE, 'maglione', { colori })` su gruccia Cintre; in `ambienti.js`
+      `stender(THREE, x, [{capo, colori}])` e `vetrinaCapo(THREE, x, {capo})` (pedana girevole).
+- [x] Scena di controllo `guardaroba`: `vista=modella|sfilata|stender|vetrina`, `sopra/sotto/scarpe`,
+      `csopra/csotto/cscarpe/cinterno` (hex senza #), `zona=intera|busto|gambe|piedi`, `capi=a,b,c` + `c=hex,hex`.
+- [ ] Prossimi: accessori (borsa, occhiali, cappello, cintura) e fantasie (righe, quadri, pois).
+- [x] Nuovi preset (reel "armadio infinito"): `ambienti.js` → `armadio` (ante che si aprono + luce), `corridoioArmadio`
+      (capi infiniti nella nebbia, `.volo`), `ristorante` (tavolo apparecchiato, candele, vetrata città, `posti`);
+      `oggetti.js` → `calice`, `scintille` (`.burst`), app con `ricerca`/`outfits`/`evidenzia`; modella: posa
+      `seduta(t, brindisi)`; `brand.js` → `OUTFIT_CASA`, `OUTFIT_CENA_LAVORO`. Scena `armadio_infinito`.
 
 ## 📥 Richieste nuove
 <!-- Antonio: scrivi qui sotto, una riga per richiesta. Claude le smista nelle fasi. -->

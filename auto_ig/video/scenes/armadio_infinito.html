@@ -1,0 +1,149 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>armadio_infinito</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+// "L'armadio infinito → cena di lavoro": 8 atti, uno per frase del copione (parametro atti).
+//  0 camera: stasera cena di lavoro · 1 apre l'armadio → corridoio infinito · 2 rabbia tra i capi che volano
+//  3 apre Cintre · 4 app: cerca "cena di lavoro" · 5 scintille e cambio d'abito · 6 cena: brindisi · 7 logo
+// Solo regia: modella, capi, ambienti, oggetti e qualità arrivano dai preset.
+import { start } from './common.js';
+import { creaModella } from '../preset/modella.js';
+import { applicaQualita } from '../preset/qualita.js';
+import { OUTFITS, OUTFIT_CASA, OUTFIT_CENA_LAVORO, SCURO } from '../preset/brand.js';
+import { telefonoCintre, scintille, calice } from '../preset/oggetti.js';
+import { cameraDaLetto, armadio, corridoioArmadio, studio, ristorante, cartelloFinale } from '../preset/ambienti.js';
+import { tempiAtti, dissolvenza, inquadra, carrellata, ease, mix } from '../preset/regia.js';
+
+const DEF = '0.6,3.1,5.6,8.1,10.6,13.1,15.6,18.4';
+start({ atti: DEF, fine: '21' }, (THREE, p, renderer) => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(36, 1080 / 1920, 0.1, 200); scene.add(camera);
+  const luci = applicaQualita(THREE, renderer, scene, p.qualita || 'alta');
+  const atti = tempiAtti(p, 8, DEF);
+  const velo = dissolvenza(THREE, camera, SCURO);
+  const lampo = dissolvenza(THREE, camera, '#fff6e8');
+
+  // set
+  const stanza = cameraDaLetto(THREE, 0);
+  const arm = armadio(THREE); arm.g.position.set(2.5, 0, -2.55); stanza.gruppo.add(arm.g);
+  const corr = corridoioArmadio(THREE, 200);
+  const app = studio(THREE, 60);
+  const cena = ristorante(THREE, 240);
+  const fine = cartelloFinale(THREE, 120);
+  [stanza, corr, app, cena, fine].forEach((s) => scene.add(s.gruppo));
+  luci.ombre(stanza.gruppo, app.gruppo, cena.gruppo, corr.gruppo);
+  const tel = telefonoCintre(THREE, 0.34, 0.7); scene.add(tel.g);
+  const telGrande = telefonoCintre(THREE, 1.55, 3.1); telGrande.g.position.set(60, 3.5, 0); scene.add(telGrande.g);
+  const magia = scintille(THREE); scene.add(magia.g);
+
+  // la protagonista e le colleghe
+  const lei = creaModella(THREE, { outfit: OUTFIT_CASA }); scene.add(lei.root);
+  const bicchiere = calice(THREE, { scala: 1.1 }); bicchiere.g.position.set(0, -0.11, 0.035); bicchiere.g.rotation.x = 2.05;
+  lei.articolazioni.bR.mano.add(bicchiere.g);
+  const colleghe = [
+    creaModella(THREE, { aspetto: { capelli: '#c9a063', pelle: '#f1c9a5' }, outfit: OUTFITS[8] }),
+    creaModella(THREE, { aspetto: { capelli: '#17100c', pelle: '#c98e66', occhi: '#3b2416' }, outfit: OUTFITS[0] }),
+  ];
+  const calici = [bicchiere];
+  colleghe.forEach((c) => {
+    scene.add(c.root);
+    const b = calice(THREE, { scala: 1.1 }); b.g.position.set(0, -0.11, 0.035); b.g.rotation.x = 2.05; c.articolazioni.bR.mano.add(b.g);
+    calici.push(b);
+  });
+  const nebbia = corr.nebbia;
+  const SET = ['camera', 'camera', 'corridoio', 'corridoio', 'app', 'camera', 'cena', 'fine'];
+  const C = 200;   // x del corridoio
+
+  return { scene, camera, update(t) {
+    const { i, u, len } = atti.a(t);
+    let set = SET[i];
+    if (i === 1 && u > 1.15) set = 'corridoio';            // l'armadio si apre: dentro c'è il corridoio infinito
+    const prima = i > 0 ? SET[i - 1] : null;
+    velo(i === 0 ? 1 - ease(t / 0.4) : (prima !== SET[i] && i !== 2 ? 1 - ease(u / 0.35) : 0));
+    lampo(i === 1 ? Math.max(0, 1 - Math.abs(u - 1.15) / 0.35) : 0);
+    scene.fog = set === 'corridoio' ? nebbia : null;
+    scene.background = new THREE.Color(set === 'corridoio' ? '#f6ece4' : set === 'cena' ? '#1a0b10' : '#f3e6e0');
+    lei.root.visible = set !== 'app' && set !== 'fine';
+    colleghe.forEach((c) => (c.root.visible = set === 'cena'));
+    tel.g.visible = i === 3; telGrande.g.visible = set === 'app';
+    magia.burst(i === 5 ? u : -1, [2.0, 2.0, -0.4]);
+    corr.volo(i === 2 ? u : -1, [0, 2.3, -3.2]);   // coordinate del corridoio
+    stanza.volo(-1); stanza.rabbia(t, 0, null);
+    arm.apri(i === 0 ? 0 : i === 1 ? ease(u / 0.9) : 1);
+    lei.root.scale.setScalar(1); lei.root.rotation.set(0, 0, 0);
+    calici.forEach((c) => (c.g.visible = false));
+    luci.key.intensity = set === 'cena' ? 1.2 : 2.4; luci.amb.intensity = set === 'cena' ? 0.45 : 0.9;
+
+    if (i === 0) {                     // camera da letto: lei pensierosa davanti all'armadio chiuso
+      lei.setOutfit(OUTFIT_CASA); lei.setMood(u < 1.2 ? 'neutra' : 'sorpresa'); lei.pose.fermo(t);
+      lei.root.position.set(0.9, 0, 0.4); lei.root.rotation.y = 0.15;
+      inquadra(camera, [1.3, 3.3, mix(9.6, 8.8, ease(u / len))], [1.6, 2.35, -1.0]);
+    }
+    if (i === 1 && set === 'camera') { // apre l'armadio: luce calda, la camera si avvicina alle ante
+      lei.setOutfit(OUTFIT_CASA); lei.setMood('sorpresa'); lei.pose.fermo(t);
+      lei.root.position.set(1.0, 0, -0.6); lei.root.rotation.y = Math.PI - 0.7;   // di lato: la camera passa a destra
+      carrellata(camera, [[0.9, 3.4, 6.6], [2.2, 2.4, -2.4]], [[2.2, 3.0, 2.6], [2.5, 2.3, -3.0]], u / 1.15);
+    }
+    if (set === 'corridoio') {
+      lei.setOutfit(OUTFIT_CASA);
+      if (i === 1) {                   // volo nel corridoio: lei entra camminando, i capi scorrono ai lati
+        const k = (u - 1.15) / Math.max(0.5, len - 1.15);
+        lei.setMood('sorpresa'); lei.pose.cammina(t, 4.5);
+        lei.root.position.set(C, 0, mix(-1.5, -4.0, k)); lei.root.rotation.y = Math.PI;
+        inquadra(camera, [C, mix(3.6, 2.9, ease(k)), mix(4.5, 0.5, k)], [C, 2.4, -14]);
+      } else if (i === 2) {            // "mille vestiti e niente da mettermi!": rabbia tra i capi che volano
+        lei.setMood('arrabbiata'); (u < len * 0.5 ? lei.pose.pestaPiedi : lei.pose.maniNeiCapelli)(t);
+        lei.root.position.set(C, 0, -3.2); lei.root.rotation.y = 0;
+        const sc = Math.sin(t * 40) * 0.025;
+        inquadra(camera, [C + sc, 3.05, mix(3.6, 2.6, ease(u / len))], [C, 2.6, -3.2]);
+      } else {                         // apre Cintre: dal broncio al sorriso
+        const k = ease(u / 0.9);
+        lei.setMood(u < 0.5 ? 'arrabbiata' : u < 1.0 ? 'sorpresa' : 'felice'); lei.pose.telefono(t);
+        lei.root.position.set(C, 0, -3.2); lei.root.rotation.y = 0;
+        tel.g.position.set(C, 2.62, -3.2 + 0.62); tel.g.rotation.set(-0.2, 0, 0);
+        tel.g.scale.setScalar(0.3 + 0.7 * k); tel.splash(ease((u - 0.2) / 0.6));
+        inquadra(camera, [C, 2.8, mix(1.5, 0.7, ease(u / len))], [C, 2.35, -3.2]);
+      }
+    }
+    if (set === 'app') {               // l'app: scrive "cena di lavoro", sceglie l'outfit perfetto
+      telGrande.app(u, len, { ricerca: 'Cena di lavoro, elegante', outfits: [OUTFIT_CENA_LAVORO, OUTFITS[8], OUTFITS[0], OUTFITS[7], OUTFITS[1], OUTFITS[5]],
+        evidenzia: ease((u - 1.9) / 0.4) });
+      telGrande.g.rotation.set(0.04, Math.sin(u * 1.4) * 0.07, Math.sin(u * 0.9) * 0.015);
+      inquadra(camera, [60, 3.25, mix(7.2, 6.6, ease(u / len))], [60, 3.05, 0]);
+    }
+    if (i === 5) {                     // scintille: gira su se stessa e compare il nuovo outfit
+      const giro = ease(u / 0.9);
+      lei.setOutfit(u < 0.45 ? OUTFIT_CASA : OUTFIT_CENA_LAVORO);
+      lei.setMood(u < 0.45 ? 'sorpresa' : 'felice');
+      (u < 0.9 ? lei.pose.fermo : lei.pose.posa)(t);
+      lei.root.position.set(2.0, 0, -0.4); lei.root.rotation.y = -0.15 + giro * Math.PI * 2;
+      inquadra(camera, [1.4, 2.6, mix(7.4, 6.6, ease(u / len))], [2.0, 2.15, -0.6]);
+    }
+    if (set === 'cena') {              // cena di lavoro: lei al centro, brindisi e complimenti
+      const posti = cena.posti;
+      lei.setOutfit(OUTFIT_CENA_LAVORO); lei.setMood('felice');
+      const b = ease((u - 0.6) / 0.6) * (1 - ease((u - len + 0.3) / 0.3));
+      lei.pose.seduta(t, b);
+      calici.forEach((c) => (c.g.visible = b > 0.35));
+      lei.root.position.set(posti[1].x, 0, posti[1].z);
+      colleghe.forEach((c, k) => {
+        const ps = posti[k === 0 ? 0 : 2];
+        c.setOutfit(k === 0 ? OUTFITS[8] : OUTFITS[0]); c.setMood('felice'); c.pose.seduta(t + k * 1.7, b);
+        c.root.position.set(ps.x, 0, ps.z); c.root.rotation.y = k === 0 ? 0.35 : -0.35;
+        c.head.rotation.y += k === 0 ? 0.35 : -0.35;   // guardano lei
+        c.tick(t);
+      });
+      cena.aggiorna(t);
+      inquadra(camera, [240, mix(3.0, 2.8, ease(u / len)), mix(6.4, 5.3, ease(u / len))], [240, 1.7, -0.8]);
+    }
+    if (set === 'fine') {
+      fine.aggiorna(u);
+      inquadra(camera, [120, 2.6, 7.4], [120, 2.6, 0]);
+    }
+    luci.segui(lei.root.position);
+    lei.tick(t);
+  } };
+});
+</script>
+</body></html>

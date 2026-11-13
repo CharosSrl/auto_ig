@@ -6,8 +6,13 @@
 //   scene.add(lei.root);
 //   ogni fotogramma:  lei.pose.cammina(t);  lei.tick(t);
 //   lei.setMood('arrabbiata' | 'neutra' | 'felice' | 'sorpresa');
-//   lei.setOutfit({ tipo: 'abito' | 'gonna' | 'pantaloni', top, bottom, scarpe });
+//   pose: fermo, posa, pestaPiedi, maniNeiCapelli, digita, telefono, gioia, seduta(t, brindisi), cammina(t, ritmo)
+//   lei.setOutfit({ tipo: 'abito' | 'gonna' | 'pantaloni', top, bottom, scarpe });   // outfit base
+//   lei.indossa({ sopra: 'camicia', sotto: 'jeans', scarpe: 'sneakers', colori: { sopra: '#fff' } });
+//   (capi dal preset guardaroba.js; un outfit con campo capi passa da indossa automaticamente)
 // Piedi a y = 0, guarda verso +z. Tutto dipende solo da t: render deterministico.
+
+import { creaSarto, SLOT, PREDEFINITI, CAPI } from './guardaroba.js';
 
 export const ASPETTO = { pelle: '#eab894', capelli: '#4a2c1d', occhi: '#6b4226', labbra: '#b84a5e' };
 export const OUTFIT_BASE = { tipo: 'gonna', top: '#ffffff', bottom: '#2b2d42', scarpe: '#1b1b1b' };
@@ -33,7 +38,8 @@ export function creaModella(THREE, opts = {}) {
   };
 
   const root = new THREE.Group();
-  const body = new THREE.Group(); root.add(body);
+  const appoggio = new THREE.Group(); root.add(appoggio);       // si abbassa con le scarpe basse
+  const body = new THREE.Group(); appoggio.add(body);
   const ombreggia = [];
   function mesh(parent, geo, mat, x = 0, y = 0, z = 0, contorno = 0) {
     if (contorno) {                                       // centra la geometria: il contorno si scala dal centro
@@ -161,8 +167,8 @@ export function creaModella(THREE, opts = {}) {
   // --- braccia (spalla -> gomito -> mano) ------------------------------------------------
   const braccio = (s) => {
     const spalla = new THREE.Group(); spalla.position.set(0.28 * s, 2.84, 0); body.add(spalla);
-    mesh(spalla, new THREE.SphereGeometry(0.075, 14, 12), M.top);
-    mesh(spalla, new THREE.CapsuleGeometry(0.064, 0.44, 6, 12), M.top, 0, -0.27, 0, 0.05);
+    const maniche = [mesh(spalla, new THREE.SphereGeometry(0.075, 14, 12), M.top),
+      mesh(spalla, new THREE.CapsuleGeometry(0.064, 0.44, 6, 12), M.top, 0, -0.27, 0, 0.05)];
     const gomito = new THREE.Group(); gomito.position.set(0, -0.54, 0); spalla.add(gomito);
     mesh(gomito, new THREE.SphereGeometry(0.052, 12, 10), M.pelle);
     mesh(gomito, new THREE.CapsuleGeometry(0.05, 0.42, 6, 12), M.pelle, 0, -0.24, 0, 0.06);
@@ -173,7 +179,7 @@ export function creaModella(THREE, opts = {}) {
       mesh(mano, new THREE.CapsuleGeometry(0.011, 0.06, 4, 6), M.pelle, (-0.024 + f * 0.016) * s, -0.105 + Math.abs(f - 1.5) * 0.008, 0.004);
     const pollice = mesh(mano, new THREE.CapsuleGeometry(0.012, 0.045, 4, 6), M.pelle, 0.04 * -s, -0.05, 0.02);
     pollice.rotation.z = 0.6 * s;
-    return { spalla, gomito, mano };
+    return { spalla, gomito, mano, maniche };
   };
   const bL = braccio(-1), bR = braccio(1);
 
@@ -189,8 +195,8 @@ export function creaModella(THREE, opts = {}) {
     // décolleté: pianta inclinata in avanti + tacco
     const scarpa = mesh(piede, new THREE.CapsuleGeometry(0.045, 0.16, 4, 10), M.scarpe, 0, -0.06, 0.07, 0.08);
     scarpa.rotation.x = Math.PI / 2 + 0.45;
-    mesh(piede, new THREE.CylinderGeometry(0.012, 0.018, 0.15, 8), M.scarpe, 0, -0.1, -0.035);
-    return { anca, ginocchio, piede, coscia };
+    const tacco = mesh(piede, new THREE.CylinderGeometry(0.012, 0.018, 0.15, 8), M.scarpe, 0, -0.1, -0.035);
+    return { anca, ginocchio, piede, coscia, scarpe: [scarpa, tacco] };
   };
   const gL = gamba(-1), gR = gamba(1);
 
@@ -201,7 +207,38 @@ export function creaModella(THREE, opts = {}) {
 
   // --- outfit --------------------------------------------------------------------------
   let tipo = 'gonna';
+  const sarto = creaSarto(THREE, { contorno: M.contorno });
+  const scheletro = { body, head, bL, bR, gL, gR };
+  const guardaroba = {};                              // capi già costruiti (riusati, solo ricolorati)
+  const indosso = { sopra: null, sotto: null, scarpe: null };
+  const maniche = [...bL.maniche, ...bR.maniche], scarpeBase = [...gL.scarpe, ...gR.scarpe];
+  function vestiBase(attivo) {                        // parti dell'outfit base: colori o pelle sotto i capi
+    busto.material = attivo ? M.top : M.pelle;
+    maniche.forEach((m) => (m.material = attivo ? M.top : M.pelle));
+    bacino.material = attivo ? M.bottom : M.pelle;
+    scarpeBase.forEach((m) => (m.visible = attivo));
+  }
+  function indossa(capi = {}) {
+    for (const slot of SLOT) {
+      const id = capi[slot] || PREDEFINITI[slot];
+      for (const c of Object.values(guardaroba)) if (c.categoria === slot && c.id !== id) c.mostra(false);
+      const c = (guardaroba[id] ||= sarto.veste(scheletro, id));
+      c.mostra(true); c.colora(capi.colori?.[slot]);
+      indosso[slot] = id;
+    }
+    vestiBase(false);
+    appoggio.position.y = -(CAPI[indosso.scarpe].abbassa || 0);
+    gonna.visible = false;
+    M.gambe.color.set(asp.pelle);
+  }
   function setOutfit(o = {}) {
+    if (o.capi) {
+      return indossa({ ...o.capi, colori: { sopra: o.top, sotto: o.bottom, scarpe: o.scarpe, ...(o.capi.colori || {}) } });
+    }
+    for (const c of Object.values(guardaroba)) c.mostra(false);
+    SLOT.forEach((k) => (indosso[k] = null));
+    vestiBase(true);
+    appoggio.position.y = 0;
     if (o.tipo) tipo = o.tipo;
     if (o.top) M.top.color.set(o.top);
     if (o.bottom) M.bottom.color.set(o.bottom);
@@ -319,6 +356,17 @@ export function creaModella(THREE, opts = {}) {
       bL.gomito.rotation.x = bR.gomito.rotation.x = -0.2;
       head.rotation.z = S(t * 6) * 0.06;
     },
+    seduta(t, brindisi = 0) { // seduta a tavola (sedile ~0.95), mani sul tavolo; brindisi 0..1 alza il calice (mano destra = bR)
+      reset();
+      body.position.y = -0.895 + S(t * 2) * 0.004;
+      gL.anca.rotation.set(-1.5, 0, 0.06); gR.anca.rotation.set(-1.5, 0, -0.06);
+      gL.ginocchio.rotation.x = gR.ginocchio.rotation.x = 1.5;
+      bL.spalla.rotation.set(-0.75, 0, 0.12); bL.gomito.rotation.x = -1.1;
+      const b = Math.min(1, Math.max(0, brindisi));
+      bR.spalla.rotation.set(-0.75 - b * 0.7, 0, -0.12 + b * 0.5); bR.gomito.rotation.x = -1.1 + b * 0.5;   // calice a lato del viso
+      head.rotation.set(-0.04 - b * 0.06, S(t * 0.9) * 0.08, S(t * 1.2) * 0.03);
+      body.rotation.z = S(t * 0.7) * 0.01;
+    },
     cammina(t, ritmo = 5.5) { // passo da passerella: piedi sulla linea, anche che ondeggiano
       reset();
       const s = S(t * ritmo), c = Math.cos(t * ritmo);
@@ -335,6 +383,7 @@ export function creaModella(THREE, opts = {}) {
 
   // --- vita: battito delle palpebre + capelli che ondeggiano ------------------------------
   function tick(t) {
+    for (const id of Object.values(indosso)) if (id) guardaroba[id].tick();
     const ph = (t + 0.7) % 3.6;
     const blink = ph < 0.13 ? Math.sin((ph / 0.13) * Math.PI) : 0;
     applyMood(blink);
@@ -349,7 +398,8 @@ export function creaModella(THREE, opts = {}) {
   reset();
   tick(0);
   return {
-    root, body, head, setMood, setOutfit, pose, tick, mesh: ombreggia,
+    root, body, head, setMood, setOutfit, indossa, pose, tick, mesh: ombreggia, scheletro,
+    get indosso() { return { ...indosso }; },
     articolazioni: { bL, bR, gL, gR },
     get mood() { return moodName; },
     // compatibilità con personaggio.js

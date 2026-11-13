@@ -10,7 +10,7 @@ from auto_ig.ui import create_app
 
 class TestVideoBasics(unittest.TestCase):
     def test_scenes_present(self):
-        self.assertEqual(video.scenes(), ["cintre_storia", "foglio_modella", "oggetto", "particelle", "testo"])
+        self.assertEqual(video.scenes(), ["armadio_infinito", "cintre_storia", "foglio_modella", "guardaroba", "oggetto", "particelle", "testo"])
 
     def test_ffmpeg_cmd_reels_specs(self):
         cmd = " ".join(video.ffmpeg_cmd(Path("x.mp4")))
@@ -113,3 +113,27 @@ class TestVideoUI(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGuardaroba(unittest.TestCase):
+    """Coerenza del catalogo capi (preset/guardaroba.js) con costruttori e outfit del brand."""
+
+    def setUp(self):
+        import re
+        self.re = re
+        preset = Path(video.__file__).parent / "preset"
+        self.capi_js = (preset / "guardaroba.js").read_text()
+        self.brand_js = (preset / "brand.js").read_text()
+        blocco = self.capi_js.split("export const CAPI = {", 1)[1].split("};", 1)[0]
+        self.capi = dict(re.findall(r"^\s+(\w+):\s+\{[^}]*categoria: '(\w+)'", blocco, re.M))
+
+    def test_ogni_capo_ha_un_costruttore(self):
+        self.assertGreaterEqual(len(self.capi), 17)
+        self.assertEqual(set(self.capi.values()), {"sopra", "sotto", "scarpe"})
+        for capo in self.capi:
+            self.assertRegex(self.capi_js, rf"\n\s+{capo}\(\) \{{", capo)
+
+    def test_outfit_usano_capi_esistenti(self):
+        for slot, capo in self.re.findall(r"(sopra|sotto|scarpe): '(\w+)'", self.brand_js):
+            self.assertIn(capo, self.capi)
+            self.assertEqual(self.capi[capo], slot)
