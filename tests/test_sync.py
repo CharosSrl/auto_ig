@@ -56,6 +56,10 @@ class TestAllineamento(unittest.TestCase):
         sh(self.pc, "add", "-A"); sh(self.pc, "commit", "-q", "-m", "x")
         self.assertIn("commit della coda", " ".join(sync.allineamento("1")))
 
+    def test_coda_github_legge_la_versione_remota(self):
+        self.scrivi(self.actions, "published"); sh(self.actions, "push", "-q")
+        self.assertEqual(sync.coda_github()["1"]["status"], "published")   # sul PC è ancora "pending"
+
     def test_post_non_ancora_su_github(self):
         self.assertIn("non è ancora su GitHub", " ".join(sync.allineamento("7")))
 

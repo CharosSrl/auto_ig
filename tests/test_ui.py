@@ -39,11 +39,12 @@ class TestUI(unittest.TestCase):
         self.qf, self.md = d / "queue.yaml", d / "media"
         self.md.mkdir()
         self.client = FakeClient()
-        self.problemi, self.sincronizzati = [], []
+        self.problemi, self.sincronizzati, self.github = [], [], {}
         self.cfg = Config("EAAtok", "123", "v23.0", "https://cdn.example/media/")
         app = create_app(self.qf, self.md, self.cfg, search_fn=lambda q, n, f: [RES],
                          client_factory=lambda cfg, dry_run=False: self.client, check_url=lambda u: True,
-                         sync_fn=self.fake_sync, align_fn=lambda pid: list(self.problemi))
+                         sync_fn=self.fake_sync, align_fn=lambda pid: list(self.problemi),
+                         github_fn=lambda: dict(self.github))
         app.testing = True
         self.c = app.test_client()
 
@@ -99,6 +100,27 @@ class TestUI(unittest.TestCase):
         self.assertIn("già pubblicato".encode(), r.data)
         self.assertEqual(self.client.posted, [])
         self.assertEqual(queue.load(self.qf)[0].status, "pending")
+
+    def test_orario_su_github(self):
+        self.add()                                       # post 1, sul PC: 2026-12-01 18:00
+        page = self.c.get("/coda?aggiorna=1").data.decode()
+        self.assertIn("non ancora su GitHub", page)
+        self.github = {"1": {"id": "1", "when": "2026-12-01T18:00+01:00", "status": "pending", "media": ["x.jpg"]}}
+        page = self.c.get("/coda?aggiorna=1").data.decode()
+        self.assertIn("01/12 alle 18:00", page)
+        self.assertNotIn("diverso dal PC", page)
+        self.github["1"]["when"] = "2026-12-02T09:00+01:00"   # orario cambiato su GitHub
+        self.assertIn("diverso dal PC", self.c.get("/coda?aggiorna=1").data.decode())
+        self.github["1"].update(status="published", published_at="2026-12-01T17:31:00+00:00")
+        self.assertIn("✓ pubblicato", self.c.get("/coda?aggiorna=1").data.decode())
+
+    def test_github_non_leggibile(self):
+        def rotto():
+            raise RuntimeError("rete assente")
+        app = create_app(self.qf, self.md, self.cfg, github_fn=rotto)
+        app.testing = True
+        page = app.test_client().get("/coda").data.decode()
+        self.assertIn("rete assente", page)
 
     def test_sync_button(self):
         r = self.c.post("/sincronizza", follow_redirects=True)

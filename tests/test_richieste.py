@@ -126,7 +126,7 @@ class TestRichieste(Base):
     def test_ui_lists_and_enqueues(self):
         f = self.make()
         richieste.build(f, render_fn=self.render, speak_fn=fake_speak)
-        app = create_app(self.qf, self.md, Config("", "", "v23.0", "https://cdn/media/"), sync_fn=lambda: "",
+        app = create_app(self.qf, self.md, Config("", "", "v23.0", "https://cdn/media/"), github_fn=lambda: {}, sync_fn=lambda: "",
                          req_dir=self.base)
         app.testing = True
         c = app.test_client()

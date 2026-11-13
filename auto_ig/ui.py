@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -39,6 +40,25 @@ def to_input(iso: str) -> str:
         return ""
 
 
+GIORNI = ["lun", "mar", "mer", "gio", "ven", "sab", "dom"]
+
+
+def orario(iso) -> str:
+    """ISO -> 'gio 13/11 alle 18:00' in ora locale ('' se non valido)."""
+    try:
+        dt = queue.Post("", str(iso), "image", []).when_dt().astimezone(local_tz())
+    except ValueError:
+        return ""
+    return f"{GIORNI[dt.weekday()]} {dt:%d/%m} alle {dt:%H:%M}"
+
+
+def stesso_orario(a, b) -> bool:
+    try:
+        return queue.Post("", str(a), "image", []).when_dt() == queue.Post("", str(b), "image", []).when_dt()
+    except ValueError:
+        return False
+
+
 def default_when() -> str:
     """Prossime 18:00 (oggi se mancano almeno 30 minuti, altrimenti domani), ora locale."""
     now = datetime.now()
@@ -59,7 +79,7 @@ def media_base_ok(cfg: Config) -> bool:
 
 def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: Config | None = None,
                search_fn=default_search, client_factory=make_client, check_url=None,
-               sync_fn=sync.sync, align_fn=sync.allineamento, render_fn=vid.render, plan_file: Path = planner.PLAN_FILE,
+               sync_fn=sync.sync, align_fn=sync.allineamento, github_fn=sync.coda_github, render_fn=vid.render, plan_file: Path = planner.PLAN_FILE,
                used_file: Path = planner.USED_FILE, req_dir: Path = richieste.REQ_DIR) -> Flask:
     app = Flask(__name__)
     app.secret_key = os.urandom(24)
@@ -74,6 +94,17 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
             return False
     check_url = check_url or url_reachable
 
+    gh = {"t": 0.0, "coda": None, "errore": None}   # coda su GitHub, riletta al massimo ogni 60 s
+
+    def coda_github(forza: bool = False):
+        if forza or time.time() - gh["t"] > 60:
+            try:
+                gh.update(coda=github_fn(), errore=None)
+            except Exception as e:  # noqa: BLE001
+                gh.update(coda=None, errore=str(e))
+            gh["t"] = time.time()
+        return gh["coda"], gh["errore"]
+
     def find(posts, post_id):
         post = next((p for p in posts if p.id == post_id), None)
         if not post:
@@ -82,7 +113,7 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
 
     @app.context_processor
     def helpers():
-        return {"to_input": to_input}
+        return {"to_input": to_input, "orario": orario, "stesso_orario": stesso_orario}
 
     @app.route("/")
     def home():
@@ -132,7 +163,8 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
                 quota = client_factory(cfg).publishing_limit().get("quota_usage", 0)
             except Exception as e:
                 flash(f"Quota non disponibile: {e}", "errore")
-        return render_template("coda.html", posts=posts, quota=quota, limite=SAFE_DAILY_LIMIT, plan_job=plan_job,
+        github, github_err = coda_github(forza=request.args.get("aggiorna") == "1")
+        return render_template("coda.html", posts=posts, quota=quota, github=github, github_err=github_err, limite=SAFE_DAILY_LIMIT, plan_job=plan_job,
                                bozze=sum(p.status == "draft" for p in posts),
                                media_ok=media_base_ok(cfg), base_url=cfg.media_base_url)
 
@@ -216,6 +248,7 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
         if ok:                                  # subito su GitHub: così le Actions sanno che è uscito
             try:
                 flash(sync_fn(), "ok")
+                gh["t"] = 0.0
             except Exception as e:  # noqa: BLE001
                 flash(f"ATTENZIONE: pubblicato, ma la coda non è su GitHub ({e}). Premi Sincronizza ORA, "
                       "altrimenti GitHub Actions lo pubblica di nuovo.", "errore")
@@ -271,6 +304,7 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
     def sincronizza():
         try:
             flash(sync_fn(), "ok")
+            gh["t"] = 0.0
         except Exception as e:
             flash(f"Sincronizzazione fallita: {e}", "errore")
         return redirect(url_for("coda"))
@@ -296,9 +330,12 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
     @app.route("/video")
     def video():
         reqs = [(f, d, e) for f, d, e in richieste.all_requests(req_dir) if not d or d.get("stato") != "scartato"]
+        github, _ = coda_github()
+        per_media = {m: p for p in (github or {}).values() for m in p.get("media") or []}
+        su_github = {f.name: per_media.get(f"reel-{f.name}.mp4") for f, d, e in reqs} if github is not None else None
         return render_template("video.html", scene=vid.scenes(), job=job, video=unqueued_videos(),
                                quando=default_when(), max_sec=vid.MAX_SECONDS, richieste=reqs,
-                               has_video=lambda f: richieste.outputs(f)["mp4"].exists())
+                               has_video=lambda f: richieste.outputs(f)["mp4"].exists(), su_github=su_github)
 
     def req_folder(name: str) -> Path:
         folder = (req_dir / name).resolve()

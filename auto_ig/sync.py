@@ -67,6 +67,17 @@ def allineamento(post_id: str | None = None) -> list[str]:
     return problemi
 
 
+def coda_github(fetch: bool = True) -> dict[str, dict]:
+    """La coda così com'è su GitHub (quella che usano le Actions): {id: post}. Solleva RuntimeError."""
+    if fetch:
+        git("fetch", "--quiet")
+    try:
+        dati = yaml.safe_load(git("show", f"@{{u}}:{QUEUE}")) or {}
+    except yaml.YAMLError as e:
+        raise RuntimeError(f"coda su GitHub illeggibile: {e}") from e
+    return {str(p.get("id")): p for p in dati.get("posts") or []}
+
+
 def main() -> None:
     print(sync())
 

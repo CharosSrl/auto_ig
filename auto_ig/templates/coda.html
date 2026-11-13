@@ -9,7 +9,9 @@ ma la pubblicazione reale è bloccata finché i file non sono online (Fase 5, re
   {% if quota is not none %}Quota usata nelle ultime 24h: <b>{{ quota }}</b> (limite di sicurezza {{ limite }}).
   {% else %}<a href="{{ url_for('coda', quota=1) }}">Mostra quota pubblicazioni</a>{% endif %}
   · {{ posts|length }} post in coda
+  · <a href="{{ url_for('coda', aggiorna=1) }}">↻ rileggi da GitHub</a>
 </p>
+{% if github is none %}<div class="avviso">⚠ Coda su GitHub non leggibile ({{ github_err }}): gli orari "Su GitHub" non sono disponibili.</div>{% endif %}
 {% if plan_job.running %}<meta http-equiv="refresh" content="3">{% endif %}
 <div class="card" style="margin-bottom:12px">
   <b>Palinsesto</b> <span class="piccolo">(1 post al giorno da <code>schedule/plan.yaml</code>, alternando immagine e reel)</span><br>
@@ -28,7 +30,7 @@ ma la pubblicazione reale è bloccata finché i file non sono online (Fase 5, re
 <p></p>
 {% if not posts %}<p>La coda è vuota. Vai su <a href="{{ url_for('cerca') }}">Cerca immagini</a>.</p>{% else %}
 <table>
-<tr><th>#</th><th>Media</th><th>Quando / caption</th><th>Stato</th><th>Azioni</th></tr>
+<tr><th>#</th><th>Media</th><th>Quando / caption</th><th>Stato</th><th>Su GitHub<br><span class="piccolo">(quello che pubblica davvero)</span></th><th>Azioni</th></tr>
 {% for p in posts %}
 <tr>
   <td>{{ p.id }}<br><span class="piccolo">{{ p.type }}</span></td>
@@ -43,6 +45,26 @@ ma la pubblicazione reale è bloccata finché i file non sono online (Fase 5, re
   <td class="stato-{{ p.status }}">{{ {'draft':'bozza','pending':'in attesa','published':'pubblicato','error':'errore'}[p.status] }}
     {% if p.published_at %}<div class="piccolo">{{ p.published_at }}</div>{% endif %}
     {% if p.error %}<div class="piccolo">{{ p.error }}</div>{% endif %}
+  </td>
+  <td>
+    {% if github is not none %}{% set g = github.get(p.id) %}
+      {% if not g %}
+        <span class="stato-error">⚠ non ancora su GitHub</span>
+        {% if p.status == 'pending' %}<div class="piccolo">non verrà pubblicato finché non premi Sincronizza</div>{% endif %}
+      {% elif g.status == 'published' %}
+        <span class="stato-published">✓ pubblicato</span><div class="piccolo">{{ orario(g.published_at) }}</div>
+      {% elif g.status == 'draft' %}
+        bozza<div class="piccolo">non verrà pubblicato finché non la approvi · {{ orario(g.when) }}</div>
+      {% elif g.status == 'error' %}
+        <span class="stato-error">errore</span><div class="piccolo">{{ g.error }}</div>
+      {% else %}
+        🕒 <b>{{ orario(g.when) }}</b>
+        <div class="piccolo">esce al primo giro delle GitHub Actions dopo quest'ora (ogni 30 min, a volte con ritardo)</div>
+      {% endif %}
+      {% if g and (not stesso_orario(g.when, p.when) or g.status != p.status) %}
+        <div class="piccolo stato-error">⚠ diverso dal PC ({{ orario(p.when) }}, {'draft':'bozza','pending':'in attesa','published':'pubblicato','error':'errore'}[p.status]): premi Sincronizza</div>
+      {% endif %}
+    {% else %}<span class="piccolo">—</span>{% endif %}
   </td>
   <td class="azioni">
     {% if p.status == 'draft' %}

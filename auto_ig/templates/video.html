@@ -12,6 +12,13 @@
       <b>{{ f.name }}</b><div class="msg errore">{{ err }}</div>
     {% else %}
       <b>{{ d.titolo }}</b> <span class="piccolo">· {{ d.stato }} · {{ d.scena }}</span>
+      {% if d.stato == 'in_coda' and su_github is not none %}{% set g = su_github.get(f.name) %}
+        <div class="piccolo">{% if not g %}⚠ in coda sul PC ma non ancora su GitHub: premi Sincronizza
+        {% elif g.status == 'published' %}✓ pubblicato {{ orario(g.published_at) }}
+        {% elif g.status == 'draft' %}bozza su GitHub ({{ orario(g.when) }}): da approvare
+        {% elif g.status == 'error' %}⚠ errore su GitHub: {{ g.error }}
+        {% else %}🕒 Pubblicazione prevista (GitHub): <b>{{ orario(g.when) }}</b>{% endif %}</div>
+      {% endif %}
       {% if has_video(f) %}
         <video src="{{ url_for('richiesta_file', name=f.name, kind='video.mp4') }}" controls style="width:100%;max-height:420px;background:#000"></video>
       {% else %}<p class="piccolo">Video non ancora generato.</p>{% endif %}

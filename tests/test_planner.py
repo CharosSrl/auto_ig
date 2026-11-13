@@ -92,7 +92,7 @@ class TestPlanner(Base):
 
 class TestPlannerUI(Base):
     def test_generate_and_approve_from_ui(self):
-        app = create_app(self.qf, self.md, Config("", "", "v23.0", "https://cdn/media/"),
+        app = create_app(self.qf, self.md, Config("", "", "v23.0", "https://cdn/media/"), github_fn=lambda: {},
                          search_fn=self.search, render_fn=self.render, sync_fn=lambda: "",
                          plan_file=self.plan, used_file=self.used)
         app.testing = True

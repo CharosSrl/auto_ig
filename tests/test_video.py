@@ -74,7 +74,7 @@ class TestVideoUI(unittest.TestCase):
             progress and progress(1, 1)
             return f"reel-{scene}-1.mp4", f"reel-{scene}-1.jpg"
 
-        app = create_app(self.qf, self.md, Config("", "", "v23.0", "https://cdn/media/"),
+        app = create_app(self.qf, self.md, Config("", "", "v23.0", "https://cdn/media/"), github_fn=lambda: {},
                          render_fn=fake_render, sync_fn=lambda: "")
         app.testing = True
         self.c = app.test_client()
