@@ -20,3 +20,26 @@ posts:
   published_at: '2026-11-12T18:30:52+00:00'
   extra:
     cover: reel-2026-11-12-non-so-cosa-mettermi.jpg
+    pubblicato_anche:
+      ig_media_id: '17871548817660608'
+      published_at: '2026-11-12T08:29:22+00:00'
+      nota: pubblicato due volte (locale + GitHub Actions)
+- id: '2'
+  when: 2026-11-13T18:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-12-armadio-infinito-cena-di-lavoro.mp4
+  caption: 'Armadio pieno, niente da mettere? 👗✨
+
+    Con Cintre trovi l''outfit giusto per ogni occasione, anche per la cena di lavoro.
+
+    Cintre, l''app che ti aiuta a vestirti.
+
+
+    #cintre #outfit #moda #stile #lavoro #ootd'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-12-armadio-infinito-cena-di-lavoro.jpg
