@@ -1,0 +1,117 @@
+# FORMATI DEI CONTENUTI — catalogo letto dal codice (auto_ig/formati.py) e guida per Claude.
+#
+# Livelli:   formato (storia | quiz | curiosita)  →  resa (3d | 2d)  →  scena + preset
+#   - formato: COSA raccontiamo e con che scaletta (ruoli delle frasi, durata, tono, CTA).
+#   - resa:    COME lo mostriamo. 3d = modella Cintre e preset three.js; 2d = grafica piatta a schede.
+#   - ricetta: regole da seguire per generare scene coerenti (è il "prompt" fisso di Claude).
+#
+# In richiesta.yaml:   formato: curiosita   resa: 2d   cta: ""  (vuoto = CTA predefinita del formato)
+# La CTA viene AGGIUNTA SEMPRE come ultima frase dal sistema: non va scritta nel copione.
+# Con resa 2d ogni frase del copione ha una `scheda` (cosa si vede mentre la voce parla):
+#   - {testo: "...", scheda: {tipo: fatto, numero: 1, titolo: "Il taschino dei jeans", icona: taschino}}
+
+regole_comuni:
+  - "Brand Cintre: bordeaux #6d1a36, rosa cipria #e8c4c0, scuro #1a0710, crema #fffaf9; logo = gruccia (brand.js)."
+  - "Una frase del copione = un atto della scena = una scheda (sincronizzati con la voce dal parametro atti)."
+  - "Frasi brevi da parlato (max ~14 parole), seconda persona o prima persona, niente elenchi letti."
+  - "Contenuto importante nel 58% alto dell'immagine: sotto ci sono sottotitoli e caption di Instagram."
+  - "Gancio nei primi 2 secondi: la prima frase deve far restare (domanda, promessa, numero)."
+  - "Solo fatti verificabili: niente date o attribuzioni inventate; se incerto si riformula o si toglie."
+  - "Ultima frase SEMPRE la call to action (la aggiunge il sistema): logo Cintre + invito chiaro."
+  - "Caption: 1 riga di gancio, 1-2 righe di valore, la CTA, poi 5-8 hashtag (#cintre sempre)."
+
+# Icone vettoriali della resa 2d (preset/grafica2d.js → ICONE). Per un'icona nuova: disegnala lì e aggiungila qui.
+icone_2d: [taschino, orologio, tacco, staffa, tubino, auto, lampadina, domanda, commento, cuore, stella, gruccia, telefono, armadio, outfit]
+
+# Tipi di scheda della resa 2d (scena schede2d) e campi usati.
+schede_2d:
+  gancio:    "titolo grande (evidenzia = parola in colore accento), icona, timbro 'Lo sapevi?'/'Quiz!'"
+  fatto:     "numero (cerchio), titolo, icona grande: apre un punto (curiosità n, consiglio n)"
+  dettaglio: "stessa card del fatto prima; testo breve (la 'risposta') e icona nuova a fianco"
+  domanda:   "domanda del quiz (titolo) e opzioni A/B/C (opzioni: [..]); timer che scorre durante la frase"
+  risposta:  "le stesse opzioni, quella giusta (giusta: indice da 0) si illumina con la spunta; testo = perché"
+  scena:     "illustrazione piatta di una situazione (icona grande + titolo), per le storie in 2d"
+  commenta:  "fumetto con titolo (domanda al pubblico) e icone commento/cuore"
+  cta:       "logo Cintre, testo della CTA e bottone (bottone: 'Segui @cintre_official'); messa dal sistema"
+
+formati:
+  storia:
+    nome: Storia
+    scopo: "Mini racconto con la modella Cintre: un problema di stile reale risolto grazie all'app."
+    durata: [15, 30]
+    struttura:
+      - {ruolo: gancio,     guida: "Situazione + problema in 1 frase (\"Stasera ho una cena di lavoro...\")."}
+      - {ruolo: problema,   guida: "1-2 frasi che peggiorano il problema, con emozione (tono arrabbiata)."}
+      - {ruolo: svolta,     guida: "Apre Cintre e chiede aiuto (frase con il nome dell'app)."}
+      - {ruolo: soluzione,  guida: "L'app propone l'outfit giusto: si vede il cambio d'abito (tono felice)."}
+      - {ruolo: risultato,  guida: "La scena finale dimostra il successo (complimenti, sicurezza)."}
+    cta: "Prova Cintre, l'app che ti aiuta a vestirti!"
+    hashtag: "#cintre #outfit #moda #stile #ootd"
+    rese:
+      3d:
+        scene: [armadio_infinito, cintre_storia]
+        ricetta:
+          - "Protagonista SEMPRE la modella Cintre (creaModella), stessa faccia/capelli: mai un altro personaggio come lei."
+          - "Outfit: prima un outfit 'spento' (OUTFIT_CASA/OUTFIT_GRIGIO), dopo uno da OUTFITS o creato con capi del guardaroba."
+          - "Umore segue il copione: neutra → arrabbiata/sorpresa sul problema → felice dalla svolta in poi."
+          - "Set dai preset ambienti.js (cameraDaLetto, armadio, corridoioArmadio, studio, ristorante, passerella...), uno ogni 30-40 unità su x; cambio set con dissolvenza."
+          - "La svolta mostra SEMPRE l'app (telefonoCintre / studio con telefono grande) con la richiesta scritta (ricerca)."
+          - "Ultimo atto = cartelloFinale (logo) mentre la voce dice la CTA."
+          - "Camera: figura intera o 3/4, testa nel terzo alto; mai inquadrature sotto il 58% dell'immagine."
+          - "Nuovi oggetti o ambienti riutilizzabili vanno nei preset, la scena contiene solo la regia."
+      2d:
+        scene: [schede2d]
+        ricetta:
+          - "Una scheda 'scena' per atto: icona grande della situazione (armadio, telefono, cena...) + titolo di 2-4 parole."
+          - "Il gancio usa 'gancio'; il momento dell'app usa l'icona telefono; la soluzione usa l'icona outfit (figurino)."
+
+  quiz:
+    nome: Quiz
+    scopo: "Domanda di stile con 2-3 risposte: fa commentare e salvare."
+    durata: [15, 35]
+    struttura:
+      - {ruolo: gancio,   guida: "Sfida diretta (\"Scommetti che non lo sai?\")."}
+      - {ruolo: domanda,  guida: "La domanda letta per intero con le opzioni A, B, C (frase un po' più lunga: dà tempo per pensare)."}
+      - {ruolo: attesa,   guida: "Frase breve di suspense (\"Pensaci bene...\"): la scheda resta la domanda con il timer."}
+      - {ruolo: risposta, guida: "\"La risposta giusta è la B!\" + perché, in 1-2 frasi."}
+      - {ruolo: commenta, guida: "Domanda al pubblico: \"Tu l'avevi indovinata? Scrivilo nei commenti!\""}
+    cta: "Segui Cintre per il prossimo quiz di moda!"
+    hashtag: "#cintre #quizmoda #moda #stile #lo_sapevi"
+    rese:
+      3d:
+        scene: []
+        ricetta:
+          - "Modella Cintre nello studio (studioFotografico o studio) che indica i cartelli A/B/C (card di oggetti.js)."
+          - "Domanda sugli abbinamenti: la modella cambia outfit (indossa) per ogni opzione, una alla volta."
+          - "Risposta: la modella con l'outfit giusto fa 'gioia', scintille (oggetti.scintille)."
+          - "Ultimo atto = cartelloFinale."
+      2d:
+        scene: [schede2d]
+        ricetta:
+          - "Schede: gancio → domanda (opzioni) → domanda ripetuta per l'attesa → risposta (giusta) → commenta. Poi cta."
+          - "Opzioni brevi (max 4 parole), sempre 3. La risposta giusta non sempre la stessa lettera."
+
+  curiosita:
+    nome: Curiosità
+    scopo: "\"Lo sapevi?\" di moda: fatti storici o pratici veri e sorprendenti, in serie numerata."
+    durata: [20, 40]
+    struttura:
+      - {ruolo: gancio,    guida: "Promessa numerata (\"Tre curiosità sulla moda che quasi nessuno conosce\")."}
+      - {ruolo: fatto,     guida: "Per ogni curiosità: frase titolo (\"Uno: il taschino dei jeans\")."}
+      - {ruolo: dettaglio, guida: "...e la frase che sorprende (il perché), con un fatto verificabile."}
+      - {ruolo: commenta,  guida: "Domanda al pubblico (\"Quale ti ha sorpreso di più?\")."}
+    cta: "Segui Cintre per altre curiosità di moda!"
+    hashtag: "#cintre #curiosità #moda #storiadellamoda #lo_sapevi #stile"
+    rese:
+      3d:
+        scene: []
+        ricetta:
+          - "La modella Cintre fa da presentatrice nello studio: 'posa' sul gancio, 'gioia' sulle sorprese."
+          - "Ogni fatto mostra il capo di cui si parla: vetrinaCapo (pedana girevole) o la modella che lo indossa (indossa)."
+          - "Numero del fatto su card (oggetti.js) nella parte alta; ultimo atto = cartelloFinale."
+      2d:
+        scene: [schede2d]
+        ricetta:
+          - "Schede: gancio → (fatto → dettaglio) × 3 → commenta. Poi cta."
+          - "Ogni fatto ha un'icona del capo (taschino, tacco, tubino...) e il dettaglio un'icona della spiegazione (orologio, staffa, auto...)."
+          - "Titoli delle schede brevi (max 5 parole): il testo completo lo danno voce e sottotitoli."

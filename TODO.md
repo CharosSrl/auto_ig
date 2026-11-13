@@ -37,8 +37,10 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
   - immagini: `-m auto_ig.images cerca "…"` poi `scarica "…" N [--coda DATA_ISO --caption "…"]`
   - settimana: `-m auto_ig.planner [--mostra]`
 - Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
+- **Prima il formato**: ogni contenuto nuovo sceglie formato e resa da `auto_ig/formati.yaml` e ne segue scaletta e
+  ricetta; la call to action finale la aggiunge il sistema.
 - **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `modella.js` (la modella Cintre, protagonista
-  fissa di tutti i video), `guardaroba.js` (capi: `lei.indossa({sopra, sotto, scarpe, colori})`, capi singoli
+  fissa di tutti i video), `grafica2d.js` (resa 2D: icone, card, CTA), `guardaroba.js` (capi: `lei.indossa({sopra, sotto, scarpe, colori})`, capi singoli
   su gruccia/stender/vetrina), `ambienti.js`, `oggetti.js`, `brand.js`, `regia.js`, `qualita.js`.
   Scena nuova = file in `auto_ig/video/scenes/` con solo la regia (vedi `cintre_storia.html`), anteprima
   fotogrammi → correzioni → render. Nuovi pezzi riutilizzabili vanno nei preset, non nella scena.
@@ -225,6 +227,20 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       nessuna modifica a coda/media non inviata, post presente su GitHub e non già pubblicato. Altrimenti blocca.
 - [x] Dopo una pubblicazione riuscita sincronizza subito, così GitHub Actions non lo ripubblica
       (causa del doppione del 2026-11-12). Se il push fallisce: avviso rosso "Premi Sincronizza ORA".
+
+## Fase 12 — Formati dei contenuti (formato → resa → scena)
+- [x] Catalogo `auto_ig/formati.yaml` (+ `formati.py`): formati **storia**, **quiz**, **curiosita**, ognuno con scopo,
+      durata, scaletta (ruolo di ogni frase), CTA predefinita, hashtag e due **rese** — `3d` (modella Cintre e preset)
+      e `2d` (grafica a schede) — con la **ricetta** da seguire per generare scene coerenti. Regole comuni in testa.
+      Vedere: `.venv/bin/python -m auto_ig.formati [formato] [resa]`.
+- [x] `richiesta.yaml`: `formato`, `resa`, `cta` (vuoto = del formato). La **CTA viene aggiunta sempre** come ultima frase
+      (+1 s a schermo). Con resa 2d ogni frase ha una `scheda` (gancio, fatto, dettaglio, domanda, risposta, scena,
+      commenta, cta); controlli su tipi, icone e gancio iniziale. `richieste nuova "Titolo" --formato quiz --resa 2d`
+      crea lo scheletro della scaletta con i colori del brand.
+- [x] Resa 2D: preset `preset/grafica2d.js` (sfondo brand con grucce, card, testo parola per parola, numeri, frecce,
+      bottone CTA con tocco, 15 icone vettoriali di moda) e scena `schede2d` (layout sopra y≈910: sotto i sottotitoli).
+- [x] Primo video: `richieste/2026-11-13-curiosita-sulla-moda` (taschino dei jeans, tacchi alti, tubino nero + CTA).
+- [ ] Scene 3D dedicate per quiz e curiosità (ricette già scritte in formati.yaml).
 
 ## 📥 Richieste nuove
 <!-- Antonio: scrivi qui sotto, una riga per richiesta. Claude le smista nelle fasi. -->

@@ -10,6 +10,7 @@ import argparse
 import io
 import json
 import re
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +28,7 @@ Image.MAX_IMAGE_PIXELS = 100_000_000
 
 
 def slugify(text: str, maxlen: int = 40) -> str:
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()   # à -> a
     s = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return s[:maxlen].strip("-") or "img"
 

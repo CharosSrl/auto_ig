@@ -1,0 +1,133 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>schede2d</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+// Resa 2D dei formati (curiosità, quiz, storia): una scheda per frase del copione, sincronizzata con la voce.
+// Parametri: schede = JSON [{tipo, titolo, icona, numero, evidenzia, testo, opzioni, giusta, bottone}, ...]
+//            (tipi in auto_ig/formati.yaml → schede_2d), atti, fine, colore (sfondo), accento, formato.
+// Solo regia: disegno, icone e animazioni arrivano da preset/grafica2d.js.
+import { start } from './common.js';
+import { tempiAtti, mix } from '../preset/regia.js';
+import { BORDEAUX, CIPRIA, SCURO } from '../preset/brand.js';
+import * as G from '../preset/grafica2d.js';
+
+const ESEMPIO = [   // anteprima senza parametri
+  { tipo: 'gancio', titolo: '3 curiosità sulla moda', evidenzia: 'moda', icona: 'lampadina' },
+  { tipo: 'fatto', numero: 1, titolo: 'Il taschino dei jeans', icona: 'taschino' },
+  { tipo: 'dettaglio', testo: "Era per l'orologio da taschino", icona: 'orologio' },
+  { tipo: 'domanda', titolo: 'Chi ha reso famoso il tubino nero?', opzioni: ['Dior', 'Chanel', 'Versace'] },
+  { tipo: 'risposta', titolo: 'Chi ha reso famoso il tubino nero?', opzioni: ['Dior', 'Chanel', 'Versace'], giusta: 1 },
+  { tipo: 'commenta', titolo: 'Quale ti ha sorpreso di più?' },
+  { tipo: 'cta', titolo: 'Segui Cintre per altre curiosità di moda!', bottone: 'Segui @cintre_official' },
+];
+const ETICHETTA = { curiosita: 'Lo sapevi?', quiz: 'Quiz di moda', storia: 'Storia' };
+const CARD = { x: 90, y: 290, w: 900, h: 620 };     // tutto sopra y ~910: sotto ci sono i sottotitoli (fino a 4 righe)
+const QUIZ = ['domanda', 'risposta'];
+
+start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '17' }, (THREE, p, renderer) => {
+  const S = p.schede ? JSON.parse(p.schede) : ESEMPIO;
+  const atti = tempiAtti(p, S.length);
+  const tela = G.tela2d(THREE, renderer), ctx = tela.ctx;
+  const acc = p.accento, etichetta = ETICHETTA[p.formato] || '';
+  const fatti = S.map((s, k) => (s.tipo === 'fatto' ? k : -1)).filter((k) => k >= 0);
+  const fattoPrima = (i) => { for (let k = i; k >= 0; k--) if (S[k].tipo === 'fatto') return S[k]; return {}; };
+  const inizioQuiz = (i) => { let k = i; while (k > 0 && QUIZ.includes(S[k - 1].tipo)) k--; return k; };
+  const fineDomanda = (i) => { let k = i; while (k + 1 < S.length && S[k + 1].tipo === 'domanda') k++; return atti.inizi[k + 1] ?? atti.fine; };
+
+  // ingresso della card: sale dal basso; `nuova` = false se continua quella dell'atto prima
+  function conCard(u, nuova, disegna) {
+    const k = nuova ? G.easeOut(u / 0.5) : 1;
+    ctx.save(); ctx.globalAlpha = k; ctx.translate(0, (1 - k) * 260);
+    G.card(ctx, CARD.x, CARD.y, CARD.w, CARD.h); disegna(); ctx.restore();
+  }
+
+  const DISEGNA = {
+    gancio(s, u, t) {
+      ctx.save(); ctx.translate(540, 340); ctx.rotate(-0.05); ctx.scale(G.pop(G.entra(u, 0, 0.5)), G.pop(G.entra(u, 0, 0.5)));
+      G.pillola(ctx, s.timbro || etichetta, 0, 0, { font: G.SERIF(58, 'italic 700'), size: 58, fondo: acc, colore: BORDEAUX, h: 112 });
+      ctx.restore();
+      G.icona(ctx, s.icona || 'lampadina', 540, 580, 330, { t, accento: acc, k: G.entra(u, 0.15, 0.6), ruota: Math.sin(t * 1.5) * 0.05 });
+      G.testo(ctx, s.titolo, 540, 830, { size: 92, peso: 900, colore: '#fff', evidenzia: s.evidenzia, accento: acc, maxW: 920, parole: G.entra(u, 0.25, 0.9), ombra: true });
+    },
+    fatto(s, u, t) {
+      conCard(u, true, () => {
+        G.icona(ctx, s.icona, 540, 560, 340, { t, accento: acc, k: G.entra(u, 0.2, 0.55) });
+        G.testo(ctx, s.titolo, 540, 815, { size: 80, peso: 900, colore: SCURO, evidenzia: s.evidenzia, accento: BORDEAUX, maxW: 790, parole: G.entra(u, 0.35, 0.6) });
+      });
+      G.numero(ctx, s.numero ?? '', 175, 305, 86, { k: G.entra(u, 0.15, 0.5), colore: acc });
+    },
+    dettaglio(s, u, t) {
+      const f = fattoPrima(atti.a(t).i), m = G.easeInOut(u / 0.7);
+      conCard(u, !f.titolo, () => {
+        G.testo(ctx, f.titolo || '', 540, mix(815, 380, m), { size: mix(80, 44, m), peso: 900, colore: m > 0.5 ? '#8c6a75' : SCURO, maxW: 790 });
+        if (f.icona) G.icona(ctx, f.icona, mix(540, 290, m), mix(560, 570, m), mix(340, 230, m), { t, accento: acc });
+        G.freccia(ctx, 405, 510, 645, 510, { k: G.entra(u, 0.4, 0.4), colore: BORDEAUX });
+        G.icona(ctx, s.icona, 770, 580, 260, { t, accento: acc, k: G.entra(u, 0.55, 0.5) });
+        G.testo(ctx, s.testo || s.titolo || '', 540, 800, { size: 60, peso: 900, colore: BORDEAUX, evidenzia: s.evidenzia, accento: '#c0392b', maxW: 790, parole: G.entra(u, 0.6, 0.7) });
+      });
+      if (f.numero !== undefined) G.numero(ctx, f.numero, 175, 305, 86, { colore: acc });
+    },
+    scena(s, u, t) {
+      conCard(u, true, () => {
+        G.icona(ctx, s.icona, 540, 560, 350, { t, accento: acc, k: G.entra(u, 0.2, 0.55) });
+        G.testo(ctx, s.titolo, 540, 815, { size: 80, peso: 900, colore: SCURO, evidenzia: s.evidenzia, accento: BORDEAUX, maxW: 790, parole: G.entra(u, 0.35, 0.6) });
+      });
+    },
+    domanda(s, u, t, i) { quiz(s, u, t, i, -1); },
+    risposta(s, u, t, i) { quiz(s, u, t, i, s.giusta ?? 0); },
+    commenta(s, u, t) {
+      for (let n = 0; n < 9; n++) {          // cuori che salgono dietro il fumetto
+        const v = ((u * 0.35 + n / 9) % 1), x = 150 + ((n * 0.618) % 1) * 780 + Math.sin(n * 2.3 + u * 2) * 50;
+        ctx.save(); ctx.globalAlpha = Math.sin(Math.PI * v) * G.entra(u, 0.3, 0.5);
+        G.icona(ctx, 'cuore', x, 960 - v * 760, 60 + (n % 3) * 22, { accento: n % 2 ? '#e8435a' : acc }); ctx.restore();
+      }
+      const k = G.easeOut(u / 0.5);
+      ctx.save(); ctx.globalAlpha = k; ctx.translate(540, 590); ctx.scale(0.8 + 0.2 * G.pop(k), 0.8 + 0.2 * G.pop(k)); ctx.translate(-540, -590);
+      G.card(ctx, 110, 400, 860, 400, { r: 70 });
+      ctx.fillStyle = '#fffaf9'; ctx.beginPath(); ctx.moveTo(300, 790); ctx.lineTo(250, 890); ctx.lineTo(420, 790); ctx.fill();
+      G.testo(ctx, s.titolo, 540, 600, { size: 84, peso: 900, colore: SCURO, evidenzia: s.evidenzia, accento: BORDEAUX, maxW: 760, parole: G.entra(u, 0.2, 0.7) });
+      ctx.restore();
+      G.icona(ctx, s.icona || 'commento', 540, 385, 190, { t, accento: acc, k: G.entra(u, 0.1, 0.5) });
+    },
+    cta(s, u, t) { G.finale(ctx, u, { testo: s.titolo || '', bottone: s.bottone, accento: acc, t }); },
+  };
+
+  // Quiz: domanda con 3 opzioni e timer; la risposta illumina quella giusta (giusta >= 0)
+  function quiz(s, u, t, i, giusta) {
+    const i0 = inizioQuiz(i), t0 = atti.inizi[i0], uq = t - t0;
+    conCard(uq, true, () => {
+      G.testo(ctx, s.titolo, 540, 400, { size: 58, peso: 900, colore: SCURO, maxW: 780, parole: G.entra(uq, 0.2, 0.7) });
+      (s.opzioni || []).forEach((o, n) => {
+        const y = 560 + n * 110, k = G.entra(uq, 0.45 + n * 0.15, 0.4), ok = n === giusta, kr = giusta >= 0 ? G.easeOut(u / 0.4) : 0;
+        ctx.save(); ctx.globalAlpha *= k * (giusta >= 0 && !ok ? 1 - 0.6 * kr : 1); ctx.translate((1 - G.easeOut(k)) * 120, 0);
+        ctx.fillStyle = ok ? `rgba(109,26,54,${0.12 + 0.88 * kr})` : 'rgba(109,26,54,0.1)';
+        G.rr(ctx, 170, y - 46, 740, 92, 46); ctx.fill();
+        G.pillola(ctx, 'ABC'[n], 230, y, { size: 44, fondo: ok && kr > 0.5 ? CIPRIA : BORDEAUX, colore: ok && kr > 0.5 ? BORDEAUX : CIPRIA, w: 76, h: 76 });
+        ctx.font = G.FONT(50, 800); ctx.fillStyle = ok && kr > 0.5 ? '#fff' : SCURO; ctx.textBaseline = 'middle'; ctx.fillText(o, 300, y + 2);
+        if (ok && kr > 0.5) { ctx.fillStyle = CIPRIA; ctx.font = G.FONT(60, 900); ctx.fillText('✓', 840, y + 2); }
+        ctx.restore();
+      });
+      if (giusta < 0) {                      // timer: si svuota fino alla fine dell'ultima "domanda"
+        const k = 1 - Math.min(1, uq / (fineDomanda(i) - t0));
+        ctx.fillStyle = 'rgba(109,26,54,0.12)'; G.rr(ctx, 170, 865, 740, 16, 8); ctx.fill();
+        ctx.fillStyle = k < 0.25 ? '#c0392b' : BORDEAUX; G.rr(ctx, 170, 865, Math.max(18, 740 * k), 18, 9); ctx.fill();
+      }
+    });
+  }
+  // la card del quiz non rientra a ogni frase: conCard usa il tempo dall'inizio del quiz
+
+  return { scene: tela.scene, camera: tela.camera, update(t) {
+    const { i, u } = atti.a(t), s = S[i] || {};
+    tela.inizia();
+    G.sfondo(ctx, t, { colore: p.colore, accento: acc });
+    if (s.tipo !== 'cta') G.intestazione(ctx, etichetta, { passi: fatti.length, attuale: fatti.filter((k) => k <= i).length - 1, accento: acc });
+    (DISEGNA[s.tipo] || DISEGNA.scena)(s, u, t, i);
+    // dissolvenza d'ingresso e d'uscita del video
+    const v = Math.max(1 - t / 0.35, (t - (atti.fine - 0.3)) / 0.3);
+    if (v > 0) { ctx.fillStyle = `rgba(26,7,16,${Math.min(1, v)})`; ctx.fillRect(0, 0, G.W, G.H); }
+    tela.fine();
+  } };
+});
+</script>
+</body></html>

@@ -11,7 +11,7 @@
     {% if not d %}
       <b>{{ f.name }}</b><div class="msg errore">{{ err }}</div>
     {% else %}
-      <b>{{ d.titolo }}</b> <span class="piccolo">· {{ d.stato }} · {{ d.scena }}</span>
+      <b>{{ d.titolo }}</b> <span class="piccolo">· {{ d.stato }} · {% if d.formato %}{{ d.formato }} {{ d.resa }} · {% endif %}{{ d.scena }}</span>
       {% if d.stato == 'in_coda' and su_github is not none %}{% set g = su_github.get(f.name) %}
         <div class="piccolo">{% if not g %}⚠ in coda sul PC ma non ancora su GitHub: premi Sincronizza
         {% elif g.status == 'published' %}✓ pubblicato {{ orario(g.published_at) }}
@@ -22,7 +22,7 @@
       {% if has_video(f) %}
         <video src="{{ url_for('richiesta_file', name=f.name, kind='video.mp4') }}" controls style="width:100%;max-height:420px;background:#000"></video>
       {% else %}<p class="piccolo">Video non ancora generato.</p>{% endif %}
-      <details><summary class="piccolo">Copione</summary><ol class="piccolo">{% for l in d.copione %}<li>{{ l }}</li>{% endfor %}</ol></details>
+      <details><summary class="piccolo">Copione</summary><ol class="piccolo">{% for l in d.copione %}<li>{{ l.testo if l is mapping else l }}</li>{% endfor %}{% if d.formato %}<li><i>CTA finale automatica</i></li>{% endif %}</ol></details>
       {% if has_video(f) and d.stato != 'in_coda' %}
       <form method="post" action="{{ url_for('richiesta_coda', name=f.name) }}">
         <input type="datetime-local" name="quando" value="{{ to_input(d.pubblicazione.quando) if d.pubblicazione and d.pubblicazione.quando else quando }}" required>

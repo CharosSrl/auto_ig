@@ -7,7 +7,7 @@
 
     Tutta la cartella richieste/ resta solo in locale (.gitignore): su GitHub va solo ciò che entra in media/.
 
-    python -m auto_ig.richieste nuova "Nuova collezione"     # crea cartella + richiesta.yaml da compilare
+    python -m auto_ig.richieste nuova "Nuova collezione" [--formato curiosita --resa 2d]   # cartella + richiesta.yaml
     python -m auto_ig.richieste crea <cartella>              # voce + sottotitoli + video
     python -m auto_ig.richieste coda <cartella> [--quando ISO] [--caption "..."]   # in coda come BOZZA
     python -m auto_ig.richieste lista
@@ -24,7 +24,7 @@ from typing import Callable
 
 import yaml
 
-from . import queue, voce
+from . import formati, queue, voce
 from .config import MEDIA_DIR, ROOT
 from .images import slugify
 
@@ -36,7 +36,12 @@ titolo: {titolo}
 stato: da_fare            # da_fare | generato | in_coda | scartato
 richiesta: {richiesta}    # cosa ha chiesto Antonio, parole sue
 
-# Video sotto la voce: scena three.js (testo | oggetto | particelle | ...) e colori
+# Formato (auto_ig/formati.yaml: scaletta, ricetta 3d/2d, CTA). Vuoto = richiesta libera senza CTA automatica.
+formato: {formato}        # storia | quiz | curiosita
+resa: {resa}              # 3d (modella Cintre e preset) | 2d (grafica a schede)
+cta: ""                   # vuoto = CTA del formato; viene aggiunta SEMPRE come ultima frase
+
+# Video sotto la voce: scena three.js (testo | oggetto | particelle | schede2d | ...) e colori
 scena: {scena}
 colori:
   sfondo: "{sfondo}"
@@ -49,7 +54,7 @@ voce:
   modello: it_IT-paola-medium
   velocita: 1.0           # 0.8 più lenta, 1.2 più veloce
   # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole
-copione:                  # riga semplice, oppure {{testo: "...", tono: arrabbiata|felice}}
+copione:                  # riga semplice, oppure {{testo: "...", tono: arrabbiata|felice, scheda: {{tipo: ..., titolo: ...}}}}
 {copione}
 
 # Pubblicazione (facoltativa): usata da "coda", entra sempre come BOZZA
@@ -63,16 +68,25 @@ def _q(text: str) -> str:
     return json.dumps(text, ensure_ascii=False)       # stringa YAML sicura (JSON è YAML valido)
 
 
-def new(title: str, lines: list[str] | None = None, scene: str = "particelle", bg: str = "#000000",
+def new(title: str, lines: list | None = None, scene: str = "particelle", bg: str = "#000000",
         accent: str = "#d4af37", caption: str = "", request: str = "", base: Path = REQ_DIR,
-        day: date | None = None) -> Path:
+        day: date | None = None, formato: str = "", resa: str = "") -> Path:
     folder = base / f"{(day or date.today()).isoformat()}-{slugify(title, 50)}"
     if folder.exists():
         raise FileExistsError(f"Esiste già: {folder}")
+    if formato:                      # scaletta e scena dal catalogo dei formati
+        resa = resa or "2d"
+        lines = lines or formati.scheletro(formato, resa)
+        scene = formati.scena({"formato": formato, "resa": resa}) or scene
+        f = formati.formato(formato)
+        caption = caption or f"\n\n{f['cta']}\n\n{f['hashtag']}"
+        if (bg, accent) == ("#000000", "#d4af37"):   # colori del brand Cintre
+            bg, accent = "#6d1a36", "#e8c4c0"
     lines = lines or ["Prima frase del copione.", "Seconda frase."]
     folder.mkdir(parents=True)
     (folder / "richiesta.yaml").write_text(TEMPLATE.format(
         titolo=_q(title), richiesta=_q(request), scena=scene, sfondo=bg, accento=accent,
+        formato=formato or '""', resa=resa or '""',
         copione="\n".join(f"  - {_q(l)}" for l in lines), caption=_q(caption)))
     return folder
 
@@ -85,6 +99,7 @@ def load(folder: Path) -> dict:
             errs.append("copione vuoto")
     except ValueError as e:
         errs.append(str(e))
+    errs += formati.valida(data)
     if data.get("stato", "da_fare") not in STATES:
         errs.append(f"stato non valido ({', '.join(STATES)})")
     for k in ("sfondo", "accento"):
@@ -122,14 +137,18 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     o["wav"].parent.mkdir(exist_ok=True)
     v = data.get("voce") or {}
     kw = {"pronuncia": v["pronuncia"]} if v.get("pronuncia") else {}
-    sentences, seconds = speak_fn(data["copione"], o["wav"],
+    righe = formati.copione(data)                 # + call to action finale, se c'è il formato
+    sentences, seconds = speak_fn(righe, o["wav"],
                                   v.get("modello", voce.DEFAULT_VOICE), float(v.get("velocita", 1.0)), **kw)
     colors = data["colori"]
     o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"]))
     o["tempi"].write_text(json.dumps(voce.timings_dict(sentences), indent=2, ensure_ascii=False))
-    scene_text = data.get("testo_scena") or (data.get("titolo", "") if data["scena"] == "testo" else "")
-    render_fn(data["scena"], {"testo": scene_text, "colore": colors["sfondo"], "accento": colors["accento"],
-                              "voce": "1", "fine": f"{seconds:.2f}",
+    scene_text = data.get("testo_scena") or (data.get("titolo", "") if formati.scena(data) == "testo" else "")
+    if data.get("formato"):
+        seconds += 1.0                             # la CTA resta a schermo un po' dopo la voce
+    render_fn(formati.scena(data), {"testo": scene_text, "colore": colors["sfondo"], "accento": colors["accento"],
+                              "voce": "1", "fine": f"{seconds:.2f}", "schede": formati.schede(righe),
+                              "formato": data.get("formato") or "",
                               # inizio di ogni frase: le scene a più atti si sincronizzano con la voce
                               "atti": ",".join(f"{x.start:.2f}" for x in sentences)},
               max(3.0, seconds), o["mp4"].parent, progress=progress, audio=o["wav"], ass=o["ass"], name="video",
@@ -185,13 +204,15 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Richieste di contenuti con voice-over")
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("nuova"); a.add_argument("titolo")
+    a.add_argument("--formato", choices=list(formati.catalogo()["formati"]), default="")
+    a.add_argument("--resa", choices=formati.RESE, default="")
     b = sub.add_parser("crea"); b.add_argument("cartella")
     c = sub.add_parser("coda"); c.add_argument("cartella"); c.add_argument("--quando"); c.add_argument("--caption")
     sub.add_parser("lista")
     args = ap.parse_args()
 
     if args.cmd == "nuova":
-        print(f"Creata {new(args.titolo).relative_to(ROOT)}/richiesta.yaml")
+        print(f"Creata {new(args.titolo, formato=args.formato, resa=args.resa).relative_to(ROOT)}/richiesta.yaml")
     elif args.cmd == "crea":
         def prog(i, n):
             if i % 30 == 0 or i == n:
