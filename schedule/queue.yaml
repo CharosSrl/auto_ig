@@ -43,3 +43,44 @@ posts:
   published_at: '2026-11-13T12:28:11+00:00'
   extra:
     cover: reel-2026-11-12-armadio-infinito-cena-di-lavoro.jpg
+- id: '3'
+  when: 2026-11-14T10:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-14-capi-nati-in-guerra.mp4
+  caption: 'Il tuo trench è nato in trincea. E il bikini? Ancora peggio 💥
+
+    Trench, cardigan e bikini: tre capi che indossi ogni giorno, tre nomi nati in
+    guerra.
+
+
+    Mandalo a chi ha un trench nell''armadio 👇
+
+
+    #cintre #curiosità #storiadellamoda #trench #bikini'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-14-capi-nati-in-guerra.jpg
+- id: '4'
+  when: 2026-11-14T18:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-14-indossi-un-pugnale.mp4
+  caption: 'Il tacco a spillo è un pugnale. E la cravatta? Un soldato 🗡️
+
+    Tacco a spillo, cravatta e sneakers: tre nomi con una storia che non ti aspetti.
+
+
+    Salvalo e mandalo a chi porta le sneakers 👇
+
+
+    #cintre #curiosità #storiadellamoda #sneakers #cravatta'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-14-indossi-un-pugnale.jpg
