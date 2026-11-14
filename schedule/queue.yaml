@@ -83,3 +83,46 @@ posts:
   published_at: null
   extra:
     cover: reel-2026-11-14-quiz-jeans-citta.jpg
+- id: '5'
+  when: 2026-11-15T18:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-14-lusso-nato-dalla-crisi.mp4
+  caption: 'Chanel, Ferragamo e Gucci: tre icone del lusso nate dalla crisi 👜
+
+    Il jersey delle mutande da uomo, la zeppa di sughero senza acciaio, il manico
+    di bambù del dopoguerra.
+
+
+    Mandalo a chi sogna una borsa di lusso 👇
+
+
+    #cintre #curiosità #storiadellamoda #chanel #gucci'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-14-lusso-nato-dalla-crisi.jpg
+- id: '6'
+  when: 2026-11-15T18:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-14-lusso-contro-nemici.mp4
+  caption: 'Louis Vuitton sfidò Houdini: la storia vera della serratura imbattibile
+    🔒
+
+    E poi l''orologio Cartier nato per un aviatore e la tela Monogram inventata contro
+    i falsari.
+
+
+    Mandalo a chi sogna un baule Louis Vuitton 👇
+
+
+    #cintre #curiosità #storiadellamoda #louisvuitton #cartier'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-14-lusso-contro-nemici.jpg
