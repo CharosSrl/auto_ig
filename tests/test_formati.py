@@ -77,7 +77,7 @@ class TestRegole(unittest.TestCase):
     def test_schede_e_scena(self):
         s = json.loads(formati.schede(formati.copione(curiosita())))
         self.assertEqual([x["tipo"] for x in s], ["gancio", "fatto", "cta"])
-        self.assertEqual(formati.scena(curiosita()), "schede2d")
+        self.assertEqual(formati.scena(curiosita()), "cartoon2d")
 
 
 class TestRichiesta(unittest.TestCase):

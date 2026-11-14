@@ -10,7 +10,7 @@ from auto_ig.ui import create_app
 
 class TestVideoBasics(unittest.TestCase):
     def test_scenes_present(self):
-        self.assertEqual(video.scenes(), ["armadio_infinito", "cintre_storia", "foglio_modella", "guardaroba", "oggetto", "particelle", "schede2d", "testo"])
+        self.assertEqual(video.scenes(), ["armadio_infinito", "cartoon2d", "cintre_storia", "foglio_modella", "guardaroba", "oggetto", "particelle", "schede2d", "testo"])
 
     def test_ffmpeg_cmd_reels_specs(self):
         cmd = " ".join(video.ffmpeg_cmd(Path("x.mp4")))

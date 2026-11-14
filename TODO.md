@@ -39,6 +39,10 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
 - **Prima il formato**: ogni contenuto nuovo sceglie formato e resa da `auto_ig/formati.yaml` e ne segue scaletta e
   ricetta; la call to action finale la aggiunge il sistema.
+- **Ritmo alto (2D)**: scena `cartoon2d` (modella Cintre disegnata in 2D, preset `cartoon2d.js`) con `sottotitoli: corti`
+  e `audio: {musica: true, sfx: true}` (base ed effetti generati a codice da `auto_ig/audio.py`, sincronizzati con le
+  "battute" visive). Regole in `formati.yaml → ritmo_alto`; hook e ritmo dalle skill `.claude/skills/viral-hooks` e
+  `.claude/skills/short-form-video` (MIT, solo Markdown).
 - **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `modella.js` (la modella Cintre, protagonista
   fissa di tutti i video), `grafica2d.js` (resa 2D: icone, card, CTA), `guardaroba.js` (capi: `lei.indossa({sopra, sotto, scarpe, colori})`, capi singoli
   su gruccia/stender/vetrina), `ambienti.js`, `oggetti.js`, `brand.js`, `regia.js`, `qualita.js`.

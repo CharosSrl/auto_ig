@@ -91,6 +91,8 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       G.icona(ctx, s.icona || 'commento', 540, 385, 190, { t, accento: acc, k: G.entra(u, 0.1, 0.5) });
     },
     cta(s, u, t) { G.finale(ctx, u, { testo: s.titolo || '', bottone: s.bottone, accento: acc, t }); },
+    // rehook (pensato per cartoon2d): qui un gancio con timbro "Aspetta…"
+    rehook(s, u, t) { this.gancio({ ...s, timbro: s.timbro || 'Aspetta…', icona: s.icona || 'domanda' }, u, t); },
   };
 
   // Quiz: domanda con 3 opzioni e timer; la risposta illumina quella giusta (giusta >= 0)

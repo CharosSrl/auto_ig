@@ -3,7 +3,7 @@
     richieste/<AAAA-MM-GG>-<titolo>/
         richiesta.yaml      # cosa fare: scena, colori, voce, copione, pubblicazione
         out/                # risultati generati
-            voce.wav  sottotitoli.ass  tempi.json  video.mp4  video.jpg
+            voce.wav  sottotitoli.ass  tempi.json  video.mp4  video.jpg  (mix.wav se c'è audio: musica/sfx)
 
     Tutta la cartella richieste/ resta solo in locale (.gitignore): su GitHub va solo ciò che entra in media/.
 
@@ -24,7 +24,7 @@ from typing import Callable
 
 import yaml
 
-from . import formati, queue, voce
+from . import audio, formati, queue, voce
 from .config import MEDIA_DIR, ROOT
 from .images import slugify
 
@@ -48,6 +48,8 @@ colori:
   accento: "{accento}"      # anche colore della parola evidenziata
 testo_scena: ""           # testo fisso della scena (vuoto = nessuno; per 'testo' usa il titolo)
 qualita: alta             # alta (supersampling 2x, ombre) | bozza (veloce, per provare)
+sottotitoli: interi       # interi (frase intera) | corti (1-3 parole alla volta: più spazio alla grafica)
+audio: {{musica: false, sfx: false}}   # base musicale e effetti sonori generati a codice (auto_ig/audio.py)
 
 # Voce (Piper, locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
@@ -124,7 +126,7 @@ def outputs(folder: Path) -> dict:
     out = folder / "out"
     return {k: out / n for k, n in
             {"wav": "voce.wav", "ass": "sottotitoli.ass", "tempi": "tempi.json",
-             "mp4": "video.mp4", "jpg": "video.jpg"}.items()}
+             "mp4": "video.mp4", "jpg": "video.jpg", "mix": "mix.wav"}.items()}
 
 
 def build(folder: Path, render_fn=None, speak_fn=voce.speak,
@@ -141,17 +143,26 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     sentences, seconds = speak_fn(righe, o["wav"],
                                   v.get("modello", voce.DEFAULT_VOICE), float(v.get("velocita", 1.0)), **kw)
     colors = data["colori"]
-    o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"]))
+    o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"], corti=data.get("sottotitoli") == "corti"))
     o["tempi"].write_text(json.dumps(voce.timings_dict(sentences), indent=2, ensure_ascii=False))
     scene_text = data.get("testo_scena") or (data.get("titolo", "") if formati.scena(data) == "testo" else "")
     if data.get("formato"):
         seconds += 1.0                             # la CTA resta a schermo un po' dopo la voce
+    sk = [(r.get("scheda") if isinstance(r, dict) else None) or {} for r in righe]
+    bt = audio.battute(sentences, sk)              # cambi visivi: stessi istanti per scena ed effetti sonori
+    au = data.get("audio") or {}
+    traccia = o["wav"]
+    if au.get("musica") or au.get("sfx"):
+        traccia = audio.mix(o["wav"], bt, max(3.0, seconds), o["mix"], musica=bool(au.get("musica")), sfx=bool(au.get("sfx")))
     render_fn(formati.scena(data), {"testo": scene_text, "colore": colors["sfondo"], "accento": colors["accento"],
                               "voce": "1", "fine": f"{seconds:.2f}", "schede": formati.schede(righe),
                               "formato": data.get("formato") or "",
                               # inizio di ogni frase: le scene a più atti si sincronizzano con la voce
-                              "atti": ",".join(f"{x.start:.2f}" for x in sentences)},
-              max(3.0, seconds), o["mp4"].parent, progress=progress, audio=o["wav"], ass=o["ass"], name="video",
+                              "atti": ",".join(f"{x.start:.2f}" for x in sentences),
+                              "fini": ",".join(f"{x.end:.2f}" for x in sentences),   # bocca che parla
+                              "battute": audio.battute_param(bt),
+                              "outfit": str(data.get("outfit") or "")},
+              max(3.0, seconds), o["mp4"].parent, progress=progress, audio=traccia, ass=o["ass"], name="video",
               quality=str(data.get("qualita") or "alta"), log=log)
     set_state(folder, "generato")
     return o["mp4"]

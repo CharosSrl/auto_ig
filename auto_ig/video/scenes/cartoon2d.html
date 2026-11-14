@@ -1,0 +1,161 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>cartoon2d</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+// Resa 2D AD ALTO RITMO (curiosità, ma vale per ogni formato a schede): la modella Cintre disegnata in 2D presenta
+// le schede; a ogni "battuta" (parametro battute, calcolato da auto_ig/audio.py e uguale per gli effetti sonori)
+// cambia qualcosa: stacco con tendina, punch-in, posa, timbro, esplosione. Niente dissolvenza d'ingresso:
+// il gancio è a schermo dal fotogramma 0.
+// Parametri: schede (JSON, tipi in formati.yaml → schede_2d, + rehook), atti, fini, battute "t:tipo,...",
+//            fine, colore, accento, outfit (nome di brand.js OUTFITS).
+// Solo regia: personaggio ed effetti da preset/cartoon2d.js, icone e CTA da preset/grafica2d.js.
+import { start } from './common.js';
+import { tempiAtti } from '../preset/regia.js';
+import { BORDEAUX, CIPRIA, SCURO, CREMA, gruccia } from '../preset/brand.js';
+import * as G from '../preset/grafica2d.js';
+import * as C from '../preset/cartoon2d.js';
+
+const ESEMPIO = [
+  { tipo: 'gancio', titolo: '3 capi nati in guerra', evidenzia: 'guerra' },
+  { tipo: 'fatto', numero: 1, titolo: 'Il trench', icona: 'trench' },
+  { tipo: 'dettaglio', testo: 'Nato nelle trincee', evidenzia: 'trincee', icona: 'elmetto' },
+  { tipo: 'rehook', titolo: "Aspetta l'ultimo…" },
+  { tipo: 'fatto', numero: 2, titolo: 'Il bikini', icona: 'bikini' },
+  { tipo: 'commenta', titolo: 'Quale ti ha sorpreso di più?', evidenzia: 'sorpreso' },
+  { tipo: 'cta', titolo: 'Segui Cintre per altre curiosità di moda!', bottone: 'Segui @cintre_official' },
+];
+const ETICHETTA = { curiosita: 'Lo sapevi?', quiz: 'Quiz di moda', storia: 'Storia' };
+const SCURO2 = '#4a0f24';
+
+start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '20', outfit: '' }, (THREE, p, renderer) => {
+  const S = p.schede ? JSON.parse(p.schede) : ESEMPIO;
+  const atti = tempiAtti(p, S.length);
+  const voceInizi = String(p.atti || atti.inizi.join(',')).split(',').map(Number);
+  const fini = p.fini ? String(p.fini).split(',').map(Number) : voceInizi.map((a, i) => (atti.inizi[i + 1] ?? atti.fine) - 0.4);
+  const BT = (p.battute ? String(p.battute).split(',').map((x) => { const [t, k] = x.split(':'); return { t: +t, k }; })
+    : atti.inizi.map((t, i) => ({ t, k: i ? 'stacco' : 'boom' }))).sort((a, b) => a.t - b.t);
+  const tela = G.tela2d(THREE, renderer), ctx = tela.ctx, acc = p.accento || CIPRIA;
+  const outfit = C.outfitDaNome(p.outfit);
+  const etichetta = ETICHETTA[p.formato] || 'Cintre';
+  const fatti = S.map((s, k) => (s.tipo === 'fatto' ? k : -1)).filter((k) => k >= 0);
+  const iconeFatti = fatti.map((k) => S[k].icona || 'stella');
+
+  // battuta corrente e quante battute ci sono state dall'inizio della frase i
+  function battuta(t) {
+    let b = 0; for (let k = 0; k < BT.length; k++) if (BT[k].t <= t + 1e-6) b = k;
+    return { b, ...BT[b], dt: t - BT[b].t };
+  }
+  const nelFrase = (b, i) => BT.filter((x, k) => k <= b && x.t >= atti.inizi[i] - 1e-6).length - 1;   // 0 = stacco iniziale
+  const parla = (t) => voceInizi.some((a, j) => t >= a && t <= fini[j]);
+  const scoperte = (i) => fatti.filter((k) => k <= i).length;
+
+  // zoom e fuoco per battuta (irregolari: niente metronomo)
+  const LIV = [1.08, 1.0, 1.14, 1.04];
+  const livello = (k, b) => ({ boom: 1.0, stacco: 1.0, rivela: 1.1 }[k] ?? LIV[b % 4]);
+
+  // Pose ed espressioni per tipo: una per battuta dentro la frase (si cicla)
+  const COPIONE = {
+    gancio:    [['sorpresa', 'wow'], ['presenta', 'furba'], ['indica', 'felice']],
+    fatto:     [['indica', 'felice'], ['presenta', 'neutra'], ['spalle', 'furba']],
+    scena:     [['presenta', 'neutra'], ['indica', 'felice']],
+    dettaglio: [['sorpresa', 'sorpresa'], ['gioia', 'wow'], ['spalle', 'furba']],
+    rehook:    [['pensa', 'furba'], ['indica', 'furba']],
+    commenta:  [['gioia', 'felice'], ['saluta', 'felice']],
+  };
+
+  // Disposizione: personaggio e adesivo si scambiano lato a ogni frase (cambio d'inquadratura)
+  function lati(i) { return i % 2 ? { pc: 790, ic: 300 } : { pc: 290, ic: 770 }; }
+
+  function scena(s, i, t, u, bt, nb) {
+    const L = lati(i), cop = COPIONE[s.tipo] || COPIONE.scena, [posa, espr] = cop[Math.max(0, nb) % cop.length];
+    const [posaPrima] = nb > 0 ? cop[(nb - 1) % cop.length] : ['neutro'];
+    const kPosa = G.clamp(bt.dt / 0.28);
+    const salto = (bt.k === 'boom' || bt.k === 'rivela') ? 34 * Math.sin(Math.PI * G.clamp(bt.dt / 0.32)) : 0;
+    const specchia = (q) => (L.pc > 540 ? ({ indica: 'indicaSx', presenta: 'presenta' }[q] || q) : q);
+    const lei = (x, y, sc, extra = {}) => C.cintre(ctx, x, y, sc, { posa: specchia(posa), da: specchia(posaPrima), k: kPosa, espr, parla: parla(t), t, outfit, salto, ...extra });
+    const n = scoperte(i);
+
+    if (s.tipo === 'gancio') {
+      C.scritta(ctx, s.titolo || '', 540, 345, u, { size: 96, maxW: 820, evidenzia: s.evidenzia, accento: acc, passo: 0 });
+      lei(540, 690, 1.0);
+      C.carteMistero(ctx, iconeFatti.length ? iconeFatti : ['stella', 'stella', 'stella'], 0, 540, 1000, 175, t, { accento: acc, attiva: nb >= 1 ? nb % 3 : -1 });
+    } else if (s.tipo === 'fatto' || s.tipo === 'scena') {
+      C.contatore(ctx, n, fatti.length, 540, 268, u, { accento: acc });
+      C.scritta(ctx, s.titolo || '', 540, 395, u, { size: 100, evidenzia: s.evidenzia, accento: acc });
+      lei(L.pc, 690, 1.0);
+      C.adesivo(ctx, s.icona, L.ic, 790, 400 * (nb >= 1 ? 1.06 : 1), u - 0.1, { t, accento: acc, ruota: L.ic > 540 ? 0.06 : -0.06 });
+    } else if (s.tipo === 'dettaglio') {
+      const f = S[[...fatti].reverse().find((k) => k < i) ?? i] || {};
+      C.scritta(ctx, s.testo || s.titolo || '', 540, 335, u, { size: 92, evidenzia: s.evidenzia, accento: acc, passo: 0.07 });
+      lei(L.pc, 690, 1.0);
+      if (f.icona) C.adesivo(ctx, f.icona, L.ic + (L.ic > 540 ? 120 : -120), 590, 180, 1, { t, accento: acc, ruota: -0.12 });
+      C.adesivo(ctx, s.icona, L.ic, 830, 380, u - 0.05, { t, accento: acc, dall: 'pop', ruota: L.ic > 540 ? -0.05 : 0.05 });
+      const parola = (s.timbro || s.evidenzia || '').toUpperCase();
+      if (parola && nb >= 1) C.timbro(ctx, parola + '!', L.ic, 1075, bt.dt + (nb > 1 ? 1 : 0), { size: 62, fondo: '#ffd166', ruota: L.ic > 540 ? 0.1 : -0.1 });
+    } else if (s.tipo === 'rehook') {
+      const sx = Math.sin(t * 40) * 6 * Math.exp(-u * 2);
+      ctx.save(); ctx.translate(sx, 0);
+      C.scritta(ctx, s.titolo || 'Aspetta…', 540, 350, u, { size: 104, maxW: 820, evidenzia: s.evidenzia, accento: '#ffd166', pennarello: SCURO, passo: 0.08 });
+      ctx.restore();
+      lei(290, 690, 1.0);
+      C.carteMistero(ctx, [iconeFatti[n] || 'stella'], 0, 780, 810, 300, t, { accento: acc, attiva: 0 });
+    } else if (s.tipo === 'commenta') {
+      C.fumetto(ctx, 90, 250, 900, 300, 540, 600);
+      G.testo(ctx, s.titolo || '', 540, 400, { size: 72, peso: 900, colore: SCURO, evidenzia: s.evidenzia, accento: BORDEAUX, maxW: 800, parole: G.entra(u, 0.05, 0.5) });
+      for (let k = 0; k < 9; k++) {                        // cuori che salgono
+        const v = ((u * 0.45 + k / 9) % 1), x = 120 + ((k * 0.618) % 1) * 840 + Math.sin(k * 2.3 + u * 3) * 40;
+        ctx.save(); ctx.globalAlpha = Math.sin(Math.PI * v); G.icona(ctx, 'cuore', x, 1150 - v * 560, 60 + (k % 3) * 24, { accento: k % 2 ? '#e8435a' : acc }); ctx.restore();
+      }
+      lei(540, 760, 1.0);
+    } else {                                               // domanda/risposta e altri: titolo + personaggio
+      C.scritta(ctx, s.titolo || s.testo || '', 540, 360, u, { size: 84, evidenzia: s.evidenzia, accento: acc });
+      lei(540, 690, 1.0);
+    }
+  }
+
+  function hud(t, i, s) {
+    C.barra(ctx, t / atti.fine, { colore: acc });
+    gruccia(ctx, 104, 170, 56, acc, 5);
+    ctx.save(); ctx.fillStyle = '#fff'; ctx.font = '700 44px "DejaVu Serif", serif'; ctx.textBaseline = 'middle'; ctx.fillText('Cintre', 148, 170);
+    G.pillola(ctx, etichetta.toUpperCase(), 445, 172, { size: 28, fondo: acc, colore: BORDEAUX, h: 52 }); ctx.restore();
+    if (fatti.length && s.tipo !== 'gancio') C.carteMistero(ctx, iconeFatti, scoperte(i), 870, 172, 62, t, { accento: acc, gap: 1.2 });
+  }
+
+  return { scene: tela.scene, camera: tela.camera, update(t) {
+    const { i, u } = atti.a(t), s = S[i] || {};
+    const bt = battuta(t), nb = nelFrase(bt.b, i);
+    const prima = BT[bt.b - 1];
+    const z0 = prima ? livello(prima.k, bt.b - 1) : 1, z1 = livello(bt.k, bt.b);
+    let zoom = G.clamp(bt.dt / 0.2) < 1 ? z0 + (z1 - z0) * C.backOut(bt.dt / 0.2) : z1;
+    if (bt.k === 'boom') zoom += 0.12 * Math.exp(-bt.dt * 7);
+    const L = lati(i), fuoco = nb % 2 ? [L.pc, 520] : [s.tipo === 'fatto' || s.tipo === 'dettaglio' ? L.ic : 540, 700];
+    const forte = bt.k === 'boom' || bt.k === 'rivela';
+    const amp = (forte ? 18 : 0) * Math.exp(-bt.dt * 9);
+    const fondo = s.tipo === 'rehook' ? SCURO : s.tipo === 'cta' ? (p.colore || BORDEAUX) : (i % 2 ? SCURO2 : (p.colore || BORDEAUX));
+
+    tela.inizia();
+    C.camera(ctx, { zoom, fx: fuoco[0], fy: fuoco[1], sx: Math.sin(bt.dt * 55) * amp, sy: Math.cos(bt.dt * 47) * amp * 0.6 });
+    C.sfondoPop(ctx, t, { colore: fondo, raggi: s.tipo === 'rehook' ? '#ffd166' : acc, alfa: s.tipo === 'rehook' ? 0.14 : 0.09,
+      vel: s.tipo === 'rehook' ? 0.6 : 0.15, cx: fuoco[0], cy: fuoco[1] });
+    C.lineeVelocita(ctx, fuoco[0], fuoco[1], forte ? Math.exp(-bt.dt * 3) : (bt.k === 'stacco' ? Math.exp(-bt.dt * 6) * 0.6 : 0));
+    if (s.tipo === 'cta') {
+      G.finale(ctx, u, { testo: s.titolo || '', bottone: s.bottone, accento: acc, t });
+    } else scena(s, i, t, u, bt, nb);
+    ctx.restore();
+
+    if (s.tipo !== 'cta') hud(t, i, s);
+    // esplosioni sulle rivelazioni e sul gancio, tendina sugli stacchi, flash
+    if (bt.k === 'rivela') C.esplosione(ctx, L.ic, 800, bt.dt, { seme: bt.b });
+    if (bt.k === 'boom') C.esplosione(ctx, 540, 360, bt.dt, { seme: bt.b + 5, n: 30, forza: 1300 });
+    if (s.tipo === 'cta') C.esplosione(ctx, 540, 450, u - 0.1, { seme: 99, n: 34, forza: 1200 });
+    if (bt.k !== 'punch' && bt.b > 0) C.tendina(ctx, bt.dt, { colore: acc, colore2: SCURO, dir: bt.b % 2 ? 1 : -1 });
+    C.flash(ctx, { boom: 0.55, rivela: 0.3, punch: 0.12, stacco: 0 }[bt.k] * Math.exp(-bt.dt * 12) * (bt.b === 0 ? 0 : 1));
+    // ultimi 0,3 s: torna al colore d'apertura (il loop riparte pulito)
+    const v = (t - (atti.fine - 0.3)) / 0.3;
+    if (v > 0) { ctx.fillStyle = `rgba(26,7,16,${Math.min(1, v)})`; ctx.fillRect(0, 0, G.W, G.H); }
+    tela.fine();
+  } };
+});
+</script>
+</body></html>

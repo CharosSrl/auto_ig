@@ -21,8 +21,13 @@ BOTTONE_CTA = "Segui @cintre_official"
 
 
 @lru_cache(maxsize=1)
-def catalogo() -> dict:
+def _catalogo(mtime: float) -> dict:
     return yaml.safe_load(CATALOGO.read_text())
+
+
+def catalogo() -> dict:
+    """Catalogo da formati.yaml; si ricarica da solo se il file cambia (la UI resta accesa a lungo)."""
+    return _catalogo(CATALOGO.stat().st_mtime)
 
 
 def formato(nome: str) -> dict:
@@ -121,6 +126,8 @@ def descrivi(nome: str | None = None, resa: str | None = None) -> str:
             if resa and r != resa:
                 continue
             out += [f"  Resa {r} — scene: {', '.join(v['scene']) or '(da creare)'}"] + [f"    - {x}" for x in v["ricetta"]]
+            if "cartoon2d" in v["scene"]:
+                out += ["    Ritmo alto (cartoon2d):"] + [f"      · {x}" for x in c.get("ritmo_alto", [])]
         out.append("")
     return "\n".join(out)
 

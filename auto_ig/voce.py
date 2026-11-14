@@ -151,11 +151,32 @@ def _esc(text: str) -> str:
     return text.replace("\\", "\\\\").replace("{", "(").replace("}", ")")
 
 
+def gruppi(words: list[Word], max_parole: int = 3, max_lettere: int = 14) -> list[list[int]]:
+    """Indici delle parole divisi in pezzi corti (max 3 parole e ~14 lettere: una riga sola;
+    si va a capo dopo la punteggiatura)."""
+    out, cur = [], []
+    for i, w in enumerate(words):
+        if cur and len(" ".join(words[j].text for j in cur + [i])) > max_lettere:
+            out.append(cur)
+            cur = []
+        cur.append(i)
+        if len(cur) >= max_parole or re.search(r"[.,:;!?…]$", w.text):
+            out.append(cur)
+            cur = []
+    if cur:
+        out.append(cur)
+    return out
+
+
 def build_ass(sentences: list[Sentence], highlight: str = "#FFD166", text_color: str = "#FFFFFF",
-              font: str = "DejaVu Sans", size: int = 90, margin_bottom: int = 560) -> str:
+              font: str = "DejaVu Sans", size: int = 90, margin_bottom: int = 560, corti: bool = False) -> str:
     """Una riga di dialogo per parola: la frase intera, con la parola detta colorata e un po' più grande.
     Il tono della frase cambia colore/grandezza; "arrabbiata" fa anche tremare la frase (±shake gradi).
+    corti=True: invece della frase intera si vede solo il pezzo di 1-3 parole in corso (una riga, più grande):
+    lascia spazio alla grafica (resa 2d ad alto ritmo).
     Margine basso ampio: resta sopra la zona che Instagram copre con la caption."""
+    if corti:
+        size = max(size, 104)
     base = ass_color(text_color)
     head = f"""[Script Info]
 ScriptType: v4.00+
@@ -175,10 +196,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     for s in sentences:
         tn = TONES.get(s.tone, TONES[""])
         hl, sc = ass_color(tn["highlight"] or highlight), tn["scale"]
+        pezzo = {j: g for g in gruppi(s.words) for j in g} if corti else {}
         for i, w in enumerate(s.words):
             end = s.words[i + 1].start if i + 1 < len(s.words) else s.end + 0.25
-            parts = [(r"{\c" + hl + rf"\fscx{sc}\fscy{sc}" + "}" + _esc(x.text) + r"{\c" + base + r"\fscx100\fscy100}")
-                     if j == i else _esc(x.text) for j, x in enumerate(s.words)]
+            visibili = pezzo.get(i, range(len(s.words)))
+            parts = [(r"{\c" + hl + rf"\fscx{sc}\fscy{sc}" + "}" + _esc(s.words[j].text) + r"{\c" + base + r"\fscx100\fscy100}")
+                     if j == i else _esc(s.words[j].text) for j in visibili]
             shake = (r"{\frz" + str(tn["shake"] if i % 2 else -tn["shake"]) + "}") if tn["shake"] else ""
             lines.append(f"Dialogue: 0,{ass_time(w.start)},{ass_time(end)},Voce,,0,0,0,,{shake}{' '.join(parts)}")
     return head + "\n".join(lines) + "\n"

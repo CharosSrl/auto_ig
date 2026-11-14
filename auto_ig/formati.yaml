@@ -21,7 +21,8 @@ regole_comuni:
   - "Caption: 1 riga di gancio, 1-2 righe di valore, la CTA, poi 5-8 hashtag (#cintre sempre)."
 
 # Icone vettoriali della resa 2d (preset/grafica2d.js → ICONE). Per un'icona nuova: disegnala lì e aggiungila qui.
-icone_2d: [taschino, orologio, tacco, staffa, tubino, auto, lampadina, domanda, commento, cuore, stella, gruccia, telefono, armadio, outfit]
+icone_2d: [taschino, orologio, tacco, staffa, tubino, auto, lampadina, domanda, commento, cuore, stella, gruccia, telefono, armadio, outfit,
+           trench, elmetto, cardigan, medaglia, bikini, atomo, cravatta, sciabole, sneaker, pugnale, silenzio]
 
 # Tipi di scheda della resa 2d (scena schede2d) e campi usati.
 schede_2d:
@@ -32,7 +33,19 @@ schede_2d:
   risposta:  "le stesse opzioni, quella giusta (giusta: indice da 0) si illumina con la spunta; testo = perché"
   scena:     "illustrazione piatta di una situazione (icona grande + titolo), per le storie in 2d"
   commenta:  "fumetto con titolo (domanda al pubblico) e icone commento/cuore"
+  rehook:    "a metà video: titolo enorme che trema ('Aspetta l'ultima...') + carta mistero della prossima curiosità (solo cartoon2d)"
   cta:       "logo Cintre, testo della CTA e bottone (bottone: 'Segui @cintre_official'); messa dal sistema"
+
+# RITMO ALTO (resa 2d con scena cartoon2d). Sintesi della ricerca del 2026-11-14 (skill .claude/skills/viral-hooks e
+# short-form-video; skip rate di Instagram = chi esce entro 3 s). I numeri dei blog sono indicativi, le regole no.
+ritmo_alto:
+  - "Gancio a schermo dal fotogramma 0 (niente dissolvenza dal nero); parola chiave detta entro 1-1,5 s."
+  - "Gancio = una sola promessa aperta (open loop): numero preciso + contrasto ('3 capi nati in guerra. L'ultimo è esplosivo')."
+  - "Svela l'ultima curiosità per ultima; a metà (~12-15 s) un rehook ('Ma aspetta l'ultima...') con scheda rehook."
+  - "Un cambio visivo ogni 1,5-3 s, irregolare: le battute le calcola auto_ig/audio.py e valgono anche per gli effetti sonori."
+  - "Sottotitoli corti (1-3 parole, sottotitoli: corti) e titoli schede di max 4 parole."
+  - "Durata 20-30 s; frasi brevi, niente pause morte; audio: {musica: true, sfx: true}."
+  - "Hook: due varianti di categorie diverse (stop-scroll: negazione/numero/domanda + ritenzione: storia/emozione), scegli la più forte."
 
 formati:
   storia:
@@ -110,8 +123,10 @@ formati:
           - "Ogni fatto mostra il capo di cui si parla: vetrinaCapo (pedana girevole) o la modella che lo indossa (indossa)."
           - "Numero del fatto su card (oggetti.js) nella parte alta; ultimo atto = cartelloFinale."
       2d:
-        scene: [schede2d]
+        scene: [cartoon2d, schede2d]
         ricetta:
-          - "Schede: gancio → (fatto → dettaglio) × 3 → commenta. Poi cta."
+          - "Scena predefinita cartoon2d (modella Cintre in 2D + ritmo alto, vedi ritmo_alto); schede2d per una versione calma."
+          - "Schede: gancio → (fatto → dettaglio) × 3 con un rehook prima dell'ultimo fatto → commenta. Poi cta."
+          - "Nel dettaglio 'evidenzia' (o 'timbro') diventa il timbro che sbatte sullo schermo: una parola forte (TRINCEE, ATOMICA)."
           - "Ogni fatto ha un'icona del capo (taschino, tacco, tubino...) e il dettaglio un'icona della spiegazione (orologio, staffa, auto...)."
           - "Titoli delle schede brevi (max 5 parole): il testo completo lo danno voce e sottotitoli."

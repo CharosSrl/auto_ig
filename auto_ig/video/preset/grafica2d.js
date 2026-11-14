@@ -315,6 +315,123 @@ export const ICONE = {
     ctx.beginPath(); rr(ctx, -70, -86, 60, 22, 4); ctx.strokeStyle = accento; ctx.lineWidth = 4; ctx.stroke(); stileIcona(ctx);
   },
   outfit(ctx) { figurino(ctx, 0, -100, 200, OUTFITS[0]); },
+
+  // --- Curiosità "capi nati in guerra" / "nomi nascosti" (2026-11-14) ---
+  // Trench doppiopetto color cammello con cintura e spalline
+  trench(ctx) {
+    ctx.beginPath(); ctx.moveTo(-30, -92); ctx.lineTo(-70, -78); ctx.quadraticCurveTo(-84, -40, -80, 0); ctx.lineTo(-92, 98); ctx.lineTo(92, 98);
+    ctx.lineTo(80, 0); ctx.quadraticCurveTo(84, -40, 70, -78); ctx.lineTo(30, -92); ctx.lineTo(0, -40); ctx.closePath(); fs(ctx, '#c8a26b');
+    ctx.beginPath(); ctx.moveTo(-30, -92); ctx.lineTo(-8, -30); ctx.lineTo(-30, -20); ctx.lineTo(-48, -74); ctx.closePath(); fs(ctx, '#b48d57');   // revers
+    ctx.beginPath(); ctx.moveTo(30, -92); ctx.lineTo(8, -30); ctx.lineTo(30, -20); ctx.lineTo(48, -74); ctx.closePath(); fs(ctx, '#b48d57');
+    ctx.beginPath(); rr(ctx, -84, 8, 168, 20, 4); fs(ctx, '#a07a45');                                   // cintura
+    ctx.beginPath(); rr(ctx, -14, 4, 28, 28, 4); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
+    for (const [x, y] of [[-22, -12], [22, -12], [-22, 50], [22, 50]]) { ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); fs(ctx, '#5a3d1e'); }
+    for (const s of [-1, 1]) { ctx.beginPath(); rr(ctx, s * 66 - 16, -86, 32, 12, 4); fs(ctx, '#a07a45'); } // spalline
+    ctx.save(); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 28); ctx.lineTo(0, 98); ctx.stroke(); ctx.restore();
+  },
+  // Elmetto da soldato (Prima guerra mondiale, forma a scodella)
+  elmetto(ctx) {
+    ctx.beginPath(); ctx.ellipse(0, 30, 100, 24, 0, 0, 7); fs(ctx, '#5f6b4e');
+    ctx.beginPath(); ctx.moveTo(-64, 26); ctx.quadraticCurveTo(-60, -70, 0, -72); ctx.quadraticCurveTo(60, -70, 64, 26); ctx.closePath(); fs(ctx, '#6f7d5a');
+    ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.arc(-6, -6, 46, Math.PI * 1.15, Math.PI * 1.45); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.moveTo(-40, 40); ctx.quadraticCurveTo(0, 96, 40, 40); ctx.lineWidth = 5; ctx.strokeStyle = '#8b5a2b'; ctx.stroke(); stileIcona(ctx);
+  },
+  // Cardigan aperto con bottoni
+  cardigan(ctx, { accento = CIPRIA }) {
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.scale(s, 1);
+      ctx.beginPath(); ctx.moveTo(6, -86); ctx.lineTo(44, -92); ctx.quadraticCurveTo(86, -80, 96, -30); ctx.lineTo(100, 70); ctx.lineTo(74, 74);
+      ctx.lineTo(70, -10); ctx.lineTo(66, 96); ctx.lineTo(6, 96); ctx.closePath(); fs(ctx, '#d98e73');
+      ctx.restore();
+    }
+    ctx.beginPath(); ctx.moveTo(-6, -86); ctx.lineTo(0, 20); ctx.lineTo(6, -86); ctx.closePath(); fs(ctx, '#fffaf0');
+    ctx.save(); ctx.lineWidth = 3; ctx.globalAlpha = 0.5;
+    for (let y = -60; y < 90; y += 16) { ctx.beginPath(); ctx.moveTo(-60, y); ctx.lineTo(-12, y); ctx.moveTo(12, y); ctx.lineTo(60, y); ctx.stroke(); }
+    ctx.restore();
+    for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(-14, 30 + k * 18, 6, 0, 7); fs(ctx, accento); }
+    for (const y of [86, 92]) { ctx.beginPath(); ctx.moveTo(-66, y); ctx.lineTo(66, y); ctx.lineWidth = 3; ctx.stroke(); } stileIcona(ctx);
+  },
+  // Medaglia militare con nastro
+  medaglia(ctx, { t = 0 }) {
+    ctx.beginPath(); ctx.moveTo(-40, -96); ctx.lineTo(40, -96); ctx.lineTo(24, -10); ctx.lineTo(-24, -10); ctx.closePath(); fs(ctx, '#c0392b');
+    ctx.beginPath(); ctx.moveTo(-10, -96); ctx.lineTo(10, -96); ctx.lineTo(6, -10); ctx.lineTo(-6, -10); ctx.closePath(); fs(ctx, '#fffaf0');
+    ctx.save(); ctx.shadowColor = '#ffe9a8'; ctx.shadowBlur = 20 + 15 * Math.sin(t * 5);
+    ctx.beginPath(); for (let k = 0; k < 16; k++) { const r = k % 2 ? 44 : 60, a = -Math.PI / 2 + k * Math.PI / 8; ctx.lineTo(Math.cos(a) * r, 46 + Math.sin(a) * r); }
+    ctx.closePath(); fs(ctx, ORO); ctx.restore(); ctx.lineWidth = L; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 46, 28, 0, 7); fs(ctx, '#e8c25a');
+  },
+  // Bikini a pois su filo
+  bikini(ctx, { accento = CIPRIA }) {
+    const pois = (x, y) => { ctx.save(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); ctx.restore(); };
+    ctx.save(); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-96, -86); ctx.quadraticCurveTo(0, -60, 96, -86); ctx.stroke(); ctx.restore();
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 8, -40); ctx.quadraticCurveTo(s * 20, -82, s * 44, -82); ctx.quadraticCurveTo(s * 78, -64, s * 80, -14); ctx.quadraticCurveTo(s * 40, -4, s * 8, -40); fs(ctx, '#e8435a'); pois(s * 40, -50); pois(s * 58, -28); }
+    ctx.beginPath(); ctx.moveTo(-70, 26); ctx.quadraticCurveTo(0, 40, 70, 26); ctx.quadraticCurveTo(46, 66, 18, 92); ctx.lineTo(-18, 92); ctx.quadraticCurveTo(-46, 66, -70, 26); fs(ctx, '#e8435a');
+    pois(-30, 48); pois(10, 60); pois(36, 42);
+    ctx.save(); ctx.strokeStyle = accento; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-70, 26); ctx.lineTo(-96, 20); ctx.moveTo(70, 26); ctx.lineTo(96, 20); ctx.stroke(); ctx.restore();
+  },
+  // Fungo atomico stilizzato (test sull'atollo di Bikini) sopra un'isola con palma
+  atomo(ctx, { t = 0 }) {
+    const g = 1 + 0.04 * Math.sin(t * 4);
+    ctx.beginPath(); ctx.ellipse(0, 88, 96, 14, 0, 0, 7); fs(ctx, '#3b8fc4');
+    ctx.beginPath(); ctx.ellipse(-50, 80, 34, 10, 0, Math.PI, 0); fs(ctx, '#f2d38b');
+    ctx.save(); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-50, 72); ctx.quadraticCurveTo(-46, 50, -56, 34); ctx.stroke();
+    ctx.fillStyle = '#4c9a4a'; for (const a of [-2.6, -1.9, -1.2, -0.5]) { ctx.beginPath(); ctx.ellipse(-56 + Math.cos(a) * 14, 34 + Math.sin(a) * 6, 16, 5, a, 0, 7); ctx.fill(); ctx.stroke(); } ctx.restore();
+    ctx.beginPath(); ctx.moveTo(10, 84); ctx.quadraticCurveTo(22, 30, 16, -10); ctx.lineTo(46, -10); ctx.quadraticCurveTo(40, 30, 54, 84); ctx.closePath(); fs(ctx, '#f0a35e');
+    ctx.save(); ctx.translate(31, -40); ctx.scale(g, g);
+    ctx.beginPath(); ctx.ellipse(0, 0, 70, 40, 0, 0, 7); fs(ctx, '#f7c873');
+    ctx.beginPath(); ctx.ellipse(-24, -16, 26, 20, 0, 0, 7); fs(ctx, '#ffe3a3');
+    ctx.beginPath(); ctx.ellipse(26, -12, 24, 18, 0, 0, 7); fs(ctx, '#ffe3a3');
+    ctx.restore();
+  },
+  // Cravatta a righe
+  cravatta(ctx, { accento = CIPRIA }) {
+    ctx.beginPath(); ctx.moveTo(-22, -96); ctx.lineTo(22, -96); ctx.lineTo(14, -66); ctx.lineTo(-14, -66); ctx.closePath(); fs(ctx, BORDEAUX);
+    ctx.beginPath(); ctx.moveTo(-14, -66); ctx.lineTo(14, -66); ctx.lineTo(42, 66); ctx.lineTo(0, 100); ctx.lineTo(-42, 66); ctx.closePath(); fs(ctx, BORDEAUX);
+    ctx.save(); ctx.clip(); ctx.strokeStyle = accento; ctx.lineWidth = 9;
+    for (let y = -80; y < 140; y += 34) { ctx.beginPath(); ctx.moveTo(-60, y); ctx.lineTo(60, y - 40); ctx.stroke(); } ctx.restore();
+    ctx.beginPath(); ctx.moveTo(-14, -66); ctx.lineTo(14, -66); ctx.lineTo(42, 66); ctx.lineTo(0, 100); ctx.lineTo(-42, 66); ctx.closePath(); ctx.stroke();
+  },
+  // Due sciabole incrociate (soldati a cavallo)
+  sciabole(ctx) {
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.rotate(s * 0.75);
+      ctx.beginPath(); ctx.moveTo(-6, 50); ctx.quadraticCurveTo(-14, -30, 4, -100); ctx.quadraticCurveTo(10, -30, 8, 50); ctx.closePath(); fs(ctx, '#dfe5ea');
+      ctx.beginPath(); rr(ctx, -26, 50, 52, 12, 5); fs(ctx, ORO);
+      ctx.beginPath(); rr(ctx, -7, 62, 14, 34, 5); fs(ctx, '#5a3d1e');
+      ctx.restore();
+    }
+  },
+  // Sneaker di profilo, suola di gomma bianca
+  sneaker(ctx, { accento = CIPRIA }) {
+    ctx.beginPath(); ctx.moveTo(-96, 40); ctx.lineTo(-92, -30); ctx.quadraticCurveTo(-60, -50, -40, -40); ctx.lineTo(-10, -20);
+    ctx.quadraticCurveTo(40, 0, 82, 14); ctx.quadraticCurveTo(100, 22, 98, 40); ctx.closePath(); fs(ctx, '#ffffff');
+    ctx.beginPath(); ctx.moveTo(-92, -30); ctx.quadraticCurveTo(-60, -50, -40, -40); ctx.lineTo(-30, 10); ctx.lineTo(-94, 10); ctx.closePath(); fs(ctx, accento);
+    ctx.beginPath(); rr(ctx, -100, 40, 202, 26, 12); fs(ctx, '#f3ead8');
+    ctx.save(); ctx.lineWidth = 3; for (let x = -88; x < 96; x += 14) { ctx.beginPath(); ctx.moveTo(x, 50); ctx.lineTo(x + 6, 58); ctx.stroke(); } ctx.restore();
+    ctx.save(); ctx.lineWidth = 4; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(-26 + k * 14, -16 + k * 6); ctx.lineTo(-14 + k * 14, -28 + k * 6); ctx.stroke(); } ctx.restore();
+    ctx.beginPath(); ctx.moveTo(30, 6); ctx.quadraticCurveTo(50, 14, 70, 14); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
+  },
+  // Pugnale (stiletto)
+  pugnale(ctx, { t = 0 }) {
+    ctx.save(); ctx.rotate(-0.5);
+    ctx.beginPath(); ctx.moveTo(-10, 10); ctx.lineTo(0, -108); ctx.lineTo(10, 10); ctx.closePath(); fs(ctx, '#e3e9ee');
+    ctx.save(); ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 6); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-3, 0); ctx.lineTo(0, -80); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); rr(ctx, -40, 10, 80, 14, 7); fs(ctx, ORO);
+    ctx.beginPath(); rr(ctx, -10, 24, 20, 56, 8); fs(ctx, BORDEAUX);
+    ctx.beginPath(); ctx.arc(0, 88, 12, 0, 7); fs(ctx, ORO);
+    ctx.restore();
+  },
+  // Impronte silenziose + "shh"
+  silenzio(ctx, { t = 0, accento = CIPRIA }) {
+    const passo = (x, y, a) => { ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+      ctx.beginPath(); ctx.ellipse(0, 0, 16, 30, 0, 0, 7); fs(ctx, '#fffaf0');
+      for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(-10 + k * 7, -38 - (k === 0 ? 2 : 0), 5, 0, 7); fs(ctx, '#fffaf0'); } ctx.restore(); };
+    const n = Math.floor(t * 2) % 4;
+    [[-60, 70, -0.2], [-20, 20, 0.2], [20, -30, -0.2], [60, -80, 0.2]].forEach(([x, y, a], k) => { if (k <= n) passo(x, y, a); });
+    ctx.fillStyle = accento; ctx.font = SERIF(54, 'italic 700'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.save(); ctx.lineWidth = 8; ctx.strokeText('shh…', -40, -80); ctx.restore(); ctx.fillText('shh…', -40, -80);
+  },
 };
 export const NOMI_ICONE = Object.keys(ICONE);
 
