@@ -60,5 +60,90 @@ class FormatiCartoonTest(unittest.TestCase):
         self.assertEqual(formati.scena(data), "cartoon2d")
 
 
+
+class RegoleAntonioTest(unittest.TestCase):
+    """Mascotte solo su richiesta; hook corto; CTA unica con azione del formato."""
+    def base(self, **kw):
+        d = {"formato": "curiosita", "resa": "2d", "copione": [{"testo": "Il tuo trench è nato in trincea.",
+             "scheda": {"tipo": "gancio", "titolo": "x"}}]}
+        d.update(kw)
+        return d
+
+    def test_cta_salva_condividi(self):
+        cta = formati.copione(self.base())[-1]["scheda"]
+        self.assertEqual((cta["tipo"], cta["azione"]), ("cta", "salva_condividi"))
+        self.assertNotIn("Segui", cta["bottone"])
+        self.assertEqual(formati.copione(self.base(cta_azione="segui"))[-1]["scheda"]["bottone"], "Segui @cintre_official")
+        self.assertTrue(formati.valida(self.base(cta_azione="boh")))
+
+    def test_hook_troppo_lungo(self):
+        lungo = self.base(copione=[{"testo": " ".join(["parola"] * 15), "scheda": {"tipo": "gancio"}}])
+        self.assertTrue(any("hook troppo lungo" in e for e in formati.valida(lungo)))
+        self.assertEqual(formati.valida(self.base()), [])
+
+    def test_mascotte(self):
+        self.assertTrue(formati.valida(self.base(mascotte="si")))
+        self.assertEqual(formati.valida(self.base(mascotte=True)), [])
+
+    def test_mascotte_spenta_di_default_nel_build(self):
+        from auto_ig import richieste
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "r"; f.mkdir()
+            (f / "richiesta.yaml").write_text(yaml_dump(self.base(titolo="t", scena="cartoon2d", colori={"sfondo": "#000000", "accento": "#ffffff"})))
+            calls = []
+            def render(scene, params, seconds, out_dir, **kw):
+                calls.append(params); (out_dir / "video.mp4").write_bytes(b"x")
+            def speak(lines, wav, *a, **kw):
+                wav.write_bytes(b"RIFF")
+                return [voce.Sentence(t, i, i + 0.5, voce.word_timings(t, i, i + 0.5), tone)
+                        for i, (t, tone) in enumerate(voce.normalize_lines(lines))], 3.0
+            richieste.build(f, render_fn=render, speak_fn=speak)
+            self.assertEqual(calls[0]["mascotte"], "0")
+
+
+class QuizTest(unittest.TestCase):
+    """Quiz ad alto ritmo: conto alla rovescia con tic, risposta che 'rivela', CTA commenta."""
+    def test_battute_quiz(self):
+        attesa = voce.Sentence("Tre. Due. Uno.", 6.0, 8.4, voce.word_timings("Tre. Due. Uno.", 6.0, 8.4))
+        frasi = [(0.6, 3.0), (3.4, 5.6), attesa, (8.8, 11.0)]
+        schede = [{"tipo": "gancio"}, {"tipo": "domanda"}, {"tipo": "domanda", "conto": 3}, {"tipo": "risposta", "giusta": 1}]
+        bt = audio.battute(frasi, schede)
+        tic = [t for t, k in bt if k == "tic"]
+        self.assertEqual(tic, [round(w.start, 2) for w in attesa.words])       # un tic per numero detto
+        self.assertFalse([t for t, k in bt if 6.0 <= t < 8.8 and k != "tic"])  # niente punch nel conto
+        self.assertIn((8.8, "rivela"), bt)
+        self.assertGreater(np.abs(audio.tic()).max(), 0)
+
+    def test_voce_a_ritmo(self):
+        """ritmo: 1.0 → una parola al secondo esatta (il conto alla rovescia), le altre righe come prima."""
+        synth = lambda text, tone: (b"\0\0" * int(22050 * 0.3 * len(text.split())), 22050, 2, 1)
+        with tempfile.TemporaryDirectory() as d:
+            frasi, _ = voce.speak(["Quale città?", {"testo": "Tre. Due. Uno.", "ritmo": 1.0}], Path(d) / "v.wav", synth=synth)
+        w = frasi[1].words
+        self.assertEqual([x.text for x in w], ["Tre.", "Due.", "Uno."])
+        self.assertAlmostEqual(w[1].start - w[0].start, 1.0, places=2)
+        self.assertAlmostEqual(w[2].start - w[1].start, 1.0, places=2)
+        self.assertAlmostEqual(frasi[1].end - frasi[1].start, 2.3, places=2)
+        self.assertEqual(voce.ritmi(["a", {"testo": ""}, {"testo": "b", "ritmo": 1}]), [0.0, 1.0])
+
+    def test_valida_quiz_e_cta(self):
+        d = {"formato": "quiz", "resa": "2d", "copione": [
+            {"testo": "I tuoi jeans portano il nome di una città.", "scheda": {"tipo": "gancio", "icona": "jeans"}},
+            {"testo": "Quale?", "scheda": {"tipo": "domanda", "titolo": "?", "opzioni": ["Nîmes", "Genova", "Londra"]}},
+            {"testo": "È Genova!", "scheda": {"tipo": "risposta", "titolo": "?", "opzioni": ["Nîmes", "Genova", "Londra"], "giusta": 1}}]}
+        self.assertEqual(formati.valida(d), [])
+        self.assertEqual(formati.scena(d), "cartoon2d")
+        self.assertEqual(formati.copione(d)[-1]["scheda"]["azione"], "commenta")
+        d["copione"][2]["scheda"]["giusta"] = 3
+        d["copione"][1]["scheda"]["opzioni"] = ["Nîmes", "Genova"]
+        errs = formati.valida(d)
+        self.assertTrue(any("3 opzioni" in e for e in errs) and any("giusta" in e for e in errs))
+
+
+def yaml_dump(d):
+    import yaml
+    return yaml.safe_dump(d, allow_unicode=True)
+
+
 if __name__ == "__main__":
     unittest.main()

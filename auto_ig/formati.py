@@ -17,7 +17,10 @@ import yaml
 
 CATALOGO = Path(__file__).with_name("formati.yaml")
 RESE = ("3d", "2d")
-BOTTONE_CTA = "Segui @cintre_official"
+# Azione della call to action (formati.yaml → cta_azione): decide il cartello finale e il suo bottone.
+AZIONI_CTA = {"salva_condividi": "Salva e invia", "segui": "Segui @cintre_official",
+              "commenta": "Scrivilo nei commenti", "app": "Link in bio"}
+MAX_PAROLE_HOOK = 14     # regola: ~12 parole; oltre 14 è un errore (formati.yaml → hook_e_cta)
 
 
 @lru_cache(maxsize=1)
@@ -70,9 +73,25 @@ def valida(data: dict) -> list[str]:
                 errs.append(f"frase {i}: scheda '{s.get('tipo')}' sconosciuta ({', '.join(tipi)})")
             elif s.get("icona") and s["icona"] not in catalogo()["icone_2d"]:
                 errs.append(f"frase {i}: icona '{s['icona']}' inesistente ({', '.join(catalogo()['icone_2d'])})")
+            elif s["tipo"] in ("domanda", "risposta"):
+                op = s.get("opzioni") or []
+                if len(op) != 3:
+                    errs.append(f"frase {i}: il quiz vuole 3 opzioni (A, B, C), trovate {len(op)}")
+                if s["tipo"] == "risposta" and s.get("giusta") not in range(len(op)):
+                    errs.append(f"frase {i}: 'giusta' deve essere l'indice dell'opzione giusta (0 = A, 1 = B, 2 = C)")
         prima = _scheda((data.get("copione") or [None])[0]) or {}
         if prima and prima.get("tipo") != "gancio":
             errs.append("la prima scheda deve essere il gancio")
+    if data.get("mascotte") not in (None, True, False):
+        errs.append("mascotte: true | false (la mascotte si mette solo se Antonio la chiede)")
+    gancio = (data.get("copione") or [None])[0]
+    testo = gancio.get("testo", "") if isinstance(gancio, dict) else str(gancio or "")
+    if len(testo.split()) > MAX_PAROLE_HOOK and not testo.startswith("["):     # "[gancio] ..." = segnaposto
+        errs.append(f"hook troppo lungo ({len(testo.split())} parole, max {MAX_PAROLE_HOOK}): l'hook va detto in 3 s")
+    try:
+        azione_cta(data)
+    except ValueError as e:
+        errs.append(str(e))
     return errs
 
 
@@ -85,7 +104,17 @@ def copione(data: dict) -> list:
     righe = list(data.get("copione") or [])
     if not data.get("formato") or _ha_cta(righe):
         return righe
-    return righe + [{"testo": cta(data), "tono": "felice", "scheda": {"tipo": "cta", "titolo": cta(data), "bottone": BOTTONE_CTA}}]
+    az = azione_cta(data)
+    return righe + [{"testo": cta(data), "tono": "felice",
+                     "scheda": {"tipo": "cta", "titolo": cta(data), "azione": az, "bottone": AZIONI_CTA[az]}}]
+
+
+def azione_cta(data: dict) -> str:
+    """Azione della CTA: dalla richiesta (cta_azione) o dal formato; predefinita salva_condividi."""
+    az = str(data.get("cta_azione") or formato(data["formato"]).get("cta_azione") or "salva_condividi")
+    if az not in AZIONI_CTA:
+        raise ValueError(f"cta_azione '{az}' non valida ({', '.join(AZIONI_CTA)})")
+    return az
 
 
 def schede(righe: list) -> str:
@@ -109,7 +138,11 @@ def scheletro(nome: str, resa: str) -> list:
     for passo in f["struttura"]:
         testo = f"[{passo['ruolo']}] {passo['guida']}"
         tipo = passo["ruolo"] if passo["ruolo"] in catalogo()["schede_2d"] else {"attesa": "domanda"}.get(passo["ruolo"], "scena")
-        righe.append({"testo": testo, "scheda": {"tipo": tipo, "titolo": ""}} if resa == "2d" else testo)
+        sk = {"tipo": tipo, "titolo": ""}
+        if tipo in ("domanda", "risposta"):                 # quiz: segnaposto validi (3 opzioni, conto, giusta)
+            sk["opzioni"] = ["A", "B", "C"]
+            sk.update({"conto": 3} if passo["ruolo"] == "attesa" else {"giusta": 0} if tipo == "risposta" else {})
+        righe.append({"testo": testo, "scheda": sk} if resa == "2d" else testo)
     return righe
 
 

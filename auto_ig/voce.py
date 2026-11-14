@@ -5,10 +5,14 @@ il tempo di ogni parola è stimato in proporzione alla sua lunghezza.
 """
 from __future__ import annotations
 
+import hashlib
 import io
+import os
 import re
+import subprocess
 import wave
 from dataclasses import asdict, dataclass
+from functools import lru_cache
 from pathlib import Path
 
 from .config import ROOT
@@ -65,6 +69,65 @@ def _load_voice(name: str):
     return PiperVoice.load(str(path))
 
 
+# --- Qwen3-TTS (Apache 2.0): voce più naturale, più lenta (~10x il tempo reale su CPU) ----------
+# modello: "qwen3-vivian" (o un altro speaker: serena, ryan, aiden, ...). Le frasi già sintetizzate
+# finiscono in .voci/cache: rifare un video dopo una modifica grafica non rigenera la voce.
+QWEN_REPO = "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"
+CACHE_DIR = VOICES_DIR / "cache"
+
+
+def is_qwen(name: str) -> bool:
+    return str(name).startswith("qwen3")
+
+
+@lru_cache(maxsize=1)
+def _qwen_model():
+    import torch
+    from qwen_tts import Qwen3TTSModel
+    torch.set_num_threads(os.cpu_count() or 4)
+    return Qwen3TTSModel.from_pretrained(QWEN_REPO, device_map="cpu", dtype=torch.float32)
+
+
+def _atempo(pcm: bytes, rate: int, speed: float) -> bytes:
+    """Velocità senza cambiare l'intonazione (ffmpeg atempo); PCM 16 bit mono."""
+    if abs(speed - 1.0) < 0.01:
+        return pcm
+    p = subprocess.run(["ffmpeg", "-v", "error", "-f", "s16le", "-ar", str(rate), "-ac", "1", "-i", "-",
+                        "-filter:a", f"atempo={min(max(speed, 0.5), 2.0)}", "-f", "s16le", "-"],
+                       input=pcm, capture_output=True, check=True)
+    return p.stdout
+
+
+def _qwen_synth(speaker: str, text: str, speed: float) -> tuple[bytes, int, int, int]:
+    """Frase letta da Qwen3 (dalla cache se già fatta). La velocità si applica dopo la cache: cambiarla è istantaneo."""
+    key = hashlib.sha1(f"{QWEN_REPO}|{speaker}|{text}".encode()).hexdigest()[:20]
+    cached = CACHE_DIR / f"{key}.wav"
+    if not cached.exists():
+        import numpy as np
+        import torch
+        torch.manual_seed(int(key[:8], 16))             # stessa frase = stessa lettura
+        wavs, rate = _qwen_model().generate_custom_voice(text=text, language="Italian", speaker=speaker)
+        a = np.clip(np.asarray(wavs[0], dtype=np.float32), -1, 1)
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        with wave.open(str(cached), "wb") as wf:
+            wf.setnchannels(1); wf.setsampwidth(2); wf.setframerate(rate)
+            wf.writeframes((a * 32767).astype("<i2").tobytes())
+    with wave.open(str(cached), "rb") as rf:
+        pcm, rate = rf.readframes(rf.getnframes()), rf.getframerate()
+    return _atempo(_trim(pcm, rate), rate, speed), rate, 2, 1
+
+
+def _trim(pcm: bytes, rate: int, soglia: float = 0.02, prima: float = 0.03, dopo: float = 0.08) -> bytes:
+    """Toglie il silenzio ai bordi (Qwen ne lascia ~0,4 s prima e ~0,55 s dopo ogni frase): ritmo da Reel."""
+    import numpy as np
+    a = np.frombuffer(pcm, "<i2")
+    voce = np.flatnonzero(np.abs(a) > soglia * 32768)
+    if not len(voce):
+        return pcm
+    i, j = max(0, voce[0] - int(prima * rate)), min(len(a), voce[-1] + int(dopo * rate))
+    return a[i:j].tobytes()
+
+
 def _synth(voice, text: str, speed: float, tone: str = "") -> tuple[bytes, int, int, int]:
     """Ritorna (frames PCM, sample rate, sample width, canali) per una frase."""
     from piper import SynthesisConfig
@@ -92,6 +155,17 @@ def normalize_lines(lines) -> list[tuple[str, str]]:
     return out
 
 
+def ritmi(lines) -> list[float]:
+    """Per ogni riga di normalize_lines: `ritmo` in secondi (0 = parlato normale). Con ritmo le parole sono
+    sintetizzate una alla volta e cadono esattamente ogni `ritmo` secondi (es. il conto "Tre. Due. Uno." del quiz)."""
+    out = []
+    for l in lines or []:
+        text = l.get("testo", "") if isinstance(l, dict) else l
+        if str(text).strip():
+            out.append(float(l.get("ritmo") or 0) if isinstance(l, dict) else 0.0)
+    return out
+
+
 def tts_text(text: str, pronuncia: dict | None = None) -> str:
     """Testo da far leggere alla voce (i sottotitoli restano invariati):
     - parole TUTTE MAIUSCOLE -> minuscole (enfasi a schermo, altrimenti Piper le compita: "MAI" = "emme a i");
@@ -105,22 +179,39 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
           synth=None, pronuncia: dict | None = None) -> tuple[list[Sentence], float]:
     """Sintetizza il copione in un unico wav. Ritorna (frasi con tempi, durata totale video consigliata).
     synth(testo, tono) -> (frames, rate, width, canali); di default Piper."""
+    passi = ritmi(lines)
     lines = normalize_lines(lines)
     if not lines:
         raise ValueError("Il copione è vuoto")
-    if synth is None:
+    if synth is None and is_qwen(voice_name):
+        speaker = voice_name.partition("-")[2] or "vivian"
+        synth = lambda text, tone: _qwen_synth(speaker, text, speed)   # noqa: E731
+    elif synth is None:
         voice = _load_voice(voice_name)
         synth = lambda text, tone: _synth(voice, text, speed, tone)   # noqa: E731
     chunks, sentences = [], []
     rate = width = channels = None
     t = LEAD_IN
-    for text, tone in lines:
-        frames, r, w, c = synth(tts_text(text, pronuncia), tone)
+    for (text, tone), passo in zip(lines, passi):
+        pezzi = [synth(tts_text(p, pronuncia), tone) for p in text.split()] if passo > 0 else [synth(tts_text(text, pronuncia), tone)]
         if rate is None:
-            rate, width, channels = r, w, c
+            rate, width, channels = pezzi[0][1:]
             chunks.append(b"\0" * int(LEAD_IN * rate) * width * channels)
-        dur = len(frames) / (rate * width * channels)
-        sentences.append(Sentence(text, round(t, 3), round(t + dur, 3), word_timings(text, t, t + dur), tone))
+        fr = width * channels
+        if passo > 0:                                   # una parola ogni `passo` secondi, tempi esatti
+            words, frames, q = [], b"", t
+            for k, (f, *_ ) in enumerate(pezzi):
+                d = len(f) / (rate * fr)
+                words.append(Word(text.split()[k], round(q, 3), round(q + d, 3)))
+                vuoto = max(0, int(passo * rate) - len(f) // fr) if k < len(pezzi) - 1 else 0
+                frames += f + b"\0" * vuoto * fr
+                q += max(d, passo)
+            dur = len(frames) / (rate * fr)
+        else:
+            frames = pezzi[0][0]
+            dur = len(frames) / (rate * fr)
+            words = word_timings(text, t, t + dur)
+        sentences.append(Sentence(text, round(t, 3), round(t + dur, 3), words, tone))
         chunks.append(frames)
         chunks.append(b"\0" * int(PAUSE * rate) * width * channels)
         t += dur + PAUSE

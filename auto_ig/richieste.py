@@ -39,7 +39,8 @@ richiesta: {richiesta}    # cosa ha chiesto Antonio, parole sue
 # Formato (auto_ig/formati.yaml: scaletta, ricetta 3d/2d, CTA). Vuoto = richiesta libera senza CTA automatica.
 formato: {formato}        # storia | quiz | curiosita
 resa: {resa}              # 3d (modella Cintre e preset) | 2d (grafica a schede)
-cta: ""                   # vuoto = CTA del formato; viene aggiunta SEMPRE come ultima frase
+cta: ""                   # vuoto = CTA del formato; viene aggiunta SEMPRE come ultima frase. UNA sola, legata al video
+mascotte: false           # modella Cintre (3D/2D): true SOLO se Antonio la chiede
 
 # Video sotto la voce: scena three.js (testo | oggetto | particelle | schede2d | ...) e colori
 scena: {scena}
@@ -51,9 +52,9 @@ qualita: alta             # alta (supersampling 2x, ombre) | bozza (veloce, per 
 sottotitoli: interi       # interi (frase intera) | corti (1-3 parole alla volta: più spazio alla grafica)
 audio: {{musica: false, sfx: false}}   # base musicale e effetti sonori generati a codice (auto_ig/audio.py)
 
-# Voce (Piper, locale) e copione: una riga = una frase detta e mostrata a schermo
+# Voce (locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
-  modello: it_IT-paola-medium
+  modello: qwen3-vivian   # Qwen3-TTS, più naturale (~4-5 min per video, poi in cache) | it_IT-paola-medium (Piper, istantanea)
   velocita: 1.0           # 0.8 più lenta, 1.2 più veloce
   # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole
 copione:                  # riga semplice, oppure {{testo: "...", tono: arrabbiata|felice, scheda: {{tipo: ..., titolo: ...}}}}
@@ -161,7 +162,8 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
                               "atti": ",".join(f"{x.start:.2f}" for x in sentences),
                               "fini": ",".join(f"{x.end:.2f}" for x in sentences),   # bocca che parla
                               "battute": audio.battute_param(bt),
-                              "outfit": str(data.get("outfit") or "")},
+                              "outfit": str(data.get("outfit") or ""),
+                              "mascotte": "1" if data.get("mascotte") is True else "0"},
               max(3.0, seconds), o["mp4"].parent, progress=progress, audio=traccia, ass=o["ass"], name="video",
               quality=str(data.get("qualita") or "alta"), log=log)
     set_state(folder, "generato")

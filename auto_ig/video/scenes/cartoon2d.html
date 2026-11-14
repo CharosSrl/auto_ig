@@ -27,8 +27,11 @@ const ESEMPIO = [
 ];
 const ETICHETTA = { curiosita: 'Lo sapevi?', quiz: 'Quiz di moda', storia: 'Storia' };
 const SCURO2 = '#4a0f24';
+// Mescola due colori '#rrggbb' (k = quota di b): serve a derivare i fondi alternati dalla palette della richiesta.
+const mescola = (a, b, k) => '#' + [1, 3, 5].map((j) => Math.round(parseInt(a.slice(j, j + 2), 16) * (1 - k) + parseInt(b.slice(j, j + 2), 16) * k)
+  .toString(16).padStart(2, '0')).join('');
 
-start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '20', outfit: '' }, (THREE, p, renderer) => {
+start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '20', outfit: '', mascotte: '0' }, (THREE, p, renderer) => {
   const S = p.schede ? JSON.parse(p.schede) : ESEMPIO;
   const atti = tempiAtti(p, S.length);
   const voceInizi = String(p.atti || atti.inizi.join(',')).split(',').map(Number);
@@ -36,7 +39,12 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   const BT = (p.battute ? String(p.battute).split(',').map((x) => { const [t, k] = x.split(':'); return { t: +t, k }; })
     : atti.inizi.map((t, i) => ({ t, k: i ? 'stacco' : 'boom' }))).sort((a, b) => a.t - b.t);
   const tela = G.tela2d(THREE, renderer), ctx = tela.ctx, acc = p.accento || CIPRIA;
+  // Fondi: con la palette Cintre (bordeaux) restano quelli di sempre; con un altro colore si derivano da quello,
+  // così una scheda su due non torna bordeaux in un video nero/oro o verde/oro.
+  const proprio = /^#[0-9a-f]{6}$/i.test(p.colore || '') && p.colore.toLowerCase() !== BORDEAUX.toLowerCase();
+  const ALT = proprio ? mescola(p.colore, acc, 0.1) : SCURO2, BUIO = proprio ? mescola(p.colore, '#000000', 0.45) : SCURO;
   const outfit = C.outfitDaNome(p.outfit);
+  const MASCOTTE = p.mascotte === '1';          // modella Cintre 2D solo se Antonio la chiede
   const etichetta = ETICHETTA[p.formato] || 'Cintre';
   const fatti = S.map((s, k) => (s.tipo === 'fatto' ? k : -1)).filter((k) => k >= 0);
   const iconeFatti = fatti.map((k) => S[k].icona || 'stella');
@@ -52,7 +60,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
 
   // zoom e fuoco per battuta (irregolari: niente metronomo)
   const LIV = [1.08, 1.0, 1.14, 1.04];
-  const livello = (k, b) => ({ boom: 1.0, stacco: 1.0, rivela: 1.1 }[k] ?? LIV[b % 4]);
+  const livello = (k, b) => ({ boom: 1.0, stacco: 1.0, rivela: 1.1, tic: 1.0 + 0.03 * (b % 3) }[k] ?? LIV[b % 4]);
 
   // Pose ed espressioni per tipo: una per battuta dentro la frase (si cicla)
   const COPIONE = {
@@ -67,7 +75,102 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   // Disposizione: personaggio e adesivo si scambiano lato a ogni frase (cambio d'inquadratura)
   function lati(i) { return i % 2 ? { pc: 790, ic: 300 } : { pc: 290, ic: 770 }; }
 
+  // Senza mascotte: l'oggetto è il protagonista. Adesivo grande al centro che "reagisce" a ogni battuta.
+  function reazione(bt) {
+    const e = Math.exp(-bt.dt * 7), k = { boom: 1, rivela: 1, punch: 0.6, stacco: 0.4 }[bt.k] ?? 0.4;
+    return { sc: 1 + 0.1 * k * e * Math.cos(bt.dt * 22), rot: 0.12 * k * e * Math.sin(bt.dt * 18) * (bt.b % 2 ? 1 : -1) };
+  }
+  function scenaSola(s, i, t, u, bt, nb) {
+    const n = scoperte(i), r = reazione(bt);
+    const grande = (nome, x, y, lato, uu, opz = {}) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(r.rot); ctx.scale(r.sc, r.sc); ctx.translate(-x, -y);
+      C.adesivo(ctx, nome, x, y, lato, uu, { t, accento: acc, ...opz }); ctx.restore();
+    };
+    if (s.tipo === 'gancio') {
+      C.scritta(ctx, s.titolo || '', 540, 385, u, { size: 100, maxW: 860, evidenzia: s.evidenzia, accento: acc, passo: 0 });   // sotto l'intestazione anche col boom
+      grande(s.icona || iconeFatti[0] || 'stella', 540, 745, 400, 1, { ruota: -0.05 });
+      if (s.timbro) C.timbro(ctx, s.timbro.toUpperCase(), 770, 585, u - 0.25, { size: 58, fondo: '#ffd166', ruota: 0.12 });
+      C.carteMistero(ctx, iconeFatti.length ? iconeFatti : ['stella', 'stella', 'stella'], 0, 540, 1020, 150, t, { accento: acc, attiva: nb >= 1 ? nb % 3 : -1 });
+    } else if (s.tipo === 'fatto' || s.tipo === 'scena') {
+      C.contatore(ctx, n, fatti.length, 540, 268, u, { accento: acc });
+      C.scritta(ctx, s.titolo || '', 540, 395, u, { size: 104, maxW: 860, evidenzia: s.evidenzia, accento: acc });
+      grande(s.icona, 540, 790, 500, u - 0.05, { ruota: i % 2 ? 0.05 : -0.05 });
+    } else if (s.tipo === 'dettaglio') {
+      const f = S[[...fatti].reverse().find((k) => k < i) ?? i] || {};
+      C.scritta(ctx, s.testo || s.titolo || '', 540, 395, u, { size: 96, maxW: 860, evidenzia: s.evidenzia, accento: acc, passo: 0.07 });   // sotto l'intestazione anche su due righe
+      if (f.icona) { C.adesivo(ctx, f.icona, 230, 600, 200, 1, { t, accento: acc, ruota: -0.12 }); G.freccia(ctx, 330, 630, 470, 700, { k: G.entra(u, 0.1, 0.3), colore: acc }); }
+      grande(s.icona, 620, 800, 440, u - 0.05, { dall: 'pop', ruota: 0.05 });
+      const parola = (s.timbro || s.evidenzia || '').toUpperCase();
+      if (parola && nb >= 1) C.timbro(ctx, parola + '!', 600, 1070, bt.dt + (nb > 1 ? 1 : 0), { size: 76, fondo: '#ffd166', ruota: -0.08 });
+    } else if (s.tipo === 'rehook') {
+      const sx = Math.sin(t * 40) * 6 * Math.exp(-u * 2);
+      ctx.save(); ctx.translate(sx, 0);
+      C.scritta(ctx, s.titolo || 'Aspetta…', 540, 350, u, { size: 112, maxW: 820, evidenzia: s.evidenzia, accento: '#ffd166', pennarello: SCURO, passo: 0.08 });
+      ctx.restore();
+      ctx.save(); ctx.translate(540, 790); ctx.rotate(r.rot); ctx.scale(r.sc, r.sc); ctx.translate(-540, -790);
+      C.carteMistero(ctx, [iconeFatti[n] || 'stella'], 0, 540, 790, 380, t, { accento: acc, attiva: 0 }); ctx.restore();
+    } else if (s.tipo === 'commenta') {
+      C.fumetto(ctx, 90, 250, 900, 300, 540, 620);
+      G.testo(ctx, s.titolo || '', 540, 400, { size: 72, peso: 900, colore: SCURO, evidenzia: s.evidenzia, accento: BORDEAUX, maxW: 800, parole: G.entra(u, 0.05, 0.5) });
+      grande('commento', 540, 820, 380, u);
+    } else {
+      C.scritta(ctx, s.titolo || s.testo || '', 540, 360, u, { size: 96, maxW: 860, evidenzia: s.evidenzia, accento: acc });
+      if (s.icona) grande(s.icona, 540, 780, 460, u);
+    }
+  }
+
+  // QUIZ: domanda in alto e 3 opzioni A/B/C a pillola. Le frasi "domanda" consecutive sono UNA card continua
+  // (niente rientro); quella con `conto: N` è l'attesa: numero gigante N…1 che sbatte su ogni battuta "tic" e
+  // anello che si svuota. "risposta": le sbagliate si barrano e sbiadiscono, la giusta (giusta: indice) si
+  // illumina con la spunta e il timbro GIUSTA!; `testo` (facoltativo) è il perché, sotto.
+  const QUIZ = ['domanda', 'risposta'];
+  const inizioQuiz = (i) => { let k = i; while (k > 0 && QUIZ.includes(S[k - 1].tipo)) k--; return k; };
+  function quizScena(s, i, t, u, bt, nb) {
+    const i0 = inizioQuiz(i), uq = t - atti.inizi[i0], giusta = s.tipo === 'risposta' ? (s.giusta ?? 0) : -1;
+    const kr = giusta >= 0 ? G.easeOut(u / 0.35) : 0;
+    C.scritta(ctx, s.titolo || '', 540, 330, uq, { size: 80, maxW: 900, evidenzia: s.evidenzia, accento: acc, passo: i === i0 ? 0.05 : 0 });
+    const conto = s.conto ? +s.conto : 0, attesa = conto > 0;
+    const urgenza = attesa ? G.clamp(u / Math.max(0.5, (fini[i] ?? t) - atti.inizi[i])) : 0;
+    (s.opzioni || []).forEach((o, n) => {
+      const y = 540 + n * 150, ke = giusta >= 0 || i > i0 ? 1 : G.entra(uq, 0.55 + n * 0.3, 0.3), ok = n === giusta;
+      if (ke <= 0) return;
+      const vib = attesa ? Math.sin(t * 38 + n * 2) * (3 + 7 * urgenza) : 0;
+      const bump = !attesa && giusta < 0 && bt.k === 'punch' && nb % 3 === n ? 0.06 * Math.exp(-bt.dt * 6) : 0;
+      const cade = giusta >= 0 && !ok ? kr : 0;
+      ctx.save(); ctx.translate(540 + vib + Math.sin(u * 30) * 10 * cade * Math.exp(-u * 4), y + cade * 10);
+      const sc = G.pop(ke) * (1 + bump + (ok ? 0.08 * kr : 0)); ctx.scale(sc, sc); ctx.rotate(cade * (n % 2 ? 0.04 : -0.04));
+      ctx.globalAlpha *= 1 - 0.6 * cade;
+      ctx.shadowColor = 'rgba(20,4,10,0.45)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
+      ctx.fillStyle = ok && kr > 0.4 ? '#ffd166' : CREMA; G.rr(ctx, -410, -58, 820, 116, 58); ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.lineWidth = 6; ctx.strokeStyle = SCURO; ctx.stroke();
+      G.pillola(ctx, 'ABC'[n], -335, 0, { size: 52, fondo: ok && kr > 0.4 ? BORDEAUX : acc, colore: ok && kr > 0.4 ? '#ffd166' : BORDEAUX, w: 92, h: 92 });
+      ctx.font = G.FONT(62, 900); ctx.fillStyle = SCURO; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillText(o, -260, 4);
+      if (ok && kr > 0.4) { ctx.fillStyle = '#2e9e5b'; ctx.font = G.FONT(84, 900); ctx.textAlign = 'center'; ctx.fillText('✓', 340, 6); }
+      if (cade > 0) {                                     // X rossa che si disegna sopra la sbagliata
+        const k2 = G.clamp(cade * 1.4); ctx.globalAlpha = 1; ctx.strokeStyle = '#e8435a'; ctx.lineWidth = 14; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-380, 0); ctx.lineTo(-380 + 760 * k2, 0); ctx.stroke();
+      }
+      ctx.restore();
+    });
+    if (attesa) {                                         // conto alla rovescia: N … 1, uno per battuta "tic"
+      const num = Math.max(1, conto - Math.max(0, nb)), r = 92, cx = 540, cy = 1010;
+      ctx.save(); ctx.lineWidth = 16; ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
+      ctx.strokeStyle = urgenza > 0.66 ? '#e8435a' : '#ffd166'; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - urgenza)); ctx.stroke(); ctx.restore();
+      const sb = 1 + 0.5 * Math.exp(-bt.dt * 9);
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(sb, sb); ctx.rotate(0.12 * Math.exp(-bt.dt * 9) * (nb % 2 ? 1 : -1));
+      ctx.font = G.FONT(150, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+      ctx.lineWidth = 20; ctx.strokeStyle = SCURO; ctx.strokeText(String(num), 0, 8); ctx.fillStyle = '#fff'; ctx.fillText(String(num), 0, 8); ctx.restore();
+    }
+    if (giusta >= 0) {
+      C.timbro(ctx, s.timbro || 'GIUSTA!', 790, 540 + giusta * 150 - 78, u - 0.15, { size: 60, fondo: '#2e9e5b', colore: '#fff', ruota: 0.12 });
+      if (s.testo) C.scritta(ctx, s.testo, 540, 1010, u - 0.5, { size: 60, maxW: 900, evidenzia: s.evidenzia, accento: acc, passo: 0.05 });
+    }
+  }
+
   function scena(s, i, t, u, bt, nb) {
+    if (QUIZ.includes(s.tipo)) return quizScena(s, i, t, u, bt, nb);
+    if (!MASCOTTE) return scenaSola(s, i, t, u, bt, nb);
     const L = lati(i), cop = COPIONE[s.tipo] || COPIONE.scena, [posa, espr] = cop[Math.max(0, nb) % cop.length];
     const [posaPrima] = nb > 0 ? cop[(nb - 1) % cop.length] : ['neutro'];
     const kPosa = G.clamp(bt.dt / 0.28);
@@ -129,10 +232,13 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     const z0 = prima ? livello(prima.k, bt.b - 1) : 1, z1 = livello(bt.k, bt.b);
     let zoom = G.clamp(bt.dt / 0.2) < 1 ? z0 + (z1 - z0) * C.backOut(bt.dt / 0.2) : z1;
     if (bt.k === 'boom') zoom += 0.12 * Math.exp(-bt.dt * 7);
-    const L = lati(i), fuoco = nb % 2 ? [L.pc, 520] : [s.tipo === 'fatto' || s.tipo === 'dettaglio' ? L.ic : 540, 700];
+    const L = MASCOTTE ? lati(i) : { pc: 540, ic: s.tipo === 'dettaglio' ? 620 : 540 };
+    const inQuiz = QUIZ.includes(s.tipo), iq = inQuiz ? inizioQuiz(i) : i;
+    const fuoco = inQuiz ? [540, 700] : !MASCOTTE ? [L.ic + (nb % 2 ? -50 : 50), 780]
+      : nb % 2 ? [L.pc, 520] : [s.tipo === 'fatto' || s.tipo === 'dettaglio' ? L.ic : 540, 760];
     const forte = bt.k === 'boom' || bt.k === 'rivela';
     const amp = (forte ? 18 : 0) * Math.exp(-bt.dt * 9);
-    const fondo = s.tipo === 'rehook' ? SCURO : s.tipo === 'cta' ? (p.colore || BORDEAUX) : (i % 2 ? SCURO2 : (p.colore || BORDEAUX));
+    const fondo = s.tipo === 'rehook' ? BUIO : s.tipo === 'cta' ? (p.colore || BORDEAUX) : (iq % 2 ? ALT : (p.colore || BORDEAUX));
 
     tela.inizia();
     C.camera(ctx, { zoom, fx: fuoco[0], fy: fuoco[1], sx: Math.sin(bt.dt * 55) * amp, sy: Math.cos(bt.dt * 47) * amp * 0.6 });
@@ -140,17 +246,17 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       vel: s.tipo === 'rehook' ? 0.6 : 0.15, cx: fuoco[0], cy: fuoco[1] });
     C.lineeVelocita(ctx, fuoco[0], fuoco[1], forte ? Math.exp(-bt.dt * 3) : (bt.k === 'stacco' ? Math.exp(-bt.dt * 6) * 0.6 : 0));
     if (s.tipo === 'cta') {
-      G.finale(ctx, u, { testo: s.titolo || '', bottone: s.bottone, accento: acc, t });
+      G.finale(ctx, u, { testo: s.titolo || '', bottone: s.bottone, azione: s.azione, accento: acc, t });
     } else scena(s, i, t, u, bt, nb);
     ctx.restore();
 
     if (s.tipo !== 'cta') hud(t, i, s);
     // esplosioni sulle rivelazioni e sul gancio, tendina sugli stacchi, flash
-    if (bt.k === 'rivela') C.esplosione(ctx, L.ic, 800, bt.dt, { seme: bt.b });
+    if (bt.k === 'rivela') C.esplosione(ctx, s.tipo === 'risposta' ? 540 : L.ic, s.tipo === 'risposta' ? 540 + (s.giusta ?? 0) * 150 : 800, bt.dt, { seme: bt.b, ...(s.tipo === 'risposta' ? { n: 34, forza: 1300 } : {}) });
     if (bt.k === 'boom') C.esplosione(ctx, 540, 360, bt.dt, { seme: bt.b + 5, n: 30, forza: 1300 });
     if (s.tipo === 'cta') C.esplosione(ctx, 540, 450, u - 0.1, { seme: 99, n: 34, forza: 1200 });
-    if (bt.k !== 'punch' && bt.b > 0) C.tendina(ctx, bt.dt, { colore: acc, colore2: SCURO, dir: bt.b % 2 ? 1 : -1 });
-    C.flash(ctx, { boom: 0.55, rivela: 0.3, punch: 0.12, stacco: 0 }[bt.k] * Math.exp(-bt.dt * 12) * (bt.b === 0 ? 0 : 1));
+    if (bt.k !== 'punch' && bt.k !== 'tic' && !(inQuiz && i > iq) && bt.b > 0) C.tendina(ctx, bt.dt, { colore: acc, colore2: SCURO, dir: bt.b % 2 ? 1 : -1 });
+    C.flash(ctx, ({ boom: 0.55, rivela: 0.3, punch: 0.12, stacco: 0, tic: 0.08 }[bt.k] ?? 0) * Math.exp(-bt.dt * 12) * (bt.b === 0 ? 0 : 1));
     // ultimi 0,3 s: torna al colore d'apertura (il loop riparte pulito)
     const v = (t - (atti.fine - 0.3)) / 0.3;
     if (v > 0) { ctx.fillStyle = `rgba(26,7,16,${Math.min(1, v)})`; ctx.fillRect(0, 0, G.W, G.H); }

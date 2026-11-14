@@ -85,7 +85,7 @@ class TestRichiesta(unittest.TestCase):
         base = Path(tempfile.mkdtemp())
         f = richieste.new("Quiz moda", base=base, day=date(2026, 11, 20), formato="quiz", resa="2d")
         data = yaml.safe_load((f / "richiesta.yaml").read_text())
-        self.assertEqual((data["formato"], data["resa"], data["scena"]), ("quiz", "2d", "schede2d"))
+        self.assertEqual((data["formato"], data["resa"], data["scena"]), ("quiz", "2d", "cartoon2d"))
         self.assertEqual([r["scheda"]["tipo"] for r in data["copione"]], ["gancio", "domanda", "domanda", "risposta", "commenta"])
         self.assertIn("#cintre", data["pubblicazione"]["caption"])
         richieste.load(f)                                     # lo scheletro è già valido
@@ -100,7 +100,7 @@ class TestRichiesta(unittest.TestCase):
                     for i, (t, tone) in enumerate(voce.normalize_lines(lines))], 7.0
         richieste.build(f, render_fn=render, speak_fn=speak)
         scene, params, seconds = calls[0]
-        self.assertEqual(scene, "schede2d")
+        self.assertEqual(scene, "cartoon2d")
         self.assertEqual(len(params["atti"].split(",")), 6)   # 5 frasi + CTA
         self.assertEqual(json.loads(params["schede"])[-1]["tipo"], "cta")
         self.assertEqual(seconds, 8.0)                        # la CTA resta a schermo un secondo in più

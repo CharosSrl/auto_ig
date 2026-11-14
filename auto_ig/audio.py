@@ -4,7 +4,7 @@ Le *battute* sono gli istanti in cui la scena cambia qualcosa (stacco, zoom, riv
 una volta sola e vanno sia alla scena (parametro `battute`) sia al mix (effetti sonori sugli stessi istanti):
 immagine e suono restano sincronizzati.
 
-    battute(frasi, schede)                -> [(secondi, tipo), ...]  tipo: boom | stacco | punch | rivela
+    battute(frasi, schede)                -> [(secondi, tipo), ...]  tipo: boom | stacco | punch | rivela | tic
     mix(voce.wav, battute, durata, out)   -> wav stereo 48 kHz: voce + base (abbassata sotto la voce) + effetti
 
 Nessun file esterno: niente copyright. Ritmo della ricerca (formati.yaml → ritmo_alto): un cambio ogni ~1,5–3 s,
@@ -22,7 +22,7 @@ BPM = 116
 # Livelli (ampiezza lineare, la voce va a ~0.9 di picco)
 LIV_BASE = 0.16          # base musicale senza voce
 DUCK = 0.6               # quanto si abbassa la base mentre la voce parla (0..1)
-LIV_SFX = {"boom": 0.55, "stacco": 0.32, "punch": 0.22, "rivela": 0.3}
+LIV_SFX = {"boom": 0.55, "stacco": 0.32, "punch": 0.22, "rivela": 0.3, "tic": 0.4}
 PASSO = (1.5, 2.3)       # distanza minima/massima tra due battute dentro una frase (s)
 
 
@@ -36,14 +36,26 @@ def _h(i: float) -> float:
 def battute(frasi: list, schede: list | None = None) -> list[tuple[float, str]]:
     """Istanti dei cambi visivi. `frasi` = oggetti con .start/.end (voce.Sentence) o tuple (start, end).
     Ogni frase apre con uno stacco (gancio/rehook: boom, dettaglio: rivela); dentro la frase un "punch"
-    ogni 1,5–2,3 s (irregolare), mai a meno di 0,7 s dalla frase dopo."""
+    ogni 1,5–2,3 s (irregolare), mai a meno di 0,7 s dalla frase dopo.
+    Quiz: la risposta apre con "rivela"; una domanda con `conto: N` (l'attesa) ha N "tic" equidistanti
+    sulla frase (il conto alla rovescia, unica battuta regolare) e nessun punch."""
     tempi = [(f.start, f.end) if hasattr(f, "start") else (float(f[0]), float(f[1])) for f in frasi]
     schede = schede or [{}] * len(tempi)
     out: list[tuple[float, str]] = []
     for i, (a, b) in enumerate(tempi):
-        tipo = (schede[i] or {}).get("tipo", "") if i < len(schede) else ""
+        sk = (schede[i] or {}) if i < len(schede) else {}
+        tipo = sk.get("tipo", "")
         t0 = 0.0 if i == 0 else a                       # la prima battuta è al fotogramma 0
-        out.append((round(t0, 2), {"gancio": "boom", "rehook": "boom", "dettaglio": "rivela"}.get(tipo, "stacco")))
+        conto = int(sk.get("conto") or 0)
+        if conto > 0:                                   # conto alla rovescia: N tic sulla frase
+            parole = getattr(frasi[i], "words", None) or []
+            if len(parole) == conto:                    # "Tre. Due. Uno." → un tic su ogni numero detto
+                out += [(round(0.0 if i == 0 and k == 0 else w.start, 2), "tic") for k, w in enumerate(parole)]
+            else:
+                out += [(round(t0 + (b - t0) * k / conto, 2), "tic") for k in range(conto)]
+            continue
+        out.append((round(t0, 2), {"gancio": "boom", "rehook": "boom", "dettaglio": "rivela",
+                                   "risposta": "rivela"}.get(tipo, "stacco")))
         if tipo == "cta":
             continue
         fine = (tempi[i + 1][0] if i + 1 < len(tempi) else b + 0.6) - 0.7
@@ -122,7 +134,13 @@ def boom(seme: int = 3) -> np.ndarray:
     return corpo + 0.5 * crash
 
 
-SUONI = {"boom": lambda: boom(), "stacco": lambda: whoosh(), "punch": lambda: pop(), "rivela": lambda: ding()}
+def tic() -> np.ndarray:
+    """Clic secco da orologio (conto alla rovescia del quiz)."""
+    t = _t(0.09)
+    return np.sin(2 * np.pi * 2400 * t) * _env(len(t), 0.0005, 0.012) + 0.6 * _rumore(len(t), 7) * _env(len(t), 0.0003, 0.004)
+
+
+SUONI = {"boom": lambda: boom(), "stacco": lambda: whoosh(), "punch": lambda: pop(), "rivela": lambda: ding(), "tic": lambda: tic()}
 
 
 def _nota(f: float, dur: float, timbro: str = "pad") -> np.ndarray:

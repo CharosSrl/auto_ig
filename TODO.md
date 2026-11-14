@@ -20,6 +20,13 @@
 6. Non fare commit/push se il task non lo dice esplicitamente.
 
 **Modalità chat (richieste di contenuti)**
+> ⭐ **Due regole di Antonio che valgono in OGNI ragionamento (2026-11-14):**
+> 1. **La mascotte (modella Cintre 3D/2D) si mette solo quando la chiede Antonio.** Se sembra adatta, glielo si
+>    chiede nelle domande; mai di propria iniziativa (`mascotte: false` è il default).
+> 2. **Hook e call to action sono la cosa più importante.** Hook: 5-10 candidati, punteggio, vince solo uno vero,
+>    ≤12 parole, a schermo dal fotogramma 0. CTA: una sola, legata al valore del video (curiosità → salva/condividi).
+>    Regole in `auto_ig/formati.yaml → hook_e_cta`, skill in `.claude/skills/` (hook-writer, short-form-video-script,
+>    caption-writer, viral-hooks), profilo e voce del brand in `marca/`.
 Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, niente API a pagamento):
 "fammi un reel con…", "cerca immagini di…", "crea una scena nuova…". Regole:
 - Claude **genera**, Antonio **decide**: nulla va mai in coda come `pending` da parte di Claude,
@@ -39,12 +46,12 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
 - **Prima il formato**: ogni contenuto nuovo sceglie formato e resa da `auto_ig/formati.yaml` e ne segue scaletta e
   ricetta; la call to action finale la aggiunge il sistema.
-- **Ritmo alto (2D)**: scena `cartoon2d` (modella Cintre disegnata in 2D, preset `cartoon2d.js`) con `sottotitoli: corti`
+- **Ritmo alto (2D)**: scena `cartoon2d` (motion graphics; modella Cintre 2D solo con `mascotte: true`) con `sottotitoli: corti`
   e `audio: {musica: true, sfx: true}` (base ed effetti generati a codice da `auto_ig/audio.py`, sincronizzati con le
   "battute" visive). Regole in `formati.yaml → ritmo_alto`; hook e ritmo dalle skill `.claude/skills/viral-hooks` e
   `.claude/skills/short-form-video` (MIT, solo Markdown).
-- **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `modella.js` (la modella Cintre, protagonista
-  fissa di tutti i video), `grafica2d.js` (resa 2D: icone, card, CTA), `guardaroba.js` (capi: `lei.indossa({sopra, sotto, scarpe, colori})`, capi singoli
+- **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `modella.js` (la modella Cintre, mascotte:
+  SOLO se Antonio la chiede), `grafica2d.js` (resa 2D: icone, card, CTA), `guardaroba.js` (capi: `lei.indossa({sopra, sotto, scarpe, colori})`, capi singoli
   su gruccia/stender/vetrina), `ambienti.js`, `oggetti.js`, `brand.js`, `regia.js`, `qualita.js`.
   Scena nuova = file in `auto_ig/video/scenes/` con solo la regia (vedi `cintre_storia.html`), anteprima
   fotogrammi → correzioni → render. Nuovi pezzi riutilizzabili vanno nei preset, non nella scena.
@@ -177,6 +184,9 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       > nota: una frase alla volta → durata reale; tempi delle parole stimati dalla lunghezza.
 - [x] Testo sincronizzato: sottotitoli ASS con **parola evidenziata** (colore accento), sopra la zona caption IG;
       la scena three.js continua sotto. Scene `testo`/`oggetto` si spostano in alto con `voce=1`.
+- [x] Voce **Qwen3-TTS 0.6B** (Apache 2.0, scelta da Antonio il 2026-11-14 dopo confronto con Piper, Pocket TTS,
+      Chatterbox): `voce.modello: qwen3-vivian` (speaker dopo il trattino). Solo CPU ~10x il tempo reale;
+      frasi in cache in `.voci/cache/`, seme fisso per frase. Velocità con ffmpeg atempo. Piper resta disponibile.
 - [x] Video: audio voce AAC 48 kHz, durata esatta (`-t`), bitrate max 6 Mbit/s, copertina con testo.
       > nota: bug trovato e corretto: con `-filter_complex` `-shortest` non ferma `apad` → audio infinito.
 - [x] UI › Video › **Richieste**: player, copione, "Metti in coda", "Scarta". 33 test OK.

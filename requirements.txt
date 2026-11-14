@@ -5,3 +5,4 @@ Flask>=3.0
 playwright>=1.40
 piper-tts>=1.3
 numpy>=1.24
+# Voce Qwen3-TTS (opzionale, solo PC): pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install qwen-tts
