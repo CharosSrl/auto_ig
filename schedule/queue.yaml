@@ -171,3 +171,27 @@ posts:
   published_at: null
   extra:
     cover: reel-2026-11-16-quiz-sneakers.jpg
+- id: '9'
+  when: 2026-11-17T14:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-17-curiosita-ray-ban.mp4
+  caption: 'I tuoi Ray-Ban sono andati in guerra. E il nome? 🕶️
+
+    Dall''inventore, perché bloccano i raggi o da un pilota: una è la trappola.
+
+
+    Tu cosa avevi detto? Scrivilo nei commenti 👇
+
+    Segui @cintre_official per la prossima curiosità di moda.
+
+
+    📷 Foto: Alfred T. Palmer, 1942, via Wikimedia Commons (pubblico dominio)
+
+    #cintre #curiosità #rayban #quizmoda #storiadellamoda'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-17-curiosita-ray-ban.jpg
