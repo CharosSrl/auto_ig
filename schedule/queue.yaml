@@ -147,3 +147,27 @@ posts:
   published_at: '2026-11-16T20:09:54+00:00'
   extra:
     cover: reel-2026-11-14-i-miei-genitori-e-cintre.jpg
+- id: '8'
+  when: 2026-11-17T09:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-16-quiz-sneakers.mp4
+  caption: 'Perché le tue sneakers si chiamano così? 👟
+
+    Dall''inventore, perché non fanno rumore o da un marchio: una è la trappola.
+
+
+    Tu cosa avevi detto? Scrivilo nei commenti 👇
+
+    Segui @cintre_official per il prossimo quiz di moda.
+
+
+    📷 Foto: Daderot via Wikimedia Commons (CC0), Bata Shoe Museum
+
+    #cintre #quizmoda #sneakers #storiadellamoda'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-16-quiz-sneakers.jpg
