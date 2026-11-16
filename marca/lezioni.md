@@ -61,3 +61,33 @@ Altri dati utili:
       Il credito va anche in caption.
     - Nei quiz il gancio porta `opzioni: [A, B, C]`, così domanda e opzioni sono a schermo dal fotogramma 0.
       Primo esempio: `richieste/2026-11-16-quiz-sneakers`.
+11. **Linguaggio dei ragazzi + una parola forte vera nel gancio** (richiesta di Antonio, 2026-11-16, da verificare
+    con gli Insights: percentuale ancora a 3 e a 6 s). Registro parlato, tu, sfida e non lezione.
+    - Al massimo una parola forte (morte, guerra, bomba, vietato…), vera e nel contesto del fatto.
+    - A schermo è censurata in automatico (`auto_ig/censura.py`: m*rte), la voce la dice intera.
+    - Niente parolacce, niente sessuale, niente droghe: dal 2025 Instagram nasconde questi contenuti ai minori (13+).
+    - Tutto il dettaglio è in `.claude/skills/linguaggio-giovani/SKILL.md`.
+12. **Foto Wikimedia incorniciata e viva dal fotogramma 0, più immagini che scritte** (richiesta di Antonio,
+    2026-11-16). L'obiettivo è sempre il massimo dell'attenzione.
+    - Nei quiz e nelle curiosità 2D **la prima scheda ha sempre `foto`**: `richieste crea` si ferma se manca.
+    - Nel quiz, domanda e risposta senza foto ereditano quella del gancio. `foto_risposta` la cambia quando arriva la risposta.
+    - Cornice da preset (`cornice:` nella richiesta o nella scheda): `oro` (default nei quiz), `polaroid` (default
+      nelle curiosità), `pellicola`, `nastro`.
+    - La foto è "viva" (`auto_ig/video/preset/foto2d.js` → `fotoViva`):
+      - ondeggia come una bandiera;
+      - un riflesso di luce la attraversa;
+      - fa glitch sulle battute forti;
+      - nelle schede `foto` passa dal bianco e nero ai colori.
+    - Le scritte a schermo sono minime, perché la voce dice già tutto:
+      - titolo ≤ 7 parole, opzioni ≤ 4 (oltre arriva un avviso al build);
+      - il "perché" della risposta solo se ≤ 5 parole;
+      - sottotitoli `corti`.
+    - Il gancio non deve svelare la risposta: va scelta una foto che incuriosisce, non una che risponde.
+13. **Si deve capire al primo ascolto** (Antonio, 2026-11-17, sul Ray-Ban: "non si capisce niente, troppo veloce").
+    - Voce a `velocita: 1.0`, mai 1.2, con `pausa: 0.4-0.5` tra le frasi.
+    - Sottotitoli `blocco`, che sono il default: due righe ferme e grandi, la parola detta si accende man mano,
+      quelle ancora da dire sono attenuate. Basta con i pezzi da 1-3 parole che scorrono.
+    - Frasi intere da 6 a 14 parole, una sola idea. Niente frammenti telegrafici ("B. Ray, raggio. Fine.").
+    - La risposta del quiz dice la lettera **e** il perché in una frase: "È la B: ray vuol dire raggio, ban vuol dire bloccare."
+    - Se il video supera i 25 s, la prima cosa da togliere è la **trappola finale**, che non insegna niente.
+      Poi si accorciano le frasi. La voce non si velocizza.

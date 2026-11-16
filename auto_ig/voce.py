@@ -176,7 +176,7 @@ def tts_text(text: str, pronuncia: dict | None = None) -> str:
 
 
 def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 1.0,
-          synth=None, pronuncia: dict | None = None) -> tuple[list[Sentence], float]:
+          synth=None, pronuncia: dict | None = None, pausa: float = PAUSE) -> tuple[list[Sentence], float]:
     """Sintetizza il copione in un unico wav. Ritorna (frasi con tempi, durata totale video consigliata).
     synth(testo, tono) -> (frames, rate, width, canali); di default Piper."""
     passi = ritmi(lines)
@@ -213,15 +213,15 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
             words = word_timings(text, t, t + dur)
         sentences.append(Sentence(text, round(t, 3), round(t + dur, 3), words, tone))
         chunks.append(frames)
-        chunks.append(b"\0" * int(PAUSE * rate) * width * channels)
-        t += dur + PAUSE
+        chunks.append(b"\0" * int(pausa * rate) * width * channels)
+        t += dur + pausa
     out_wav.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(out_wav), "wb") as wf:
         wf.setnchannels(channels)
         wf.setsampwidth(width)
         wf.setframerate(rate)
         wf.writeframes(b"".join(chunks))
-    return sentences, round(t - PAUSE + TAIL, 2)
+    return sentences, round(t - pausa + TAIL, 2)
 
 
 # --- Sottotitoli ASS ------------------------------------------------------
@@ -259,15 +259,46 @@ def gruppi(words: list[Word], max_parole: int = 3, max_lettere: int = 14) -> lis
     return out
 
 
+def pagine(words: list[Word], max_riga: int = 20, max_pagina: int = 38) -> list[tuple[list[int], int]]:
+    """Divide la frase in pagine da max 2 righe (~20 lettere a riga, ~38 a pagina) per i sottotitoli a blocco.
+    Si chiude la pagina preferibilmente dopo la punteggiatura. Ritorna [(indici, k)] con k = indice (nella pagina)
+    della prima parola della seconda riga (k = len -> una riga sola); le righe sono bilanciate."""
+    lun = lambda ix: len(" ".join(words[j].text for j in ix))   # noqa: E731
+    out, cur = [], []
+    for i, w in enumerate(words):
+        if cur and lun(cur + [i]) > max_pagina:
+            out.append(cur); cur = []
+        cur.append(i)
+        if re.search(r"[.!?…:]$", w.text) and lun(cur) >= 12 or (re.search(r"[,;]$", w.text) and lun(cur) >= 24):
+            out.append(cur); cur = []
+    if cur:
+        out.append(cur)
+    res = []
+    for ix in out:
+        k = len(ix)
+        if lun(ix) > max_riga and len(ix) > 1:
+            k = min(range(1, len(ix)), key=lambda c: max(lun(ix[:c]), lun(ix[c:])))
+        res.append((ix, k))
+    return res
+
+
 def build_ass(sentences: list[Sentence], highlight: str = "#FFD166", text_color: str = "#FFFFFF",
-              font: str = "DejaVu Sans", size: int = 90, margin_bottom: int = 560, corti: bool = False) -> str:
+              font: str = "DejaVu Sans", size: int = 90, margin_bottom: int = 560, corti: bool = False,
+              censura=None, blocco: bool = False) -> str:
     """Una riga di dialogo per parola: la frase intera, con la parola detta colorata e un po' più grande.
     Il tono della frase cambia colore/grandezza; "arrabbiata" fa anche tremare la frase (±shake gradi).
     corti=True: invece della frase intera si vede solo il pezzo di 1-3 parole in corso (una riga, più grande):
     lascia spazio alla grafica (resa 2d ad alto ritmo).
-    Margine basso ampio: resta sopra la zona che Instagram copre con la caption."""
+    Margine basso ampio: resta sopra la zona che Instagram copre con la caption.
+    censura(testo) -> testo: parole forti censurate a schermo (m*rte); la voce non cambia.
+    blocco=True (default dei reel): un blocco fermo di max 2 righe (pagine()); le parole già dette sono bianche,
+    quella detta ora è nel colore accento, quelle ancora da dire sono attenuate: si legge al ritmo della voce."""
+    cz = censura or (lambda t: t)
+    outline, shadow = 5, 2
     if corti:
         size = max(size, 104)
+    elif blocco:
+        size, margin_bottom, outline, shadow = 76, 500, 6, 3
     base = ass_color(text_color)
     head = f"""[Script Info]
 ScriptType: v4.00+
@@ -278,7 +309,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Voce,{font},{size},{base},{base},&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,5,2,2,80,80,{margin_bottom},1
+Style: Voce,{font},{size},{base},{base},&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,{outline},{shadow},2,70,70,{margin_bottom},1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -287,12 +318,27 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     for s in sentences:
         tn = TONES.get(s.tone, TONES[""])
         hl, sc = ass_color(tn["highlight"] or highlight), tn["scale"]
+        if blocco:
+            for ix, k in pagine(s.words):
+                for i in ix:
+                    end = s.words[i + 1].start if i + 1 < len(s.words) else s.end + 0.25
+                    parts = []
+                    for n, j in enumerate(ix):
+                        t = _esc(cz(s.words[j].text))
+                        if j == i:
+                            t = r"{\c" + hl + rf"\fscx{sc}\fscy{sc}" + "}" + t + r"{\c" + base + r"\fscx100\fscy100}"
+                        elif j > i:
+                            t = r"{\1a&H8C&\3a&H90&\4a&HC8&}" + t + r"{\1a&H00&\3a&H00&\4a&H00&}"
+                        parts.append(("\\N" if n == k and n else "") + t)
+                    txt = " ".join(parts).replace(" \\N", "\\N")
+                    lines.append(f"Dialogue: 0,{ass_time(s.words[i].start)},{ass_time(end)},Voce,,0,0,0,,{txt}")
+            continue
         pezzo = {j: g for g in gruppi(s.words) for j in g} if corti else {}
         for i, w in enumerate(s.words):
             end = s.words[i + 1].start if i + 1 < len(s.words) else s.end + 0.25
             visibili = pezzo.get(i, range(len(s.words)))
-            parts = [(r"{\c" + hl + rf"\fscx{sc}\fscy{sc}" + "}" + _esc(s.words[j].text) + r"{\c" + base + r"\fscx100\fscy100}")
-                     if j == i else _esc(s.words[j].text) for j in visibili]
+            parts = [(r"{\c" + hl + rf"\fscx{sc}\fscy{sc}" + "}" + _esc(cz(s.words[j].text)) + r"{\c" + base + r"\fscx100\fscy100}")
+                     if j == i else _esc(cz(s.words[j].text)) for j in visibili]
             shake = (r"{\frz" + str(tn["shake"] if i % 2 else -tn["shake"]) + "}") if tn["shake"] else ""
             lines.append(f"Dialogue: 0,{ass_time(w.start)},{ass_time(end)},Voce,,0,0,0,,{shake}{' '.join(parts)}")
     return head + "\n".join(lines) + "\n"

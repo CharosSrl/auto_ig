@@ -98,6 +98,11 @@ class TestRichiesta(unittest.TestCase):
             wav.write_bytes(b"RIFF")
             return [voce.Sentence(t, i, i + 0.5, voce.word_timings(t, i, i + 0.5), tone)
                     for i, (t, tone) in enumerate(voce.normalize_lines(lines))], 7.0
+        with self.assertRaisesRegex(ValueError, "foto"):     # quiz 2D: senza foto dal fotogramma 0 non si genera
+            richieste.build(f, render_fn=render, speak_fn=speak)
+        data["copione"][0]["scheda"]["foto"] = "x.jpg"
+        (f / "foto").mkdir(); (f / "foto" / "x.jpg").write_bytes(b"jpg")
+        (f / "richiesta.yaml").write_text(yaml.safe_dump(data, allow_unicode=True))
         richieste.build(f, render_fn=render, speak_fn=speak)
         scene, params, seconds = calls[0]
         self.assertEqual(scene, "cartoon2d")

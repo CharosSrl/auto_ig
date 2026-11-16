@@ -29,7 +29,7 @@ from typing import Callable
 
 import yaml
 
-from . import audio, formati, queue, voce
+from . import audio, censura, formati, queue, voce
 from .config import MEDIA_DIR, ROOT
 from .images import slugify
 
@@ -54,14 +54,18 @@ colori:
   accento: "{accento}"      # anche colore della parola evidenziata
 testo_scena: ""           # testo fisso della scena (vuoto = nessuno; per 'testo' usa il titolo)
 qualita: alta             # alta (supersampling 2x, ombre) | bozza (veloce, per provare)
-sottotitoli: interi       # interi (frase intera) | corti (1-3 parole alla volta: più spazio alla grafica)
+sottotitoli: blocco       # blocco (2 righe ferme, parole evidenziate man mano: default) | interi | corti (1-3 parole)
 audio: {{musica: false, sfx: false}}   # base musicale e effetti sonori generati a codice (auto_ig/audio.py)
 
 # Voce (locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
   modello: qwen3-vivian   # Qwen3-TTS, più naturale (~4-5 min per video, poi in cache) | it_IT-paola-medium (Piper, istantanea)
-  velocita: 1.0           # 0.8 più lenta, 1.2 più veloce
+  velocita: 1.0           # 1.0 nei reel: più veloce non si capisce (lezioni n. 13)
+  pausa: 0.5              # silenzio tra le frasi (default 0.35)
   # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole
+# cornice: oro            # cornice della foto: polaroid | oro | pellicola | nastro (default: quiz oro, curiosità polaroid)
+# censura: true           # parole forti (morte, guerra...) censurate a schermo e in caption (m*rte), intere nella voce;
+                          # lista = parole in più da censurare | false = nessuna censura
 copione:                  # riga semplice, oppure {{testo: "...", tono: arrabbiata|felice, scheda: {{tipo: ..., titolo: ...}}}}
 {copione}
 
@@ -124,6 +128,35 @@ def load(folder: Path) -> dict:
     return data
 
 
+FORMATI_CON_FOTO = ("quiz", "curiosita")   # marca/lezioni.md regola 12: foto Wikimedia dal fotogramma 0
+
+
+def _regole_foto(data: dict) -> list[str]:
+    """Quiz e curiosità in 2D: la prima scheda deve avere una foto (incorniciata e viva dal fotogramma 0)."""
+    if data.get("formato") not in FORMATI_CON_FOTO or data.get("resa") != "2d":
+        return []
+    righe = data.get("copione") or []
+    prima = righe[0] if righe else None
+    scheda = ((prima.get("scheda") if isinstance(prima, dict) else None) or {})
+    if not scheda.get("foto"):
+        return ["la prima frase deve avere una foto (scheda.foto): nei quiz e nelle curiosità 2D la foto Wikimedia "
+                "c'è dal fotogramma 0 — cercala con: python -m auto_ig.richieste foto <cartella> \"<ricerca>\""]
+    return []
+
+
+def avvisi_testo(data: dict) -> list[str]:
+    """Scritte a schermo troppo lunghe (non blocca: la voce dice già tutto, a schermo poche parole)."""
+    out = []
+    for i, riga in enumerate(data.get("copione") or [], 1):
+        sc = ((riga.get("scheda") if isinstance(riga, dict) else None) or {})
+        if len(str(sc.get("titolo") or "").split()) > 7:
+            out.append(f"frase {i}: titolo a schermo oltre 7 parole")
+        for o in sc.get("opzioni") or []:
+            if len(str(o).split()) > 4:
+                out.append(f"frase {i}: opzione '{o}' oltre 4 parole")
+    return out
+
+
 def set_state(folder: Path, state: str) -> None:
     """Aggiorna solo la riga 'stato:' (conserva i commenti del file)."""
     if state not in STATES:
@@ -145,15 +178,23 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     if render_fn is None:
         from .video import render as render_fn
     data = load(folder)
+    if errs := _regole_foto(data):                # lo scheletro può non averla ancora; il video no
+        raise ValueError(f"{folder.name}: " + "; ".join(errs))
+    for a in dict.fromkeys(avvisi_testo(data)):
+        log(f"avviso: {a}")
     o = outputs(folder)
     o["wav"].parent.mkdir(exist_ok=True)
     v = data.get("voce") or {}
     kw = {"pronuncia": v["pronuncia"]} if v.get("pronuncia") else {}
+    if v.get("pausa") is not None:
+        kw["pausa"] = float(v["pausa"])           # secondi di silenzio tra una frase e l'altra
     righe = formati.copione(data)                 # + call to action finale, se c'è il formato
     sentences, seconds = speak_fn(righe, o["wav"],
                                   v.get("modello", voce.DEFAULT_VOICE), float(v.get("velocita", 1.0)), **kw)
     colors = data["colori"]
-    o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"], corti=data.get("sottotitoli") == "corti"))
+    cz = censura.da_richiesta(data)               # parole forti: m*rte a schermo, intere nella voce
+    o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"], corti=data.get("sottotitoli") == "corti",
+                                       blocco=data.get("sottotitoli", "blocco") == "blocco", censura=cz))
     o["tempi"].write_text(json.dumps(voce.timings_dict(sentences), indent=2, ensure_ascii=False))
     scene_text = data.get("testo_scena") or (data.get("titolo", "") if formati.scena(data) == "testo" else "")
     _prepara_foto(folder)
@@ -166,13 +207,14 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     if au.get("musica") or au.get("sfx"):
         traccia = audio.mix(o["wav"], bt, max(3.0, seconds), o["mix"], musica=bool(au.get("musica")), sfx=bool(au.get("sfx")))
     render_fn(formati.scena(data), {"testo": scene_text, "colore": colors["sfondo"], "accento": colors["accento"],
-                              "voce": "1", "fine": f"{seconds:.2f}", "schede": formati.schede(righe),
+                              "voce": "1", "fine": f"{seconds:.2f}", "schede": formati.schede(righe, cz),
                               "formato": data.get("formato") or "",
                               # inizio di ogni frase: le scene a più atti si sincronizzano con la voce
                               "atti": ",".join(f"{x.start:.2f}" for x in sentences),
                               "fini": ",".join(f"{x.end:.2f}" for x in sentences),   # bocca che parla
                               "battute": audio.battute_param(bt),
                               "outfit": str(data.get("outfit") or ""),
+                              "cornice": str(data.get("cornice") or ""),   # preset cornice della foto (foto2d.js)
                               "mascotte": "1" if data.get("mascotte") is True else "0"},
               max(3.0, seconds), o["mp4"].parent, progress=progress, audio=traccia, ass=o["ass"], name="video",
               quality=str(data.get("qualita") or "alta"), log=log)
@@ -226,6 +268,9 @@ def enqueue(folder: Path, when: str | None = None, caption: str | None = None, s
     if not when:
         raise ValueError("Manca la data di pubblicazione (--quando o pubblicazione.quando)")
     caption = caption if caption is not None else (pub.get("caption") or "")
+    cz = censura.da_richiesta(data)               # stesso stile del video: m*rte anche in caption
+    if cz:
+        caption = cz(caption)
     name = f"reel-{folder.name}"
     shutil.copy2(o["mp4"], media_dir / f"{name}.mp4")
     cover = ""

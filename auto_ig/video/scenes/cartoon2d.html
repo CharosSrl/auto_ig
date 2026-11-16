@@ -8,7 +8,9 @@
 // cambia qualcosa: stacco con tendina, punch-in, posa, timbro, esplosione. Niente dissolvenza d'ingresso:
 // il gancio è a schermo dal fotogramma 0.
 // Quiz: un gancio con `opzioni` è già la schermata del quiz (domanda + A/B/C dal fotogramma 0).
-// Scheda `foto`: foto vera (Wikimedia, PD/CC0) in cornice, campo foto = file in <richiesta>/foto/.
+// Foto vere (Wikimedia, PD/CC0): campo foto = file in <richiesta>/foto/, su gancio/domanda/fatto/dettaglio/foto.
+// In cornice (parametro cornice o campo scheda: preset di foto2d.js) e VIVA: ondula, riflesso, glitch sulle battute.
+// Quiz: domanda e risposta senza foto ereditano quella del gancio; foto_risposta la cambia sulla risposta.
 // Parametri: schede (JSON, tipi in formati.yaml → schede_2d, + rehook), atti, fini, battute "t:tipo,...",
 //            fine, colore, accento, outfit (nome di brand.js OUTFITS).
 // Solo regia: personaggio ed effetti da preset/cartoon2d.js, icone e CTA da preset/grafica2d.js.
@@ -17,7 +19,7 @@ import { tempiAtti } from '../preset/regia.js';
 import { BORDEAUX, CIPRIA, SCURO, CREMA, gruccia } from '../preset/brand.js';
 import * as G from '../preset/grafica2d.js';
 import * as C from '../preset/cartoon2d.js';
-import { caricaFoto, cornice } from '../preset/foto2d.js';
+import { caricaFoto, fotoViva, nomeCornice } from '../preset/foto2d.js';
 
 const ESEMPIO = [
   { tipo: 'gancio', titolo: '3 capi nati in guerra', evidenzia: 'guerra' },
@@ -34,7 +36,7 @@ const SCURO2 = '#4a0f24';
 const mescola = (a, b, k) => '#' + [1, 3, 5].map((j) => Math.round(parseInt(a.slice(j, j + 2), 16) * (1 - k) + parseInt(b.slice(j, j + 2), 16) * k)
   .toString(16).padStart(2, '0')).join('');
 
-start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '20', outfit: '', mascotte: '0' }, (THREE, p, renderer) => {
+start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '20', outfit: '', mascotte: '0', cornice: '' }, (THREE, p, renderer) => {
   const S = p.schede ? JSON.parse(p.schede) : ESEMPIO;
   const FOTO = caricaFoto(S);
   const atti = tempiAtti(p, S.length);
@@ -50,6 +52,14 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   const outfit = C.outfitDaNome(p.outfit);
   const MASCOTTE = p.mascotte === '1';          // modella Cintre 2D solo se Antonio la chiede
   const etichetta = ETICHETTA[p.formato] || 'Cintre';
+  const CORNICE = nomeCornice(p.cornice, p.formato === 'quiz' ? 'oro' : 'polaroid');
+  const cornDi = (s) => nomeCornice(s.cornice, CORNICE);
+  // energia della battuta forte (onda più ampia + glitch sulla foto); niente glitch sul fotogramma 0
+  const colpo = (bt) => (bt.b === 0 ? 0 : ({ boom: 1, rivela: 1, stacco: 0.5, punch: 0.35 }[bt.k] ?? 0) * Math.exp(-bt.dt * 5));
+  // la foto della scheda, viva: usata da quiz, curiosità e premio
+  function foto(s, cx, cy, w, h, u, t, bt, opz = {}) {
+    fotoViva(ctx, FOTO.mappa[s.foto], cx, cy, w, h, u, t, { cornice: cornDi(s), credito: s.credito || 'Foto: Wikimedia Commons', colpo: colpo(bt), ...opz });
+  }
   const fatti = S.map((s, k) => (s.tipo === 'fatto' ? k : -1)).filter((k) => k >= 0);
   const iconeFatti = fatti.map((k) => S[k].icona || 'stella');
 
@@ -90,7 +100,15 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       ctx.save(); ctx.translate(x, y); ctx.rotate(r.rot); ctx.scale(r.sc, r.sc); ctx.translate(-x, -y);
       C.adesivo(ctx, nome, x, y, lato, uu, { t, accento: acc, ...opz }); ctx.restore();
     };
-    if (s.tipo === 'gancio') {
+    if (s.foto && ['gancio', 'fatto', 'scena', 'dettaglio'].includes(s.tipo)) {   // curiosità con la foto: poca scritta, foto grande
+      if (s.tipo === 'fatto' || s.tipo === 'scena') C.contatore(ctx, n, fatti.length, 540, 268, u, { accento: acc });
+      const tit = s.tipo === 'dettaglio' ? (s.testo || s.titolo || '') : (s.titolo || '');
+      C.scritta(ctx, tit, 540, s.tipo === 'gancio' ? 300 : 380, u, { size: 80, maxW: 920, evidenzia: s.evidenzia, accento: acc, passo: i === 0 ? 0 : 0.05 });
+      ctx.save(); ctx.translate(540, 780); ctx.rotate(r.rot * 0.5); ctx.translate(-540, -780);
+      foto(s, 540, s.tipo === 'gancio' ? 740 : 790, 800, 540, u - (i === 0 ? 0 : 0.05), t, bt, { entrata: i !== 0, ruota: i % 2 ? 0.025 : -0.025 });
+      ctx.restore();
+      if (s.timbro && (nb >= 1 || i === 0)) C.timbro(ctx, String(s.timbro).toUpperCase(), 860, s.tipo === 'gancio' ? 450 : 520, i === 0 ? u + 1 : bt.dt + (nb > 1 ? 1 : 0), { size: 60, fondo: '#ffd166', ruota: 0.1 });
+    } else if (s.tipo === 'gancio') {
       C.scritta(ctx, s.titolo || '', 540, 385, u, { size: 100, maxW: 860, evidenzia: s.evidenzia, accento: acc, passo: 0 });   // sotto l'intestazione anche col boom
       grande(s.icona || iconeFatti[0] || 'stella', 540, 745, 400, 1, { ruota: -0.05 });
       if (s.timbro) C.timbro(ctx, s.timbro.toUpperCase(), 770, 585, u - 0.25, { size: 58, fondo: '#ffd166', ruota: 0.12 });
@@ -126,12 +144,13 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   }
 
   // FOTO: titolo in alto e la foto vera in una cornice polaroid (lento zoom); timbro facoltativo (es. l'anno)
+  // la foto entra in bianco e nero e "si sviluppa" a colori; titolo corto sopra
   function scenaFoto(s, t, u, bt, nb, r = { sc: 1, rot: 0 }) {
-    C.scritta(ctx, s.titolo || '', 540, 330, u, { size: 88, maxW: 880, evidenzia: s.evidenzia, accento: acc, passo: 0.06 });
+    C.scritta(ctx, s.titolo || '', 540, 290, u, { size: 76, maxW: 920, evidenzia: s.evidenzia, accento: acc, passo: 0.05 });
     ctx.save(); ctx.translate(540, 760); ctx.rotate(r.rot * 0.5); ctx.scale(r.sc, r.sc); ctx.translate(-540, -760);
-    cornice(ctx, FOTO.mappa[s.foto], 540, 760, 820, 540, u - 0.05, { ruota: -0.025, credito: s.credito || 'Foto: Wikimedia Commons' });
+    foto(s, 540, 750, 860, 620, u - 0.05, t, bt, { ruota: -0.025, bn: 1 - G.clamp((u - 0.15) / 0.7) });
     ctx.restore();
-    if (s.timbro && nb >= 1) C.timbro(ctx, String(s.timbro).toUpperCase(), 850, 470, bt.dt + (nb > 1 ? 1 : 0), { size: 64, fondo: '#ffd166', ruota: 0.1 });
+    if (s.timbro && nb >= 1) C.timbro(ctx, String(s.timbro).toUpperCase(), 880, 420, bt.dt + (nb > 1 ? 1 : 0), { size: 64, fondo: '#ffd166', ruota: 0.1 });
   }
 
   // QUIZ: domanda in alto e 3 opzioni A/B/C a pillola. Le frasi "domanda" consecutive sono UNA card continua
@@ -141,7 +160,64 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   const QUIZ = ['domanda', 'risposta'];
   const eQuiz = (x) => !!x && (QUIZ.includes(x.tipo) || (x.tipo === 'gancio' && Array.isArray(x.opzioni) && x.opzioni.length > 0));
   const inizioQuiz = (i) => { let k = i; while (k > 0 && QUIZ.includes(S[k].tipo) && eQuiz(S[k - 1])) k--; return k; };
+  // domanda e risposta senza foto ereditano quella della scheda prima del quiz (basta scriverla sul gancio)
+  for (let k = 1; k < S.length; k++) {
+    const a = S[k - 1], b = S[k];
+    if (QUIZ.includes(b.tipo) && eQuiz(a) && !b.foto && a.foto) S[k] = { ...b, foto: a.foto, credito: b.credito || a.credito, cornice: b.cornice || a.cornice };
+  }
+  const OPZ_Y = (n, conFoto) => (conFoto ? 980 + n * 92 : 540 + n * 150);
+
+  // QUIZ CON FOTO: domanda corta in alto, foto viva al centro (il 3-2-1 sopra la foto), opzioni compatte sotto.
+  function quizFoto(s, i, t, u, bt, nb) {
+    const i0 = inizioQuiz(i), uq = t - atti.inizi[i0], giusta = s.tipo === 'risposta' ? (s.giusta ?? 0) : -1;
+    const subito = S[i0].tipo === 'gancio', kr = giusta >= 0 ? G.easeOut(u / 0.35) : 0;
+    C.scritta(ctx, s.titolo || '', 540, 290, uq, { size: 66, maxW: 960, evidenzia: s.evidenzia, accento: acc, passo: i === i0 && !subito ? 0.05 : 0 });
+    const cambia = giusta >= 0 && s.foto_risposta;
+    foto(cambia ? { ...s, foto: s.foto_risposta } : s, 540, 640, 740, 420, cambia ? u : uq, t, bt, { entrata: cambia || !subito, ruota: -0.02 });
+    const conto = s.conto ? +s.conto : 0, attesa = conto > 0;
+    const urgenza = attesa ? G.clamp(u / Math.max(0.5, (fini[i] ?? t) - atti.inizi[i])) : 0;
+    (s.opzioni || []).forEach((o, n) => {
+      const y = OPZ_Y(n, true), ke = giusta >= 0 || i > i0 || subito ? 1 : G.entra(uq, 0.55 + n * 0.3, 0.3), ok = n === giusta;
+      if (ke <= 0) return;
+      const vib = attesa ? Math.sin(t * 38 + n * 2) * (2 + 5 * urgenza) : 0;
+      const bump = !attesa && giusta < 0 && bt.k === 'punch' && nb % 3 === n ? 0.06 * Math.exp(-bt.dt * 6) : 0;
+      const cade = giusta >= 0 && !ok ? kr : 0;
+      ctx.save(); ctx.translate(540 + vib + Math.sin(u * 30) * 10 * cade * Math.exp(-u * 4), y + cade * 8);
+      const sc = G.pop(ke) * (1 + bump + (ok ? 0.07 * kr : 0)); ctx.scale(sc, sc); ctx.rotate(cade * (n % 2 ? 0.03 : -0.03));
+      ctx.globalAlpha *= 1 - 0.6 * cade;
+      ctx.shadowColor = 'rgba(20,4,10,0.45)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8;
+      ctx.fillStyle = ok && kr > 0.4 ? '#ffd166' : CREMA; G.rr(ctx, -400, -42, 800, 84, 42); ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.lineWidth = 5; ctx.strokeStyle = SCURO; ctx.stroke();
+      G.pillola(ctx, 'ABC'[n], -350, 0, { size: 40, fondo: ok && kr > 0.4 ? BORDEAUX : acc, colore: ok && kr > 0.4 ? '#ffd166' : BORDEAUX, w: 68, h: 68 });
+      ctx.font = G.FONT(50, 900); ctx.fillStyle = SCURO; ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillText(o, -296, 3);
+      if (ok && kr > 0.4) { ctx.fillStyle = '#2e9e5b'; ctx.font = G.FONT(68, 900); ctx.textAlign = 'center'; ctx.fillText('✓', 345, 5); }
+      if (cade > 0) {
+        const k2 = G.clamp(cade * 1.4); ctx.globalAlpha = 1; ctx.strokeStyle = '#e8435a'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-372, 0); ctx.lineTo(-372 + 744 * k2, 0); ctx.stroke();
+      }
+      ctx.restore();
+    });
+    if (attesa) {                                         // 3-2-1 gigante sopra la foto
+      const num = Math.max(1, conto - Math.max(0, nb)), r = 104, cx = 540, cy = 620;
+      ctx.save(); ctx.fillStyle = 'rgba(20,4,10,0.55)'; ctx.beginPath(); ctx.arc(cx, cy, r + 26, 0, 7); ctx.fill();
+      ctx.lineWidth = 16; ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
+      ctx.strokeStyle = urgenza > 0.66 ? '#e8435a' : '#ffd166'; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - urgenza)); ctx.stroke(); ctx.restore();
+      const sb = 1 + 0.5 * Math.exp(-bt.dt * 9);
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(sb, sb); ctx.rotate(0.12 * Math.exp(-bt.dt * 9) * (nb % 2 ? 1 : -1));
+      ctx.font = G.FONT(170, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+      ctx.lineWidth = 20; ctx.strokeStyle = SCURO; ctx.strokeText(String(num), 0, 8); ctx.fillStyle = '#fff'; ctx.fillText(String(num), 0, 8); ctx.restore();
+    }
+    if (giusta >= 0) {
+      C.timbro(ctx, s.timbro || 'GIUSTA!', 800, OPZ_Y(giusta, true) - 58, u - 0.15, { size: 50, fondo: '#2e9e5b', colore: '#fff', ruota: 0.12 });
+      // il perché: solo se corto (≤ 5 parole), come adesivo sul fondo della foto; sennò lo dice la voce
+      if (s.testo && String(s.testo).trim().split(/\s+/).length <= 5)
+        C.scritta(ctx, s.testo, 540, 770, u - 0.5, { size: 58, maxW: 900, evidenzia: s.evidenzia, accento: acc, passo: 0.05 });
+    }
+  }
+
   function quizScena(s, i, t, u, bt, nb) {
+    if (s.foto) return quizFoto(s, i, t, u, bt, nb);
     const i0 = inizioQuiz(i), uq = t - atti.inizi[i0], giusta = s.tipo === 'risposta' ? (s.giusta ?? 0) : -1;
     const subito = S[i0].tipo === 'gancio';               // gancio-quiz: domanda e opzioni già a schermo al fotogramma 0
     const kr = giusta >= 0 ? G.easeOut(u / 0.35) : 0;
@@ -252,7 +328,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     if (bt.k === 'boom') zoom += 0.12 * Math.exp(-bt.dt * 7);
     const L = MASCOTTE ? lati(i) : { pc: 540, ic: s.tipo === 'dettaglio' ? 620 : 540 };
     const inQuiz = eQuiz(s), iq = inQuiz ? inizioQuiz(i) : i;
-    const fuoco = inQuiz ? [540, 700] : !MASCOTTE ? [L.ic + (nb % 2 ? -50 : 50), 780]
+    const fuoco = inQuiz ? [540, s.foto ? 660 : 700] : !MASCOTTE ? [L.ic + (nb % 2 ? -50 : 50), 780]
       : nb % 2 ? [L.pc, 520] : [s.tipo === 'fatto' || s.tipo === 'dettaglio' ? L.ic : 540, 760];
     const forte = bt.k === 'boom' || bt.k === 'rivela';
     const amp = (forte ? 18 : 0) * Math.exp(-bt.dt * 9);
@@ -270,7 +346,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
 
     if (s.tipo !== 'cta') hud(t, i, s);
     // esplosioni sulle rivelazioni e sul gancio, tendina sugli stacchi, flash
-    if (bt.k === 'rivela') C.esplosione(ctx, s.tipo === 'risposta' ? 540 : L.ic, s.tipo === 'risposta' ? 540 + (s.giusta ?? 0) * 150 : 800, bt.dt, { seme: bt.b, ...(s.tipo === 'risposta' ? { n: 34, forza: 1300 } : {}) });
+    if (bt.k === 'rivela') C.esplosione(ctx, s.tipo === 'risposta' ? 540 : L.ic, s.tipo === 'risposta' ? OPZ_Y(s.giusta ?? 0, !!s.foto) : 800, bt.dt, { seme: bt.b, ...(s.tipo === 'risposta' ? { n: 34, forza: 1300 } : {}) });
     if (bt.k === 'boom') C.esplosione(ctx, 540, 360, bt.dt, { seme: bt.b + 5, n: 30, forza: 1300 });
     if (s.tipo === 'cta') C.esplosione(ctx, 540, 450, u - 0.1, { seme: 99, n: 34, forza: 1200 });
     if (bt.k !== 'punch' && bt.k !== 'tic' && !(inQuiz && i > iq) && bt.b > 0) C.tendina(ctx, bt.dt, { colore: acc, colore2: SCURO, dir: bt.b % 2 ? 1 : -1 });

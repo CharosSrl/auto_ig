@@ -8,7 +8,7 @@ from auto_ig.config import Config
 from auto_ig.ui import create_app
 
 
-def fake_speak(lines, out_wav, model, speed, pronuncia=None):
+def fake_speak(lines, out_wav, model, speed, pronuncia=None, pausa=voce.PAUSE):
     out_wav.write_bytes(b"RIFF")
     t, sents = 0.6, []
     for l, tone in voce.normalize_lines(lines):

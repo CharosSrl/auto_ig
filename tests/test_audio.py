@@ -89,7 +89,10 @@ class RegoleAntonioTest(unittest.TestCase):
         from auto_ig import richieste
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "r"; f.mkdir()
-            (f / "richiesta.yaml").write_text(yaml_dump(self.base(titolo="t", scena="cartoon2d", colori={"sfondo": "#000000", "accento": "#ffffff"})))
+            dati = self.base(titolo="t", scena="cartoon2d", colori={"sfondo": "#000000", "accento": "#ffffff"})
+            dati["copione"][0]["scheda"]["foto"] = "x.jpg"           # curiosità 2D: foto dal fotogramma 0
+            (f / "foto").mkdir(); (f / "foto" / "x.jpg").write_bytes(b"jpg")
+            (f / "richiesta.yaml").write_text(yaml_dump(dati))
             calls = []
             def render(scene, params, seconds, out_dir, **kw):
                 calls.append(params); (out_dir / "video.mp4").write_bytes(b"x")

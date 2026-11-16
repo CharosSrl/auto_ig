@@ -117,9 +117,20 @@ def azione_cta(data: dict) -> str:
     return az
 
 
-def schede(righe: list) -> str:
-    """Parametro `schede` per le scene 2d: JSON con una scheda per frase (vuoto se nessuna)."""
-    s = [_scheda(r) or {} for r in righe]
+CAMPI_TESTO = ("titolo", "testo", "evidenzia", "opzioni", "timbro", "credito", "bottone")
+
+
+def schede(righe: list, censura=None) -> str:
+    """Parametro `schede` per le scene 2d: JSON con una scheda per frase (vuoto se nessuna).
+    censura(testo) -> testo: applicata ai campi scritti a schermo (le parole forti diventano m*rte)."""
+    s = [dict(_scheda(r) or {}) for r in righe]
+    if censura:
+        for sk in s:
+            for k in CAMPI_TESTO:
+                if isinstance(sk.get(k), str):
+                    sk[k] = censura(sk[k])
+                elif isinstance(sk.get(k), list):
+                    sk[k] = [censura(x) if isinstance(x, str) else x for x in sk[k]]
     return json.dumps(s, ensure_ascii=False, separators=(",", ":")) if any(s) else ""
 
 
