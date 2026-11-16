@@ -11,6 +11,11 @@
     python -m auto_ig.richieste crea <cartella>              # voce + sottotitoli + video
     python -m auto_ig.richieste coda <cartella> [--quando ISO] [--caption "..."]   # in coda come BOZZA
     python -m auto_ig.richieste lista
+    python -m auto_ig.richieste foto <cartella> "<ricerca>"            # cerca su Wikimedia (solo PD/CC0)
+    python -m auto_ig.richieste foto <cartella> "<ricerca>" 3 keds-1916 # scarica il n.3 in <cartella>/foto/keds-1916.jpg
+
+    Foto delle schede 2D (tipo foto, campo foto: "keds-1916.jpg"): stanno in <cartella>/foto/ con crediti.json;
+    durante il render vengono copiate in auto_ig/video/_foto/ (servita dal server locale), poi tolte.
 """
 from __future__ import annotations
 
@@ -103,6 +108,10 @@ def load(folder: Path) -> dict:
     except ValueError as e:
         errs.append(str(e))
     errs += formati.valida(data)
+    for i, riga in enumerate(data.get("copione") or [], 1):
+        nome = ((riga.get("scheda") if isinstance(riga, dict) else None) or {}).get("foto")
+        if nome and not (folder / "foto" / str(nome)).is_file():
+            errs.append(f"frase {i}: foto '{nome}' mancante in foto/ (scaricala con: python -m auto_ig.richieste foto)")
     if data.get("stato", "da_fare") not in STATES:
         errs.append(f"stato non valido ({', '.join(STATES)})")
     for k in ("sfondo", "accento"):
@@ -147,6 +156,7 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"], corti=data.get("sottotitoli") == "corti"))
     o["tempi"].write_text(json.dumps(voce.timings_dict(sentences), indent=2, ensure_ascii=False))
     scene_text = data.get("testo_scena") or (data.get("titolo", "") if formati.scena(data) == "testo" else "")
+    _prepara_foto(folder)
     if data.get("formato"):
         seconds += 1.0                             # la CTA resta a schermo un po' dopo la voce
     sk = [(r.get("scheda") if isinstance(r, dict) else None) or {} for r in righe]
@@ -166,8 +176,41 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
                               "mascotte": "1" if data.get("mascotte") is True else "0"},
               max(3.0, seconds), o["mp4"].parent, progress=progress, audio=traccia, ass=o["ass"], name="video",
               quality=str(data.get("qualita") or "alta"), log=log)
+    from .video import VIDEO_DIR
+    shutil.rmtree(VIDEO_DIR / "_foto", ignore_errors=True)
     set_state(folder, "generato")
     return o["mp4"]
+
+
+def _prepara_foto(folder: Path) -> None:
+    """Copia <richiesta>/foto/*.jpg|png in auto_ig/video/_foto/ (la cartella è svuotata prima: niente foto
+    di altre richieste)."""
+    from .video import VIDEO_DIR
+    dest = VIDEO_DIR / "_foto"
+    shutil.rmtree(dest, ignore_errors=True)
+    src = folder / "foto"
+    if not src.is_dir():
+        return
+    dest.mkdir(parents=True)
+    for f in src.iterdir():
+        if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+            shutil.copy2(f, dest / f.name)
+
+
+def foto(folder: Path, query: str, numero: int | None = None, nome: str = "", search_fn=None,
+         download_fn=None) -> list | Path:
+    """Senza numero: risultati Wikimedia (solo PD/CC0). Con numero: scarica quel risultato in foto/<nome>.jpg."""
+    from .images import scarica_foto
+    from .sources import wikimedia
+    search_fn = search_fn or (lambda q: wikimedia.search(q, 20, min_width=800, min_height=600))
+    results = search_fn(query)
+    if numero is None:
+        return results
+    if not 1 <= numero <= len(results):
+        raise ValueError(f"Numero non valido: ci sono {len(results)} risultati")
+    res = results[numero - 1]
+    dest = folder / "foto" / f"{slugify(nome or res.title or res.id)}.jpg"
+    return (download_fn or scarica_foto)(res, dest)
 
 
 def enqueue(folder: Path, when: str | None = None, caption: str | None = None, status: str = "draft",
@@ -222,6 +265,8 @@ def main() -> None:
     b = sub.add_parser("crea"); b.add_argument("cartella")
     c = sub.add_parser("coda"); c.add_argument("cartella"); c.add_argument("--quando"); c.add_argument("--caption")
     sub.add_parser("lista")
+    d = sub.add_parser("foto"); d.add_argument("cartella"); d.add_argument("ricerca")
+    d.add_argument("numero", type=int, nargs="?"); d.add_argument("nome", nargs="?", default="")
     args = ap.parse_args()
 
     if args.cmd == "nuova":
@@ -235,6 +280,15 @@ def main() -> None:
     elif args.cmd == "coda":
         post = enqueue(resolve(args.cartella), args.quando, args.caption)
         print(f"In coda come BOZZA {post.id} per {post.when} (da approvare nella UI)")
+    elif args.cmd == "foto":
+        out = foto(resolve(args.cartella), args.ricerca, args.numero, args.nome)
+        if isinstance(out, Path):
+            print(f"Salvata {out.relative_to(ROOT)} (credito in {out.parent.relative_to(ROOT)}/crediti.json)")
+        else:
+            for i, r in enumerate(out, 1):
+                print(f"{i:2}. {r.title[:70]!r} — {r.creator[:30]} — {r.license} — {r.width}x{r.height}\n    {r.page_url}")
+            if not out:
+                print("Nessun risultato PD/CC0 (prova termini in inglese).")
     else:
         for folder, data, err in all_requests():
             print(f"{folder.name:45} {data['stato'] if data else 'ERRORE: ' + err}")

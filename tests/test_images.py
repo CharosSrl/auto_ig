@@ -81,3 +81,12 @@ class TestImages(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestScaricaFoto(unittest.TestCase):
+    def test_scarica_foto_senza_ritaglio_con_crediti(self):
+        d = Path(tempfile.mkdtemp()) / "foto"
+        out = images.scarica_foto(RES, d / "keds.jpg", lato=1600, session=Sess(Resp(content=png_bytes((4000, 2000)))))
+        with Image.open(out) as im:
+            self.assertEqual((im.size, im.format, im.mode), ((1600, 800), "JPEG", "RGB"))   # proporzioni intatte
+        self.assertEqual(json.loads((d / "crediti.json").read_text())["keds.jpg"]["creator"], "Mario")

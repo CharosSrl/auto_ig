@@ -108,6 +108,23 @@ def save_result(res: ImageResult, media_dir: Path = MEDIA_DIR, session=None) -> 
     return name
 
 
+def scarica_foto(res: ImageResult, dest: Path, lato: int = 1600, session=None) -> Path:
+    """Foto per una scheda dei reel 2D: JPEG con lato lungo <= `lato`, SENZA ritaglio (lo fa la scena).
+    Il credito va in crediti.json accanto al file."""
+    raw = download_bytes(res.url, session)
+    with Image.open(io.BytesIO(raw)) as img:
+        img = ImageOps.exif_transpose(img)
+        if img.mode != "RGB":
+            bg = Image.new("RGB", img.size, "white")
+            bg.paste(img, mask=img.convert("RGBA").split()[-1])
+            img = bg
+        img.thumbnail((lato, lato), Image.LANCZOS)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        img.save(dest, "JPEG", quality=90, optimize=True, progressive=True)
+    save_credit(dest.name, res, dest.parent / "crediti.json")
+    return dest
+
+
 def add_to_queue(filename: str, when: str, caption: str, with_credit: bool = True,
                  queue_path: Path = queue.QUEUE_FILE, credits_path: Path = CREDITS_FILE,
                  status: str = "pending") -> queue.Post:

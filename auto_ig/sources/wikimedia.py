@@ -16,7 +16,8 @@ def _clean(text: str) -> str:
     return html.unescape(re.sub(r"<[^>]+>", "", text or "")).strip()
 
 
-def search(query: str, n: int = 20, min_width: int = 1080, session=None, max_pages: int = 4) -> list[ImageResult]:
+def search(query: str, n: int = 20, min_width: int = 1080, session=None, max_pages: int = 4,
+           min_height: int = 1350) -> list[ImageResult]:
     http = session or requests
     out: list[ImageResult] = []
     offset = 0
@@ -36,7 +37,7 @@ def search(query: str, n: int = 20, min_width: int = 1080, session=None, max_pag
             meta = ii.get("extmetadata", {})
             lic = (meta.get("License", {}).get("value") or "").lower()
             if lic not in FREE or ii.get("mime") not in ("image/jpeg", "image/png", "image/webp") \
-                    or (ii.get("width") or 0) < min_width or (ii.get("height") or 0) < 1350:
+                    or (ii.get("width") or 0) < min_width or (ii.get("height") or 0) < min_height:
                 continue
             title = _clean(meta.get("ObjectName", {}).get("value")) or p["title"].removeprefix("File:")
             out.append(ImageResult(

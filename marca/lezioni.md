@@ -46,3 +46,18 @@ Altri dati utili:
    portato nulla. I follow sono a zero: aggiungere un motivo per seguire (es. "ogni giorno un quiz").
 9. **Il punteggio dei ganci non basta.** Tutti e quattro gli hook avevano 12/12 e i risultati sono stati
    diversissimi. Il punteggio serve a scartare i ganci brutti, non a prevedere le views: giudicano i dati.
+10. **Foto vere da Wikimedia Commons nei quiz e nelle curiosità** (richiesta di Antonio, 2026-11-16, da
+    verificare con gli Insights). Ritratti storici, foto d'archivio, il capo originale: una foto vera dà
+    credibilità e sorpresa.
+    - Va usata come **premio** (scheda risposta o dettaglio), mai al posto della domanda e delle opzioni
+      del primo fotogramma.
+    - Solo immagini di pubblico dominio o CC0 (filtro già presente in `auto_ig/sources/wikimedia.py`),
+      con il credito in `media/credits.json`.
+    - Prima di usare la foto di una persona reale, verificare che sia davvero lei.
+    - Niente immagini sessualizzate o centrate sul corpo.
+    - Come si fa: `python -m auto_ig.richieste foto <cartella> "<ricerca in inglese>"` elenca i risultati;
+      aggiungendo `<n> <nome>` scarica il risultato n in `<cartella>/foto/<nome>.jpg`, con il credito in
+      `crediti.json`. Nel copione si usa `scheda: {tipo: foto, titolo, foto: <nome>.jpg, timbro, credito}`.
+      Il credito va anche in caption.
+    - Nei quiz il gancio porta `opzioni: [A, B, C]`, così domanda e opzioni sono a schermo dal fotogramma 0.
+      Primo esempio: `richieste/2026-11-16-quiz-sneakers`.

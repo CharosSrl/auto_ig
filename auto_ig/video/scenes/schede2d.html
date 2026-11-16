@@ -11,6 +11,7 @@ import { start } from './common.js';
 import { tempiAtti, mix } from '../preset/regia.js';
 import { BORDEAUX, CIPRIA, SCURO } from '../preset/brand.js';
 import * as G from '../preset/grafica2d.js';
+import { caricaFoto, cornice } from '../preset/foto2d.js';
 
 const ESEMPIO = [   // anteprima senza parametri
   { tipo: 'gancio', titolo: '3 curiosità sulla moda', evidenzia: 'moda', icona: 'lampadina' },
@@ -27,6 +28,7 @@ const QUIZ = ['domanda', 'risposta'];
 
 start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '17' }, (THREE, p, renderer) => {
   const S = p.schede ? JSON.parse(p.schede) : ESEMPIO;
+  const FOTO = caricaFoto(S);
   const atti = tempiAtti(p, S.length);
   const tela = G.tela2d(THREE, renderer), ctx = tela.ctx;
   const acc = p.accento, etichetta = ETICHETTA[p.formato] || '';
@@ -74,6 +76,10 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
         G.testo(ctx, s.titolo, 540, 815, { size: 80, peso: 900, colore: SCURO, evidenzia: s.evidenzia, accento: BORDEAUX, maxW: 790, parole: G.entra(u, 0.35, 0.6) });
       });
     },
+    foto(s, u, t) {                          // foto vera (Wikimedia PD/CC0) in cornice, titolo sopra
+      G.testo(ctx, s.titolo || '', 540, 380, { size: 80, peso: 900, colore: '#fff', evidenzia: s.evidenzia, accento: acc, maxW: 900, parole: G.entra(u, 0.1, 0.6), ombra: true });
+      cornice(ctx, FOTO.mappa[s.foto], 540, 760, 820, 540, u - 0.15, { credito: s.credito || 'Foto: Wikimedia Commons' });
+    },
     domanda(s, u, t, i) { quiz(s, u, t, i, -1); },
     risposta(s, u, t, i) { quiz(s, u, t, i, s.giusta ?? 0); },
     commenta(s, u, t) {
@@ -119,7 +125,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   }
   // la card del quiz non rientra a ogni frase: conCard usa il tempo dall'inizio del quiz
 
-  return { scene: tela.scene, camera: tela.camera, update(t) {
+  return { scene: tela.scene, camera: tela.camera, pronto: FOTO.pronto, update(t) {
     const { i, u } = atti.a(t), s = S[i] || {};
     tela.inizia();
     G.sfondo(ctx, t, { colore: p.colore, accento: acc });

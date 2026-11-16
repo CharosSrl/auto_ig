@@ -144,3 +144,35 @@ class TestRichieste(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFoto(Base):
+    YAML = ("titolo: x\nstato: da_fare\nscena: cartoon2d\ncolori: {sfondo: '#6d1a36', accento: '#e8c4c0'}\n"
+            "copione:\n  - testo: Eccola, del 1916.\n    scheda: {tipo: foto, titolo: Keds, foto: keds.jpg}\n")
+
+    def test_foto_mancante_poi_copiata_per_il_render(self):
+        from auto_ig.video import VIDEO_DIR
+        f = self.make()
+        (f / "richiesta.yaml").write_text(self.YAML)
+        with self.assertRaisesRegex(ValueError, "keds.jpg"):
+            richieste.load(f)
+        (f / "foto").mkdir()
+        (f / "foto" / "keds.jpg").write_bytes(b"jpg")
+        visto = []
+        def render(*a, **kw):
+            visto.append((VIDEO_DIR / "_foto" / "keds.jpg").read_bytes())
+            return self.render(*a, **kw)
+        richieste.build(f, render_fn=render, speak_fn=fake_speak)
+        self.assertEqual(visto, [b"jpg"])                     # durante il render la foto è servita
+        self.assertFalse((VIDEO_DIR / "_foto").exists())      # dopo, tolta
+        self.assertIn('"foto":"keds.jpg"', self.calls[0]["params"]["schede"])
+
+    def test_cerca_e_scarica(self):
+        from auto_ig.sources import ImageResult
+        f = self.make()
+        res = ImageResult("wikimedia", "1", "u", "t", "p", "Daderot", "CC0", "", 3000, 2000, "Keds 1916")
+        self.assertEqual(richieste.foto(f, "keds", search_fn=lambda q: [res]), [res])
+        out = richieste.foto(f, "keds", 1, "Keds 1916!", search_fn=lambda q: [res], download_fn=lambda r, d: d)
+        self.assertEqual(out, f / "foto" / "keds-1916.jpg")
+        with self.assertRaises(ValueError):
+            richieste.foto(f, "keds", 2, search_fn=lambda q: [res])

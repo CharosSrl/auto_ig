@@ -14,3 +14,5 @@ auto_ig/video/_frames/
 .voci/
 # richieste di contenuti (copioni, voce, video): solo in locale, non vanno su GitHub
 richieste/
+# foto delle richieste copiate per il render (le serve il server locale)
+auto_ig/video/_foto/

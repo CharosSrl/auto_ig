@@ -77,10 +77,14 @@ export function start(defaults, build) {
   const ctx = build(THREE, p, renderer);
   window.renderFrame = (t) => { ctx.update(t); renderer.render(ctx.scene, ctx.camera); };
   window.grabFrame = (t, q = 0.92) => { window.renderFrame(t); return cv.toDataURL('image/jpeg', q); };
-  window.sceneReady = true;
-  if (!p.render) {             // anteprima nel browser: animazione in loop
-    const dur = parseFloat(p.durata) || 8, t0 = performance.now();
-    const loop = () => { window.renderFrame(((performance.now() - t0) / 1000) % dur); requestAnimationFrame(loop); };
-    loop();
-  }
+  // `pronto` (facoltativo): Promise delle risorse asincrone (es. foto). Il render aspetta sceneReady;
+  // se la Promise fallisce l'errore arriva come pageerror e il render si ferma con il messaggio.
+  Promise.resolve(ctx.pronto).then(() => {
+    window.sceneReady = true;
+    if (!p.render) {             // anteprima nel browser: animazione in loop
+      const dur = parseFloat(p.durata) || 8, t0 = performance.now();
+      const loop = () => { window.renderFrame(((performance.now() - t0) / 1000) % dur); requestAnimationFrame(loop); };
+      loop();
+    }
+  }, (e) => { throw e; });
 }
