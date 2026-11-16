@@ -27,6 +27,10 @@
 >    ≤12 parole, a schermo dal fotogramma 0. CTA: una sola, legata al valore del video (curiosità → salva/condividi).
 >    Regole in `auto_ig/formati.yaml → hook_e_cta`, skill in `.claude/skills/` (hook-writer, short-form-video-script,
 >    caption-writer, viral-hooks), profilo e voce del brand in `marca/`.
+> 3. **Le lezioni dai dati reali in `marca/lezioni.md` hanno la precedenza (2026-11-16).** Vince il tempo di visione.
+>    Domanda e opzioni A/B/C vanno a schermo dal primo fotogramma. Quiz invece di lezione. Argomenti per
+>    adolescenti e giovani adulti, sempre adatti ai minori. Durata sotto i 25 s. Dopo ogni gruppo di reel si
+>    chiedono gli Insights ad Antonio e si aggiorna il file.
 Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, niente API a pagamento):
 "fammi un reel con…", "cerca immagini di…", "crea una scena nuova…". Regole:
 - Claude **genera**, Antonio **decide**: nulla va mai in coda come `pending` da parte di Claude,

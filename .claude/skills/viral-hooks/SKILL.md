@@ -3,6 +3,9 @@ name: viral-hooks
 description: Generate 3 scroll-stopping hook variants for short-form video scripts (Reels, TikTok, YouTube, LinkedIn, X). Use when the user is writing a script for short-form video, asks for hook ideas, needs an opening line for a Reel/post, or pastes a script and wants alternative hooks. Pulls from a library of 100 hook formulas across 10 psychology triggers (curiosity, contrarian, authority, emotional, listicle, question, story, negation, specificity, confession).
 ---
 
+> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+
+
 # Viral Hooks — 100 formulas, 10 psychology triggers
 
 A library of battle-tested hook structures for short-form video and social posts.

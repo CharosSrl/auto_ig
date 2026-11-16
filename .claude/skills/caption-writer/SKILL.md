@@ -14,6 +14,9 @@ metadata:
 license: MIT
 ---
 
+> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+
+
 # Caption Writer
 
 A caption is not a description of the post. It's the part of the post that does the *work* —

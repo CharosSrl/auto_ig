@@ -9,6 +9,9 @@ metadata:
   tags: [instagram, reels, trial-reels, instagram-algorithm, edits-app, sends-per-reach, original-content]
 ---
 
+> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+
+
 
 # Viral Instagram Reels
 

@@ -16,6 +16,7 @@ regole_comuni:
   - "Una frase del copione = un atto della scena = una scheda (sincronizzati con la voce dal parametro atti)."
   - "Frasi brevi da parlato (max ~14 parole), seconda persona o prima persona, niente elenchi letti."
   - "Contenuto importante nel 58% alto dell'immagine: sotto ci sono sottotitoli e caption di Instagram."
+  - "PRIMA DI TUTTO leggi marca/lezioni.md: sono le regole ricavate dagli Insights dei nostri reel e hanno la precedenza. In breve: vince il tempo di visione, domanda + opzioni A/B/C dal primo fotogramma, quiz invece di lezione, argomenti Gen Z adatti ai minori, sotto i 25 s."
   - "HOOK E CTA SONO LA COSA PIÙ IMPORTANTE (regola di Antonio): seguire hook_e_cta qui sotto, senza eccezioni."
   - "Mascotte (modella Cintre) solo se Antonio la chiede: mascotte: false di default; se sembra adatta, chiederlo nelle domande."
   - "Solo fatti verificabili: niente date o attribuzioni inventate; se incerto si riformula o si toglie."
@@ -65,7 +66,7 @@ ritmo_alto:
   - "Svela l'ultima curiosità per ultima; a metà (~12-15 s) un rehook ('Ma aspetta l'ultima...') con scheda rehook."
   - "Un cambio visivo ogni 1,5-3 s, irregolare: le battute le calcola auto_ig/audio.py e valgono anche per gli effetti sonori."
   - "Sottotitoli corti (1-3 parole, sottotitoli: corti) e titoli schede di max 4 parole."
-  - "Durata 20-30 s; frasi brevi, niente pause morte; audio: {musica: true, sfx: true}."
+  - "Durata 20-25 s (dati reali: il reel da 24 s ha battuto quelli da 27-35 s); frasi brevi, niente pause morte; audio: {musica: true, sfx: true}."
   - "Hook: due varianti di categorie diverse (stop-scroll: negazione/numero/domanda + ritenzione: storia/emozione), scegli la più forte."
 
 formati:

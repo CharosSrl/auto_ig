@@ -15,6 +15,9 @@ description: >-
 version: 1.0.0
 ---
 
+> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+
+
 # short-form-video-script
 
 The **master scripting craft** for short-form vertical video — win the first 3 seconds, arc with open loops, write

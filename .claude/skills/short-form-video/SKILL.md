@@ -4,6 +4,9 @@ description: This skill should be used when the user asks to "make a Reels/TikTo
 version: 0.1.0
 ---
 
+> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+
+
 # Short-Form Video
 
 Engineer a 9:16 video that survives the swipe. Short-form is not a small launch film — it is a retention machine: a hook that earns the first second, pattern interrupts that reset attention every few seconds, and often a loop that buys watch-time past 100%. The craft is timing, not polish.
