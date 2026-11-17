@@ -195,3 +195,61 @@ posts:
   published_at: '2026-11-17T21:18:41+00:00'
   extra:
     cover: reel-2026-11-17-curiosita-ray-ban.jpg
+- id: '10'
+  when: 2026-11-18T10:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-18-quiz-nome-adidas.mp4
+  caption: 'Adidas: cosa vuol dire davvero quel nome? 👟
+
+    Una sigla sullo sport, il nome del fondatore o una parola greca: una è la trappola.
+
+
+    Tu cosa avevi detto? Scrivilo nei commenti 👇
+
+    Segui @cintre_official: ogni giorno un quiz di moda.
+
+
+    E "All Day I Dream About Sports"? Una leggenda: la sigla è stata inventata dopo
+    il nome.
+
+
+    📷 Foto: fabbrica Dassler (1928) e scarpa Puma (Musée National du Sport) via Wikimedia
+    Commons (pubblico dominio)
+
+    #cintre #quizmoda #adidas #puma #storiadellamoda'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-18-quiz-nome-adidas.jpg
+- id: '11'
+  when: 2026-11-18T18:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-18-quiz-logo-nike.mp4
+  caption: 'Il logo delle tue Nike è costato meno delle scarpe. Quanto? 👟
+
+    35 dollari, 35 mila o un milione: tu cosa dici?
+
+
+    Tu cosa avevi detto? Scrivilo nei commenti 👇
+
+    Segui @cintre_official: ogni giorno un quiz di moda.
+
+
+    Bonus: il logo è del 1971. Nel 1983 Nike regalò alla studentessa che l''aveva
+    disegnato, Carolyn Davidson, anche 500 azioni.
+
+
+    📷 Foto: Wilfredor e Shonagon via Wikimedia Commons (CC0), Nike di Samotracia,
+    Louvre
+
+    #cintre #quizmoda #nike #storiadellamoda'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-18-quiz-logo-nike.jpg
