@@ -330,6 +330,10 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
     @app.route("/video")
     def video():
         reqs = [(f, d, e) for f, d, e in richieste.all_requests(req_dir) if not d or d.get("stato") != "scartato"]
+        in_coda = {m for p in queue.load(queue_file) for m in p.media}
+        for f, d, e in reqs:        # post eliminato dalla coda: la richiesta torna "generato" e si può rimettere in coda
+            if d and d.get("stato") == "in_coda" and f"reel-{f.name}.mp4" not in in_coda:
+                d["stato"] = "generato"
         github, _ = coda_github()
         per_media = {m: p for p in (github or {}).values() for m in p.get("media") or []}
         su_github = {f.name: per_media.get(f"reel-{f.name}.mp4") for f, d, e in reqs} if github is not None else None

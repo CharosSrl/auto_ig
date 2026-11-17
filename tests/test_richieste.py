@@ -176,3 +176,17 @@ class TestFoto(Base):
         self.assertEqual(out, f / "foto" / "keds-1916.jpg")
         with self.assertRaises(ValueError):
             richieste.foto(f, "keds", 2, search_fn=lambda q: [res])
+
+
+class TestRimettiInCoda(Base):
+    def test_post_eliminato_si_rimette_in_coda(self):
+        f = self.make()
+        richieste.build(f, render_fn=self.render, speak_fn=fake_speak)
+        richieste.enqueue(f, "2026-11-21T18:00+01:00", "Cap", media_dir=self.md, queue_path=self.qf)
+        app = create_app(self.qf, self.md, Config("", "", "v23.0", "https://cdn/media/"), github_fn=lambda: {},
+                         sync_fn=lambda: "", req_dir=self.base)
+        app.testing = True
+        c = app.test_client()
+        self.assertNotIn("Metti in coda</button>", c.get("/video").data.decode())   # è in coda
+        self.qf.write_text("[]\n")                                                  # post eliminato
+        self.assertIn("Metti in coda</button>", c.get("/video").data.decode())
