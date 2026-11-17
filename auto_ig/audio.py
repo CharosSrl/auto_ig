@@ -143,6 +143,126 @@ def tic() -> np.ndarray:
 SUONI = {"boom": lambda: boom(), "stacco": lambda: whoosh(), "punch": lambda: pop(), "rivela": lambda: ding(), "tic": lambda: tic()}
 
 
+def riser(dur: float = 2.5) -> np.ndarray:
+    """Tensione che sale (3-2-1): rumore che si apre + tono in glissando, crescendo fino alla fine."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    k = t / dur
+    f = 180 * 2 ** (2.2 * k)                                        # sale di ~2 ottave
+    tono = np.sin(2 * np.pi * np.cumsum(f) / SR) * (0.35 + 0.65 * k)
+    soffio = _passabasso(_rumore(n, 11), 0.02 + 0.3 * k ** 2)
+    x = (0.55 * tono + 0.8 * soffio / (np.abs(soffio).max() + 1e-9)) * k ** 1.6
+    x[-int(0.01 * SR):] *= np.linspace(1, 0, int(0.01 * SR))       # stacco netto sul colpo
+    return x
+
+
+def _tastiera_sintetica(dur: float = 1.0) -> np.ndarray:
+    out = np.zeros(int(dur * SR))
+    t, k = 0.0, 0
+    while t < dur - 0.05:
+        s = tic() * (0.5 + 0.5 * _h(k))
+        i = int(t * SR)
+        out[i:i + len(s)] += s[: len(out) - i]
+        t += 0.06 + 0.07 * _h(k + 50)
+        k += 1
+    return out
+
+
+# --- Campioni CC0 (auto_ig/sfx, vedi CREDITI.md) con ripiego sintetico -----------------------------
+SFX_DIR = Path(__file__).resolve().parent / "sfx"
+RIPIEGO = {"scatto": lambda: np.pad(tic(), (0, int(0.2 * SR) - len(tic()))) + 0.6 * whoosh(0.2), "pop": lambda: pop(), "tic": lambda: tic(),
+           "conferma": lambda: ding(), "pop_morbido": lambda: pop(), "whoosh": lambda: whoosh(),
+           "swish": lambda: whoosh(0.15), "tastiera": lambda: _tastiera_sintetica(3.0),
+           "impatto": lambda: boom(), "riser": lambda: riser()}
+# livelli (ampiezza di picco) per suono: la voce resta davanti (~0.9)
+LIV_SUONI = {"scatto": 0.45, "impatto": 0.5, "whoosh": 0.26, "swish": 0.12, "pop": 0.3, "tic": 0.35,
+             "riser": 0.22, "conferma": 0.24, "tastiera": 0.2, "pop_morbido": 0.25}
+
+
+def campione(nome: str, cartella: Path | None = None) -> np.ndarray:
+    """Suono `nome`: il campione CC0 in auto_ig/sfx se c'è, sennò la versione sintetica."""
+    p = (cartella or SFX_DIR) / f"{nome}.wav"
+    if p.exists() and nome not in ("impatto", "riser"):
+        return leggi_wav(p)
+    return RIPIEGO.get(nome, RIPIEGO["whoosh"])()
+
+
+def _intona(x: np.ndarray, semitoni: float) -> np.ndarray:
+    """Alza/abbassa l'intonazione ricampionando (più acuto = più corto)."""
+    if not semitoni:
+        return x
+    r = 2 ** (semitoni / 12)
+    return np.interp(np.arange(0, len(x) - 1, r), np.arange(len(x)), x)
+
+
+def _parola(w: str) -> str:
+    return "".join(c for c in w.lower() if c.isalnum())
+
+
+# --- Suoni a eventi ---------------------------------------------------------------------------------
+def suoni(frasi: list, schede: list | None, bt: list[tuple[float, str]]) -> list[tuple[float, str, dict]]:
+    """Un suono per ogni cosa che succede a schermo (skill regia-reel). -> [(secondi, nome, opzioni)].
+    opzioni: liv (moltiplica il livello), semitoni, durata (tagli/riser), opz (indice opzione A/B/C per la scena)."""
+    tempi = [(f.start, f.end) if hasattr(f, "start") else (float(f[0]), float(f[1])) for f in frasi]
+    schede = schede or [{}] * len(tempi)
+    sk = lambda i: (schede[i] or {}) if i < len(schede) else {}          # noqa: E731
+    inizi = [0.0] + [a for a, _ in tempi[1:]]
+    ev: list[tuple[float, str, dict]] = []
+    # 1. le battute visive (stacchi, punch, tic, rivelazioni) con il suono giusto
+    for t, k in bt:
+        i = max(j for j, a in enumerate(inizi) if a <= t + 1e-6)
+        tipo = sk(i).get("tipo", "")
+        if t < 1e-6 and i == 0:
+            if sk(0).get("foto"):                                         # la foto vera entra con lo scatto
+                ev += [(0.0, "scatto", {}), (0.0, "impatto", {"liv": 0.5})]
+            else:
+                ev.append((0.0, "impatto", {}))
+        elif k == "tic":
+            ev.append((t, "tic", {}))
+        elif k == "punch":
+            ev.append((t, "swish", {}))
+        elif k == "boom":
+            ev.append((t, "impatto", {}))
+        elif k == "rivela":
+            ev.append((t, "impatto", {"liv": 0.8} if tipo == "risposta" else {"liv": 0.5}))
+            ev.append((t + 0.15, "conferma", {}))                         # la spunta / il dettaglio che compare
+        elif tipo == "cta":
+            ev.append((t, "pop_morbido", {}))
+        else:
+            ev.append((t, "whoosh", {}))
+    # 2. eventi delle schede
+    for i, (a, b) in enumerate(tempi):
+        s, t0 = sk(i), inizi[i]
+        tipo = s.get("tipo", "")
+        if i > 0 and (tipo == "foto" or (tipo == "risposta" and s.get("foto_risposta"))):
+            ev.append((t0 + 0.05, "scatto", {}))
+        if tipo == "domanda" and s.get("opzioni") and not s.get("conto"):
+            parole = getattr(frasi[i], "words", None) or []
+            lettere = [w.start for w in parole if _parola(w.text) in ("a", "b", "c")]
+            ts = lettere[:3] if len(lettere) >= 3 else [t0 + 0.1 + 0.3 * n for n in range(min(3, len(s["opzioni"])))]
+            ev += [(round(x, 2), "pop", {"semitoni": 2 * n, "opz": n}) for n, x in enumerate(ts)]
+        if s.get("conto"):
+            primo = next((t for t, k in bt if k == "tic" and t >= t0 - 1e-6), t0)
+            fine = tempi[i + 1][0] if i + 1 < len(tempi) else b
+            if fine - primo > 0.3:
+                ev.append((primo, "riser", {"durata": fine - primo}))
+        if tipo == "risposta" and s.get("testo") and len(str(s["testo"]).split()) <= 5:
+            n = len(str(s["testo"]).split())
+            ev.append((t0 + 0.5, "tastiera", {"durata": n * 0.05 + 0.25}))
+    return sorted(ev, key=lambda e: e[0])
+
+
+def pop_param(ev: list[tuple[float, str, dict]]) -> str:
+    """Parametro per la scena: "1.20:0,1.45:1,1.70:2" (istante del pop -> opzione che rimbalza)."""
+    return ",".join(f"{t:.2f}:{o['opz']}" for t, n, o in ev if n == "pop" and "opz" in o)
+
+
+def _da_battute(bt: list[tuple[float, str]]) -> list[tuple[float, str, dict]]:
+    """Compatibilità: eventi sonori dalle sole battute (scene senza schede)."""
+    m = {"boom": "impatto", "stacco": "whoosh", "punch": "swish", "rivela": "conferma", "tic": "tic"}
+    return [(t, m.get(k, "whoosh"), {}) for t, k in bt]
+
+
 def _nota(f: float, dur: float, timbro: str = "pad") -> np.ndarray:
     t = _t(dur)
     if timbro == "basso":
@@ -217,8 +337,9 @@ def inviluppo(x: np.ndarray, finestra: float = 0.12) -> np.ndarray:
 
 
 def mix(voce_wav: Path, bt: list[tuple[float, str]], durata: float, out: Path,
-        musica: bool = True, sfx: bool = True) -> Path:
-    """Voce + base abbassata sotto la voce + effetti sulle battute. Normalizzato, senza clipping."""
+        musica: bool = True, sfx: bool = True, eventi: list | None = None) -> Path:
+    """Voce + base abbassata sotto la voce + effetti sonori. Normalizzato, senza clipping.
+    `eventi` = suoni(...) (un suono per evento a schermo); se manca, si ricavano dalle battute."""
     n = int(durata * SR)
     v = leggi_wav(voce_wav)[:n]
     v = np.pad(v, (0, n - len(v)))
@@ -231,14 +352,24 @@ def mix(voce_wav: Path, bt: list[tuple[float, str]], durata: float, out: Path,
         coda = np.clip((durata - np.arange(n) / SR) / 1.2, 0, 1)        # dissolvenza finale
         tot += m * (1 - DUCK * inviluppo(v)) * coda
     if sfx:
-        cache = {}
-        for t, tipo in bt:
-            s = cache.setdefault(tipo, SUONI.get(tipo, SUONI["stacco"])())
-            s = s / (np.abs(s).max() + 1e-9) * LIV_SFX.get(tipo, 0.25)
+        cache: dict[str, np.ndarray] = {}
+        fx = np.zeros(n)
+        for t, nome, o in (eventi if eventi is not None else _da_battute(bt)):
+            if nome == "riser":
+                s = riser(max(0.3, float(o.get("durata", 2.5))))
+            else:
+                s = cache.setdefault(nome, campione(nome))
+                if o.get("durata"):
+                    s = s[: int(float(o["durata"]) * SR)].copy()
+                    c = min(len(s), int(0.03 * SR))
+                    s[len(s) - c:] *= np.linspace(1, 0, c)
+            s = _intona(s, o.get("semitoni", 0))
+            s = s / (np.abs(s).max() + 1e-9) * LIV_SUONI.get(nome, 0.25) * o.get("liv", 1.0)
             i = int(t * SR)
-            if i < n:
+            if 0 <= i < n:
                 m_ = min(len(s), n - i)
-                tot[i:i + m_] += s[:m_]
+                fx[i:i + m_] += s[:m_]
+        tot += fx * (1 - 0.5 * inviluppo(v))             # sotto la voce gli effetti scendono di ~6 dB
     picco = np.abs(tot).max()
     if picco > 0.97:
         tot *= 0.97 / picco

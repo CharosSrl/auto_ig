@@ -117,6 +117,42 @@ def _qwen_synth(speaker: str, text: str, speed: float) -> tuple[bytes, int, int,
     return _atempo(_trim(pcm, rate), rate, speed), rate, 2, 1
 
 
+# --- Google Cloud TTS, voci Chirp 3 HD (madrelingua italiane) ------------------------------------
+# modello: "chirp3-aoede" (la voce di Cintre, scelta da Antonio il 2026-11-18) o un'altra voce Chirp 3 HD.
+# Chiave in .env: GOOGLE_TTS_API_KEY (limitata alla sola Text-to-Speech API). Gratis fino a 1M caratteri/mese;
+# le frasi già fatte stanno in .voci/cache e non consumano caratteri.
+CHIRP_URL = "https://texttospeech.googleapis.com/v1/text:synthesize"
+
+
+def is_chirp(name: str) -> bool:
+    return str(name).startswith("chirp3")
+
+
+def _chirp_synth(voce_nome: str, text: str, speed: float) -> tuple[bytes, int, int, int]:
+    """Frase letta da Chirp 3 HD (dalla cache se già fatta); la velocità si applica dopo, come per Qwen."""
+    nome = f"it-IT-Chirp3-HD-{voce_nome.capitalize()}"
+    key = hashlib.sha1(f"{nome}|{text}".encode()).hexdigest()[:20]
+    cached = CACHE_DIR / f"chirp-{key}.wav"
+    if not cached.exists():
+        import base64
+        import requests
+        from .config import load_dotenv
+        load_dotenv()
+        api_key = os.environ.get("GOOGLE_TTS_API_KEY", "")
+        if not api_key:
+            raise RuntimeError("Manca GOOGLE_TTS_API_KEY nel .env (voce Chirp 3 HD)")
+        r = requests.post(CHIRP_URL, headers={"X-Goog-Api-Key": api_key},     # la chiave mai nell'URL
+                          json={"input": {"text": text}, "voice": {"languageCode": "it-IT", "name": nome},
+                                "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000}}, timeout=60)
+        if r.status_code != 200:
+            raise RuntimeError(f"Google TTS {r.status_code}: {r.text[:200]}")
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        cached.write_bytes(base64.b64decode(r.json()["audioContent"]))       # WAV (LINEAR16 con intestazione)
+    with wave.open(str(cached), "rb") as rf:
+        pcm, rate = rf.readframes(rf.getnframes()), rf.getframerate()
+    return _atempo(_trim(pcm, rate), rate, speed), rate, 2, 1
+
+
 def _trim(pcm: bytes, rate: int, soglia: float = 0.02, prima: float = 0.03, dopo: float = 0.08) -> bytes:
     """Toglie il silenzio ai bordi (Qwen ne lascia ~0,4 s prima e ~0,55 s dopo ogni frase): ritmo da Reel."""
     import numpy as np
@@ -183,7 +219,10 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
     lines = normalize_lines(lines)
     if not lines:
         raise ValueError("Il copione è vuoto")
-    if synth is None and is_qwen(voice_name):
+    if synth is None and is_chirp(voice_name):
+        nome = voice_name.partition("-")[2] or "aoede"
+        synth = lambda text, tone: _chirp_synth(nome, text, speed)    # noqa: E731
+    elif synth is None and is_qwen(voice_name):
         speaker = voice_name.partition("-")[2] or "vivian"
         synth = lambda text, tone: _qwen_synth(speaker, text, speed)   # noqa: E731
     elif synth is None:

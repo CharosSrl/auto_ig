@@ -44,6 +44,9 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   const fini = p.fini ? String(p.fini).split(',').map(Number) : voceInizi.map((a, i) => (atti.inizi[i + 1] ?? atti.fine) - 0.4);
   const BT = (p.battute ? String(p.battute).split(',').map((x) => { const [t, k] = x.split(':'); return { t: +t, k }; })
     : atti.inizi.map((t, i) => ({ t, k: i ? 'stacco' : 'boom' }))).sort((a, b) => a.t - b.t);
+  // pop delle opzioni (auto_ig/audio.suoni): "t:n,..." → l'opzione n rimbalza quando si sente il suo pop
+  const POP = String(p.pop || '').split(',').filter(Boolean).map((x) => { const [t, n] = x.split(':'); return { t: +t, n: +n }; });
+  const popOpz = (t, n) => POP.reduce((e, q) => (q.n === n && t >= q.t ? Math.max(e, Math.exp(-(t - q.t) * 6)) : e), 0);
   const tela = G.tela2d(THREE, renderer), ctx = tela.ctx, acc = p.accento || CIPRIA;
   // Fondi: con la palette Cintre (bordeaux) restano quelli di sempre; con un altro colore si derivano da quello,
   // così una scheda su due non torna bordeaux in un video nero/oro o verde/oro.
@@ -180,7 +183,8 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       const y = OPZ_Y(n, true), ke = giusta >= 0 || i > i0 || subito ? 1 : G.entra(uq, 0.55 + n * 0.3, 0.3), ok = n === giusta;
       if (ke <= 0) return;
       const vib = attesa ? Math.sin(t * 38 + n * 2) * (2 + 5 * urgenza) : 0;
-      const bump = !attesa && giusta < 0 && bt.k === 'punch' && nb % 3 === n ? 0.06 * Math.exp(-bt.dt * 6) : 0;
+      const bump = (!attesa && giusta < 0 && bt.k === 'punch' && nb % 3 === n ? 0.06 * Math.exp(-bt.dt * 6) : 0)
+        + (giusta < 0 ? 0.12 * popOpz(t, n) : 0);
       const cade = giusta >= 0 && !ok ? kr : 0;
       ctx.save(); ctx.translate(540 + vib + Math.sin(u * 30) * 10 * cade * Math.exp(-u * 4), y + cade * 8);
       const sc = G.pop(ke) * (1 + bump + (ok ? 0.07 * kr : 0)); ctx.scale(sc, sc); ctx.rotate(cade * (n % 2 ? 0.03 : -0.03));
@@ -228,7 +232,8 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       const y = 540 + n * 150, ke = giusta >= 0 || i > i0 || subito ? 1 : G.entra(uq, 0.55 + n * 0.3, 0.3), ok = n === giusta;
       if (ke <= 0) return;
       const vib = attesa ? Math.sin(t * 38 + n * 2) * (3 + 7 * urgenza) : 0;
-      const bump = !attesa && giusta < 0 && bt.k === 'punch' && nb % 3 === n ? 0.06 * Math.exp(-bt.dt * 6) : 0;
+      const bump = (!attesa && giusta < 0 && bt.k === 'punch' && nb % 3 === n ? 0.06 * Math.exp(-bt.dt * 6) : 0)
+        + (giusta < 0 ? 0.12 * popOpz(t, n) : 0);
       const cade = giusta >= 0 && !ok ? kr : 0;
       ctx.save(); ctx.translate(540 + vib + Math.sin(u * 30) * 10 * cade * Math.exp(-u * 4), y + cade * 10);
       const sc = G.pop(ke) * (1 + bump + (ok ? 0.08 * kr : 0)); ctx.scale(sc, sc); ctx.rotate(cade * (n % 2 ? 0.04 : -0.04));
@@ -352,6 +357,11 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     if (s.tipo === 'cta') C.esplosione(ctx, 540, 450, u - 0.1, { seme: 99, n: 34, forza: 1200 });
     if (bt.k !== 'punch' && bt.k !== 'tic' && !(inQuiz && i > iq) && bt.b > 0) C.tendina(ctx, bt.dt, { colore: acc, colore2: SCURO, dir: bt.b % 2 ? 1 : -1 });
     C.flash(ctx, ({ boom: 0.55, rivela: 0.3, punch: 0.12, stacco: 0, tic: 0.08 }[bt.k] ?? 0) * Math.exp(-bt.dt * 12) * (bt.b === 0 ? 0 : 1));
+    // scatto fotografico (audio.suoni): flash bianco quando entra una foto nuova, non al fotogramma 0
+    if (i > 0 && (s.tipo === 'foto' || (s.tipo === 'risposta' && s.foto_risposta))) {
+      const d = t - voceInizi[i] - 0.05;
+      if (d >= 0) C.flash(ctx, 0.45 * Math.exp(-d * 14));
+    }
     // ultimi 0,3 s: torna al colore d'apertura (il loop riparte pulito)
     const v = (t - (atti.fine - 0.3)) / 0.3;
     if (v > 0) { ctx.fillStyle = `rgba(26,7,16,${Math.min(1, v)})`; ctx.fillRect(0, 0, G.W, G.H); }

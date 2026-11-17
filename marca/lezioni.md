@@ -91,3 +91,9 @@ Altri dati utili:
     - La risposta del quiz dice la lettera **e** il perché in una frase: "È la B: ray vuol dire raggio, ban vuol dire bloccare."
     - Se il video supera i 25 s, la prima cosa da togliere è la **trappola finale**, che non insegna niente.
       Poi si accorciano le frasi. La voce non si velocizza.
+
+## Ispirazioni esterne (da verificare)
+
+Le regole qui sopra vengono dai nostri dati. Le ispirazioni da reel di altri creator stanno nella skill
+`.claude/skills/regia-reel/SKILL.md`: suono per ogni evento a schermo, formato "N cose", caption-bigino da salvare e
+mandare, finale che riparte, copertina, seguiti dei reel che vanno bene. Si usano solo dopo averle verificate con i nostri Insights.

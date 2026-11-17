@@ -150,3 +150,59 @@ def yaml_dump(d):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SuoniEventiTest(unittest.TestCase):
+    """Un suono per ogni evento a schermo (skill regia-reel)."""
+
+    def frasi(self):
+        testi = [("Quanto è costato il logo?", 0.6, 3.0), ("A, B, o C?", 3.4, 4.6), ("Tre. Due. Uno.", 5.0, 7.5),
+                 ("È la A: solo 35 dollari.", 7.9, 10.5), ("E la statua?", 10.9, 12.5)]
+        return [voce.Sentence(x, a, b, voce.word_timings(x, a, b)) for x, a, b in testi]
+
+    def schede(self):
+        opz = ["35 dollari", "35 mila", "Un milione"]
+        return [{"tipo": "gancio", "foto": "a.jpg", "opzioni": opz}, {"tipo": "domanda", "opzioni": opz},
+                {"tipo": "domanda", "opzioni": opz, "conto": 3},
+                {"tipo": "risposta", "opzioni": opz, "giusta": 0, "testo": "Solo 35 dollari!", "foto_risposta": "b.jpg"},
+                {"tipo": "foto", "foto": "c.jpg"}]
+
+    def test_eventi(self):
+        fr, sk = self.frasi(), self.schede()
+        ev = audio.suoni(fr, sk, audio.battute(fr, sk))
+        nomi = lambda n: [e for e in ev if e[1] == n]                       # noqa: E731
+        self.assertIn((0.0, "scatto", {}), ev)                              # la foto entra con lo scatto
+        pops = nomi("pop")
+        lettere = [w.start for w in fr[1].words if w.text.strip(",?") in ("A", "B", "C")]
+        self.assertEqual([round(p[0], 2) for p in pops], [round(x, 2) for x in lettere])
+        self.assertEqual([p[2]["opz"] for p in pops], [0, 1, 2])
+        self.assertEqual([p[2]["semitoni"] for p in pops], [0, 2, 4])       # intonazione che sale A→B→C
+        [r] = nomi("riser")
+        self.assertAlmostEqual(r[0] + r[2]["durata"], fr[3].start, places=2)   # il riser esplode sulla risposta
+        self.assertEqual(len(nomi("tic")), 3)
+        self.assertTrue(any(abs(t - (fr[3].start + 0.5)) < 1e-6 for t, _, _ in nomi("tastiera")))
+        scatti = [t for t, _, _ in nomi("scatto")]
+        self.assertTrue(any(abs(t - (fr[3].start + 0.05)) < 1e-6 for t in scatti))   # foto_risposta
+        self.assertTrue(any(abs(t - (fr[4].start + 0.05)) < 1e-6 for t in scatti))   # scheda foto
+        self.assertEqual(audio.pop_param(ev).count(":"), 3)
+
+    def test_campioni_e_ripiego(self):
+        self.assertGreater(len(audio.campione("scatto")), 1000)            # campione CC0 nel repo
+        with tempfile.TemporaryDirectory() as d:                            # cartella vuota: suono sintetico
+            for n in audio.RIPIEGO:
+                self.assertGreater(np.abs(audio.campione(n, Path(d))).max(), 0)
+
+    def test_mix_con_eventi_voce_davanti(self):
+        fr, sk = self.frasi(), self.schede()
+        ev = audio.suoni(fr, sk, audio.battute(fr, sk))
+        with tempfile.TemporaryDirectory() as d:
+            v = Path(d) / "voce.wav"
+            with wave.open(str(v), "wb") as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(22050)
+                t = np.arange(int(13 * 22050)) / 22050
+                w.writeframes((np.sin(2 * np.pi * 220 * t) * 20000).astype(np.int16).tobytes())
+            x = audio.leggi_wav(audio.mix(v, [], 13.0, Path(d) / "mix.wav", musica=True, eventi=ev))
+            self.assertLessEqual(np.abs(x).max(), 0.98)
+            senza = audio.leggi_wav(audio.mix(v, [], 13.0, Path(d) / "m2.wav", musica=True, sfx=False))
+            fx = x - senza
+            self.assertLess(np.sqrt((fx ** 2).mean()), np.sqrt((senza ** 2).mean()))   # la voce resta davanti

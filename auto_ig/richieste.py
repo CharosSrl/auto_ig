@@ -59,7 +59,8 @@ audio: {{musica: false, sfx: false}}   # base musicale e effetti sonori generati
 
 # Voce (locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
-  modello: qwen3-vivian   # Qwen3-TTS, più naturale (~4-5 min per video, poi in cache) | it_IT-paola-medium (Piper, istantanea)
+  modello: chirp3-aoede   # la voce di Cintre: Google Chirp 3 HD (GOOGLE_TTS_API_KEY nel .env, gratis fino a 1M car./mese)
+                          # | qwen3-vivian (Qwen3-TTS locale, lenta) | it_IT-paola-medium (Piper, istantanea)
   velocita: 1.0           # 1.0 nei reel: più veloce non si capisce (lezioni n. 13)
   pausa: 0.5              # silenzio tra le frasi (default 0.35)
   # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole
@@ -204,10 +205,12 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
         seconds += 1.0                             # la CTA resta a schermo un po' dopo la voce
     sk = [(r.get("scheda") if isinstance(r, dict) else None) or {} for r in righe]
     bt = audio.battute(sentences, sk)              # cambi visivi: stessi istanti per scena ed effetti sonori
+    ev = audio.suoni(sentences, sk, bt)            # un suono per ogni evento a schermo (skill regia-reel)
     au = data.get("audio") or {}
     traccia = o["wav"]
     if au.get("musica") or au.get("sfx"):
-        traccia = audio.mix(o["wav"], bt, max(3.0, seconds), o["mix"], musica=bool(au.get("musica")), sfx=bool(au.get("sfx")))
+        traccia = audio.mix(o["wav"], bt, max(3.0, seconds), o["mix"], musica=bool(au.get("musica")), sfx=bool(au.get("sfx")),
+                           eventi=ev)
     render_fn(formati.scena(data), {"testo": scene_text, "colore": colors["sfondo"], "accento": colors["accento"],
                               "voce": "1", "fine": f"{seconds:.2f}", "schede": formati.schede(righe, cz),
                               "formato": data.get("formato") or "",
@@ -215,6 +218,7 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
                               "atti": ",".join(f"{x.start:.2f}" for x in sentences),
                               "fini": ",".join(f"{x.end:.2f}" for x in sentences),   # bocca che parla
                               "battute": audio.battute_param(bt),
+                              "pop": audio.pop_param(ev),        # opzione A/B/C che rimbalza sul suo pop
                               "outfit": str(data.get("outfit") or ""),
                               "cornice": str(data.get("cornice") or ""),   # preset cornice della foto (foto2d.js)
                               "mascotte": "1" if data.get("mascotte") is True else "0"},

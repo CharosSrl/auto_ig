@@ -190,3 +190,29 @@ class TestRimettiInCoda(Base):
         self.assertNotIn("Metti in coda</button>", c.get("/video").data.decode())   # è in coda
         self.qf.write_text("[]\n")                                                  # post eliminato
         self.assertIn("Metti in coda</button>", c.get("/video").data.decode())
+
+
+class TestChirp(unittest.TestCase):
+    def test_chirp_chiave_in_header_e_cache(self):
+        import base64, io, os, wave
+        from unittest import mock
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000)
+            w.writeframes((b"\x00\x40" * 2400) + (b"\x00\x00" * 240))
+        chiamate = []
+
+        def post(url, headers=None, json=None, timeout=None):
+            chiamate.append((url, headers, json))
+            return mock.Mock(status_code=200, json=lambda: {"audioContent": base64.b64encode(buf.getvalue()).decode()})
+
+        d = Path(tempfile.mkdtemp())
+        with mock.patch.object(voce, "CACHE_DIR", d), mock.patch.dict(os.environ, {"GOOGLE_TTS_API_KEY": "k"}), \
+                mock.patch("requests.post", post):
+            sents, _ = voce.speak(["Ciao a tutti.", "Ciao a tutti."], d / "v.wav", voice_name="chirp3-aoede")
+        self.assertEqual(len(chiamate), 1)                                   # seconda frase uguale: dalla cache
+        url, headers, body = chiamate[0]
+        self.assertNotIn("k", url.split("?")[-1] if "?" in url else "")      # la chiave non va nell'URL
+        self.assertEqual(headers["X-Goog-Api-Key"], "k")
+        self.assertEqual(body["voice"]["name"], "it-IT-Chirp3-HD-Aoede")
+        self.assertEqual(len(sents), 2)
