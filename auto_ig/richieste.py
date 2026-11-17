@@ -193,7 +193,9 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
                                   v.get("modello", voce.DEFAULT_VOICE), float(v.get("velocita", 1.0)), **kw)
     colors = data["colori"]
     cz = censura.da_richiesta(data)               # parole forti: m*rte a schermo, intere nella voce
-    o["ass"].write_text(voce.build_ass(sentences, highlight=colors["accento"], corti=data.get("sottotitoli") == "corti",
+    # il cartello CTA ha già la sua scritta: niente sottotitoli doppi sotto
+    sub = [x for x, r in zip(sentences, righe) if not (isinstance(r, dict) and (r.get("scheda") or {}).get("tipo") == "cta")]
+    o["ass"].write_text(voce.build_ass(sub, highlight=colors["accento"], corti=data.get("sottotitoli") == "corti",
                                        blocco=data.get("sottotitoli", "blocco") == "blocco", censura=cz))
     o["tempi"].write_text(json.dumps(voce.timings_dict(sentences), indent=2, ensure_ascii=False))
     scene_text = data.get("testo_scena") or (data.get("titolo", "") if formati.scena(data) == "testo" else "")

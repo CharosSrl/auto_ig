@@ -326,6 +326,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     const z0 = prima ? livello(prima.k, bt.b - 1) : 1, z1 = livello(bt.k, bt.b);
     let zoom = G.clamp(bt.dt / 0.2) < 1 ? z0 + (z1 - z0) * C.backOut(bt.dt / 0.2) : z1;
     if (bt.k === 'boom') zoom += 0.12 * Math.exp(-bt.dt * 7);
+    if (eQuiz(s) && s.foto) zoom = 1 + (zoom - 1) * 0.35;   // quiz con foto: pieno fino ai sottotitoli, zoom leggero
     const L = MASCOTTE ? lati(i) : { pc: 540, ic: s.tipo === 'dettaglio' ? 620 : 540 };
     const inQuiz = eQuiz(s), iq = inQuiz ? inizioQuiz(i) : i;
     const fuoco = inQuiz ? [540, s.foto ? 660 : 700] : !MASCOTTE ? [L.ic + (nb % 2 ? -50 : 50), 780]

@@ -298,7 +298,7 @@ def build_ass(sentences: list[Sentence], highlight: str = "#FFD166", text_color:
     if corti:
         size = max(size, 104)
     elif blocco:
-        size, margin_bottom, outline, shadow = 76, 500, 6, 3
+        size, margin_bottom, outline, shadow = 76, 440, 6, 3
     base = ass_color(text_color)
     head = f"""[Script Info]
 ScriptType: v4.00+
