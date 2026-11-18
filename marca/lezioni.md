@@ -31,7 +31,10 @@ Altri dati utili:
    Per questo la domanda e le opzioni A/B/C vanno a schermo **dal primo fotogramma**, senza scheda-titolo
    d'apertura.
 4. **Quiz, non lezione.** I reel "Lo sapevi?" con l'elenco di fatti crollano intorno al 10% già a 10 secondi.
-   Una curiosità si trasforma in quiz: la risposta resta in sospeso fino alla fine.
+   Per questo anche una curiosità tiene la risposta in sospeso fino alla fine (rehook, l'ultima è la più forte).
+   **Ma il formato lo sceglie Antonio** (2026-11-19): se chiede "curiosità" si fa `formato: curiosita`, se chiede
+   "quiz" si fa `formato: quiz`. Mai convertire da soli: se i dati suggeriscono altro, glielo si chiede prima.
+   In ogni gruppo di reel si alternano i formati (quiz, "N cose", curiosità con suspense).
 5. **Domanda con la risposta "conosciuta a metà".** La curiosità è massima quando chi guarda sente di poter
    sapere la risposta (Kang et al., 2009). Funziona bene una trappola che dà mezza ragione a chi sbaglia:
    per i jeans era Nîmes, che ha dato il nome al denim.
@@ -91,6 +94,18 @@ Altri dati utili:
     - La risposta del quiz dice la lettera **e** il perché in una frase: "È la B: ray vuol dire raggio, ban vuol dire bloccare."
     - Se il video supera i 25 s, la prima cosa da togliere è la **trappola finale**, che non insegna niente.
       Poi si accorciano le frasi. La voce non si velocizza.
+
+## Regole controllate dal codice
+
+Dal 2026-11-19 queste regole non sono più solo scritte: `auto_ig/regole.py` blocca `richieste crea` se un reel 2D
+(quiz o curiosità) non le rispetta. Le aveva chieste Antonio, e io le avevo saltate.
+- formato uguale a quello chiesto da Antonio (campo `richiesta`);
+- **parola forte vera nel gancio**, detta dalla voce e scritta censurata nel titolo o nel timbro (regola 11: è
+  obbligatoria, non facoltativa). Si salta solo con `parola_forte: false` più `parola_forte_motivo`, da dire ad Antonio;
+- suoni accesi (`audio: {musica: true, sfx: true}`), voce `chirp3-aoede` a 1.0;
+- durata sotto i 25 s, controllata prima del render.
+Il build stampa la riga "regole: …": va riportata ad Antonio con ogni video. Se gli ultimi 4 reel hanno lo stesso
+formato arriva un avviso, e va proposto un formato diverso.
 
 ## Ispirazioni esterne (da verificare)
 

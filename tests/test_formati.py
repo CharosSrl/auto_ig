@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from unittest import mock
 from datetime import date
 from pathlib import Path
 
@@ -81,7 +82,8 @@ class TestRegole(unittest.TestCase):
 
 
 class TestRichiesta(unittest.TestCase):
-    def test_nuova_con_formato_e_build(self):
+    @mock.patch("auto_ig.regole.errori", return_value=[])   # qui si prova altro, non le regole di Antonio
+    def test_nuova_con_formato_e_build(self, _r):
         base = Path(tempfile.mkdtemp())
         f = richieste.new("Quiz moda", base=base, day=date(2026, 11, 20), formato="quiz", resa="2d")
         data = yaml.safe_load((f / "richiesta.yaml").read_text())
@@ -100,7 +102,9 @@ class TestRichiesta(unittest.TestCase):
                     for i, (t, tone) in enumerate(voce.normalize_lines(lines))], 7.0
         with self.assertRaisesRegex(ValueError, "foto"):     # quiz 2D: senza foto dal fotogramma 0 non si genera
             richieste.build(f, render_fn=render, speak_fn=speak)
+        self.assertEqual(data["audio"], {"musica": True, "sfx": True})   # reel 2D: suoni accesi già nello scheletro
         data["copione"][0]["scheda"]["foto"] = "x.jpg"
+        data["audio"] = {"musica": False, "sfx": False}       # il wav finto non si può mixare
         (f / "foto").mkdir(); (f / "foto" / "x.jpg").write_bytes(b"jpg")
         (f / "richiesta.yaml").write_text(yaml.safe_dump(data, allow_unicode=True))
         richieste.build(f, render_fn=render, speak_fn=speak)

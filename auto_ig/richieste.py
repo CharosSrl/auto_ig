@@ -29,7 +29,7 @@ from typing import Callable
 
 import yaml
 
-from . import audio, censura, formati, queue, voce
+from . import audio, censura, formati, queue, regole, voce
 from .config import MEDIA_DIR, ROOT
 from .images import slugify
 
@@ -55,7 +55,7 @@ colori:
 testo_scena: ""           # testo fisso della scena (vuoto = nessuno; per 'testo' usa il titolo)
 qualita: alta             # alta (supersampling 2x, ombre) | bozza (veloce, per provare)
 sottotitoli: blocco       # blocco (2 righe ferme, parole evidenziate man mano: default) | interi | corti (1-3 parole)
-audio: {{musica: false, sfx: false}}   # base musicale e effetti sonori generati a codice (auto_ig/audio.py)
+audio: {{musica: {audio}, sfx: {audio}}}   # base musicale e effetti sonori generati a codice (auto_ig/audio.py)
 
 # Voce (locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
@@ -99,7 +99,7 @@ def new(title: str, lines: list | None = None, scene: str = "particelle", bg: st
     folder.mkdir(parents=True)
     (folder / "richiesta.yaml").write_text(TEMPLATE.format(
         titolo=_q(title), richiesta=_q(request), scena=scene, sfondo=bg, accento=accent,
-        formato=formato or '""', resa=resa or '""',
+        formato=formato or '""', resa=resa or '""', audio="true" if resa == "2d" else "false",
         copione="\n".join(f"  - {_q(l)}" for l in lines), caption=_q(caption)))
     return folder
 
@@ -179,9 +179,9 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     if render_fn is None:
         from .video import render as render_fn
     data = load(folder)
-    if errs := _regole_foto(data):                # lo scheletro può non averla ancora; il video no
+    if errs := _regole_foto(data) + regole.errori(data):   # regole di Antonio: obbligatorie, non promemoria
         raise ValueError(f"{folder.name}: " + "; ".join(errs))
-    for a in dict.fromkeys(avvisi_testo(data)):
+    for a in dict.fromkeys(avvisi_testo(data) + regole.avvisi(data, folder)):
         log(f"avviso: {a}")
     o = outputs(folder)
     o["wav"].parent.mkdir(exist_ok=True)
@@ -203,6 +203,10 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     _prepara_foto(folder)
     if data.get("formato"):
         seconds += 1.0                             # la CTA resta a schermo un po' dopo la voce
+    if err := regole.errore_durata(data, seconds):  # prima del render: non si perde tempo su un reel troppo lungo
+        raise ValueError(f"{folder.name}: {err}")
+    if regole.si_applica(data):
+        log(regole.riepilogo(data, seconds))
     sk = [(r.get("scheda") if isinstance(r, dict) else None) or {} for r in righe]
     bt = audio.battute(sentences, sk)              # cambi visivi: stessi istanti per scena ed effetti sonori
     ev = audio.suoni(sentences, sk, bt)            # un suono per ogni evento a schermo (skill regia-reel)

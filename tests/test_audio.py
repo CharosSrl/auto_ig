@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from unittest import mock
 import wave
 from pathlib import Path
 
@@ -85,7 +86,8 @@ class RegoleAntonioTest(unittest.TestCase):
         self.assertTrue(formati.valida(self.base(mascotte="si")))
         self.assertEqual(formati.valida(self.base(mascotte=True)), [])
 
-    def test_mascotte_spenta_di_default_nel_build(self):
+    @mock.patch("auto_ig.regole.errori", return_value=[])   # qui si prova altro, non le regole di Antonio
+    def test_mascotte_spenta_di_default_nel_build(self, _r):
         from auto_ig import richieste
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "r"; f.mkdir()

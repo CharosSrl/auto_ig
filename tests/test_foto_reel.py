@@ -1,6 +1,7 @@
 """Quiz e curiosità 2D: foto Wikimedia incorniciata dal fotogramma 0 (marca/lezioni.md regola 12)."""
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 import yaml
@@ -43,7 +44,8 @@ class FotoReelTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "foto"):
             _build(_richiesta(foto=False))
 
-    def test_con_foto_e_cornice(self):
+    @mock.patch("auto_ig.regole.errori", return_value=[])   # qui si prova altro, non le regole di Antonio
+    def test_con_foto_e_cornice(self, _r):
         params, _ = _build(_richiesta(cornice="pellicola"))
         self.assertEqual(params["cornice"], "pellicola")
 
@@ -52,7 +54,8 @@ class FotoReelTest(unittest.TestCase):
         d["copione"] = [{"testo": "Ciao.", "scheda": {"tipo": "scena", "titolo": "x"}}]
         self.assertEqual(richieste._regole_foto(d), [])
 
-    def test_avvisi_scritte_lunghe(self):
+    @mock.patch("auto_ig.regole.errori", return_value=[])   # qui si prova altro, non le regole di Antonio
+    def test_avvisi_scritte_lunghe(self, _r):
         d = _richiesta()
         d["copione"][0]["scheda"]["titolo"] = "Una domanda davvero troppo lunga da leggere a schermo"
         d["copione"][0]["scheda"]["opzioni"] = ["Dall'inventore che si chiamava Ray", "B", "C"]
