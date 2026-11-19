@@ -45,6 +45,12 @@ schede_2d:
   rehook:    "a metà video: titolo enorme che trema ('Aspetta l'ultima...') + carta mistero della prossima curiosità (solo cartoon2d)"
   timeline:  "(solo cartoon2d) INFOGRAFICA a codice (preset infografica2d.js): titolo + tappe verticali che si disegnano (tappe: [{quando: '1871', testo: 'Tasche strappate', icona: jeans}], attiva: indice della tappa di questa frase). Più schede timeline CONSECUTIVE con le stesse tappe = una sola timeline che cresce, le tappe dopo restano nascoste. Testi delle tappe ≤ 4 parole. Usala per storie con date o passaggi in sequenza, soprattutto senza foto adatta"
   mappa:     "(solo cartoon2d) INFOGRAFICA a codice: sagoma del paese (regione: usa) con un percorso tratteggiato, puntini che si accendono uno alla volta mentre la voce parla e un'icona che viaggia (icona: auto). Puntini illustrativi, mai presentati come dati. Usala per viaggi, diffusione, 'in tutta l'America'"
+  contatore: "(solo cartoon2d) GRAFICA VIVA: numero enorme che sale (da, a, unita: 'litri', durata: secondi) mentre una vasca si riempie; tic che rallentano e conferma all'arrivo. Per i numeri sorprendenti"
+  radar:     "(solo cartoon2d) GRAFICA VIVA: un punto nel mare visto dall'alto (atollo), cerchi radar che pulsano con un ping, mirino, etichetta del posto (etichetta: 'BIKINI · 1946'); esplode: secondi → lampo. Per luoghi lontani"
+  scena2d:   "(solo cartoon2d) SCENA ANIMATA con personaggi (comparse, NON la mascotte): sfondo studio|campo|mare|casa, attori: [{azione: cammina|indica|sorpresa|disegna|legge|versa|lancia|raccoglie|saluta, x, verso: 1|-1, maglia, pantaloni, capelli, pelle: 0-3, cappello: basco|paglia, baffi, quando, dice: 'BIKINI!'}], oggetti: [{cosa: tavolo|giornale|lavatrice|cotone|gocce|eiffel|icona, x, y, s, testo, icona}]"
+  # GANCIO VIVO (Antonio, 2026-11-19: "serve qualcosa di dinamico fin dall'inizio"): il gancio può avere
+  # `grafica: {tipo: contatore|radar|scena2d, ..., anticipo: 0.6}` al posto della foto: al fotogramma 0 è già in moto,
+  # niente intestazione "Cintre · LO SAPEVI?", solo il titolo grande.
   cta:       "cartello finale secondo cta_azione del formato (salva_condividi: segnalibro + Invia; segui: bottone Segui; commenta: fumetto; app: telefono); messa dal sistema"
 
 # HOOK E CTA — la parte più importante di ogni contenuto (Antonio, 2026-11-14). Skill: .claude/skills/hook-writer,

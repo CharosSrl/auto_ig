@@ -255,10 +255,59 @@ def suoni(frasi: list, schede: list | None, bt: list[tuple[float, str]]) -> list
             d = max(0.8, (b - a) - 0.6)                                   # stessa formula di infografica2d.tempiPuntini
             ev += [(round(t0 + 0.3 + d * j / (MAPPA_PUNTI - 1), 2), "pop", {"semitoni": j % 5, "liv": 0.6})
                    for j in range(MAPPA_PUNTI)]
+        g = s.get("grafica") if tipo == "gancio" and isinstance(s.get("grafica"), dict) else s
+        fine_i = inizi[i + 1] if i + 1 < len(inizi) else b
+        ev += suoni_grafica(g, t0, fine_i, anticipo=float(g.get("anticipo", 0.25 if g.get("tipo") == "contatore" else 0.6)) if g is not s else 0.0)
         if tipo == "risposta" and s.get("testo") and len(str(s["testo"]).split()) <= 5:
             n = len(str(s["testo"]).split())
             ev.append((t0 + 0.5, "tastiera", {"durata": n * 0.05 + 0.25}))
     return sorted(ev, key=lambda e: e[0])
+
+
+RADAR_PERIODO = 0.9                                                      # = infografica2d.js RADAR_PERIODO
+
+
+def tempi_contatore(durata: float = 2.2, n: int = 12) -> list[float]:
+    """= infografica2d.js tempiContatore: i tic rallentano come il numero (easing cubico)."""
+    return [durata * (1 - (1 - (j + 1) / (n + 1)) ** (1 / 3)) for j in range(n)]
+
+
+def suoni_grafica(g: dict, t0: float, t1: float, anticipo: float = 0.0) -> list[tuple[float, str, dict]]:
+    """Suoni delle grafiche vive (contatore, radar, scena con personaggi), scheda a sé o dentro il gancio.
+    anticipo: la grafica del gancio parte già avanti (fotogramma 0 in movimento), i suoni seguono lo stesso orologio."""
+    tipo, ev = g.get("tipo", ""), []
+    metti = lambda u, nome, o=None: ev.append((round(t0 + u - anticipo, 2), nome, o or {})) if t0 + u - anticipo >= 0 and t0 + u - anticipo < t1 else None  # noqa: E731
+    if tipo == "contatore":
+        d = float(g.get("durata", 2.2))
+        for j, u in enumerate(tempi_contatore(d)):
+            metti(u, "tic", {"semitoni": j % 6, "liv": 0.6})
+        metti(d, "conferma")
+        metti(d, "impatto", {"liv": 0.4})
+    elif tipo == "radar":
+        k = 0
+        while (u := k * RADAR_PERIODO + (anticipo % RADAR_PERIODO)) < t1 - t0 + anticipo:
+            metti(u, "pop", {"semitoni": 9, "liv": 0.45})
+            k += 1
+        if float(g.get("esplode", -1)) >= 0:
+            metti(float(g["esplode"]), "impatto", {"liv": 1.0})
+    elif tipo == "scena2d":
+        for a in g.get("attori") or []:
+            az = a.get("azione")
+            if az == "cammina":
+                d = float(a.get("durata", 2))
+                for j in range(int(d / 0.35)):
+                    metti(j * 0.35, "tic", {"semitoni": -5 + 2 * (j % 2), "liv": 0.5})
+            elif az == "sorpresa":
+                q = float(a.get("quando", 0))
+                metti(q, "swish", {"liv": 2.0, "semitoni": 5})
+                metti(q + 0.1, "pop_morbido", {"semitoni": 7})
+            elif az == "versa":
+                metti(0.1, "whoosh", {"durata": 1.0, "liv": 0.8, "semitoni": -6})
+            elif az == "disegna":
+                metti(0.2, "tastiera", {"durata": 0.8, "liv": 0.6})
+            if a.get("dice"):
+                metti(float(a.get("quando", 0)) + 0.15, "pop", {"semitoni": 4})
+    return ev
 
 
 def pop_param(ev: list[tuple[float, str, dict]]) -> str:

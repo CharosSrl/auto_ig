@@ -122,3 +122,113 @@ export function tempiPuntini(durata) {
   const d = Math.max(0.8, durata - 0.6);
   return Array.from({ length: MAPPA_PUNTI }, (_, j) => 0.3 + (d * j) / (MAPPA_PUNTI - 1));
 }
+
+// ---- CONTATORE ---------------------------------------------------------------------------------------------------
+// Numero enorme che sale (da → a) mentre una vasca si riempie di liquido che ondeggia. u: secondi dalla frase
+// (nel gancio parte già avanti, così al fotogramma 0 si muove). durata: secondi per arrivare al numero finale.
+export const fmtNum = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+export function contatore(ctx, { da = 0, a = 100, unita = '', durata = 2.2, colore = '#4fb3ff' } = {}, u, t,
+  { accento = '#ffd166', box = { x: 240, y: 690, w: 600, h: 500 } } = {}) {
+  const k = easeOut(clamp(u / durata) * 1.0), v = da + (a - da) * k, fine = u >= durata;
+  const { x, y, w, h } = box;
+  ctx.save();
+  // vasca: ombra, vetro crema trasparente, contorno a inchiostro
+  ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, x + 12, y + 16, w, h, 46); ctx.fill();
+  ctx.fillStyle = 'rgba(255,248,236,0.16)'; rr(ctx, x, y, w, h, 46); ctx.fill();
+  ctx.save(); rr(ctx, x, y, w, h, 46); ctx.clip();
+  const lv = y + h - h * 0.92 * k;                      // livello del liquido
+  ctx.fillStyle = colore; ctx.beginPath(); ctx.moveTo(x, y + h);
+  for (let px = 0; px <= w; px += 12) ctx.lineTo(x + px, lv + Math.sin(px / 55 + t * 5) * 14 * (1 - 0.5 * k) + Math.sin(px / 23 - t * 7) * 5);
+  ctx.lineTo(x + w, y + h); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';             // bollicine che salgono
+  for (let j = 0; j < 14; j++) {
+    const fr = (t * (0.35 + (j % 5) * 0.08) + j * 0.137) % 1, by = y + h - fr * (y + h - lv), bx = x + 40 + ((j * 0.618) % 1) * (w - 80);
+    if (by > lv + 10) { ctx.beginPath(); ctx.arc(bx + Math.sin(t * 3 + j) * 8, by, 6 + (j % 3) * 4, 0, 7); ctx.fill(); }
+  }
+  // tacche a lato
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 6;
+  for (let j = 1; j < 5; j++) { const ty = y + h - (h * 0.92 * j) / 5; ctx.beginPath(); ctx.moveTo(x + 24, ty); ctx.lineTo(x + 84, ty); ctx.stroke(); }
+  ctx.restore();
+  ctx.lineWidth = 8; ctx.strokeStyle = INCHIOSTRO; rr(ctx, x, y, w, h, 46); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)'; rr(ctx, x + w - 70, y + 40, 22, h * 0.55, 11); ctx.fill();   // riflesso
+  // rubinetto che versa finché il numero sale
+  if (!fine) {
+    ctx.fillStyle = colore; ctx.globalAlpha = 0.9;
+    ctx.fillRect(x + w / 2 - 18 + Math.sin(t * 30) * 2, y - 100, 36 + Math.sin(t * 40) * 3, lv - y + 100); ctx.globalAlpha = 1;
+  }
+  ctx.fillStyle = CREMA; rr(ctx, x + w / 2 - 70, y - 150, 140, 56, 20); ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+  // numero enorme sopra la vasca: scuote mentre sale, pop all'arrivo
+  const arr = fine ? pop(clamp((u - durata) / 0.3)) : 1, sh = fine ? 0 : Math.sin(t * 50) * 4;
+  ctx.save(); ctx.translate(W / 2 + sh, y + h * 0.42); ctx.scale(arr, arr); ctx.rotate(fine ? -0.04 : 0);
+  ctx.font = FONT(190, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 26; ctx.strokeStyle = INCHIOSTRO; const str = fmtNum(v);
+  ctx.strokeText(str, 0, 0); ctx.fillStyle = fine ? accento : '#fff'; ctx.fillText(str, 0, 0);
+  if (unita) { ctx.font = FONT(70, 900); ctx.lineWidth = 16; ctx.strokeText(unita, 0, 140); ctx.fillStyle = '#fff'; ctx.fillText(unita, 0, 140); }
+  ctx.restore();
+  ctx.restore();
+}
+// Istanti dei tic del contatore (rallentano come l'easing) + arrivo: usati da audio.suoni (stessa logica).
+export function tempiContatore(durata = 2.2, n = 12) {
+  return Array.from({ length: n }, (_, j) => durata * (1 - Math.cbrt(1 - (j + 1) / (n + 1))));
+}
+
+// ---- RADAR -------------------------------------------------------------------------------------------------------
+// Un punto nel mare visto dall'alto: onde, un atollo (anello di isolette), cerchi che pulsano dal centro, un mirino
+// che si stringe e l'etichetta del posto. Per i luoghi lontani senza bisogno del planisfero. esplode: secondi dalla
+// frase in cui il centro fa un lampo (facoltativo).
+export const RADAR_PERIODO = 0.9;                // un cerchio (e un ping) ogni RADAR_PERIODO secondi
+export function radar(ctx, { etichetta = '', esplode = -1 } = {}, u, t, { accento = '#ffd166', cx = W / 2, cy = 800, r = 360 } = {}) {
+  ctx.save();
+  // mare: disco con onde
+  ctx.fillStyle = 'rgba(20,4,10,0.45)'; ctx.beginPath(); ctx.arc(cx + 12, cy + 16, r, 0, 7); ctx.fill();
+  ctx.fillStyle = '#1f6fa8'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.clip();
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  for (let j = 0; j < 9; j++) {
+    const yy = cy - r + 50 + j * 85, off = (t * 40 + j * 60) % 120;
+    for (let xx = cx - r - 120 + off; xx < cx + r; xx += 120) { ctx.beginPath(); ctx.arc(xx, yy, 22, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke(); }
+  }
+  // atollo: laguna più chiara e anello di isolette
+  ctx.fillStyle = '#5cc6d6'; ctx.beginPath(); ctx.ellipse(cx, cy, 170, 120, -0.3, 0, 7); ctx.fill();
+  for (let j = 0; j < 16; j++) {
+    const a = (j / 16) * Math.PI * 2, ex = cx + Math.cos(a) * 170 * Math.cos(-0.3) - Math.sin(a) * 120 * Math.sin(-0.3);
+    const ey = cy + Math.cos(a) * 170 * Math.sin(-0.3) + Math.sin(a) * 120 * Math.cos(-0.3);
+    ctx.fillStyle = '#f2d98d'; ctx.beginPath(); ctx.ellipse(ex, ey, 26 + (j % 3) * 8, 14, a, 0, 7); ctx.fill();
+    ctx.fillStyle = '#3f9a52'; ctx.beginPath(); ctx.arc(ex, ey - 4, 9 + (j % 2) * 4, 0, 7); ctx.fill();
+  }
+  // cerchi che pulsano (radar)
+  for (let j = 0; j < 4; j++) {
+    const f = ((u + 10 * RADAR_PERIODO) / RADAR_PERIODO + j / 4) % 1;
+    ctx.strokeStyle = accento; ctx.globalAlpha = (1 - f) * 0.8; ctx.lineWidth = 10 * (1 - f) + 2;
+    ctx.beginPath(); ctx.arc(cx, cy, 30 + f * r, 0, 7); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // lancetta del radar
+  const ang = t * 2.4;
+  const g = ctx.createConicGradient ? ctx.createConicGradient(ang - 0.9, cx, cy) : null;
+  if (g) { g.addColorStop(0, 'rgba(255,209,102,0)'); g.addColorStop(0.14, 'rgba(255,209,102,0.35)'); g.addColorStop(0.145, 'rgba(255,209,102,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill(); }
+  // lampo al centro
+  if (esplode >= 0 && u >= esplode) {
+    const e = u - esplode, rr2 = 40 + 900 * easeOut(e / 0.6);
+    ctx.fillStyle = '#fff6d0'; ctx.globalAlpha = Math.max(0, 1 - e / 1.2); ctx.beginPath(); ctx.arc(cx, cy, rr2, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+  ctx.lineWidth = 10; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
+  // mirino che si stringe sul centro
+  const m = 1 - easeOut(u / 0.9), mr = 70 + 160 * m;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(m * 1.2); ctx.strokeStyle = '#e8435a'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  for (let q = 0; q < 4; q++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.arc(0, 0, mr, -0.45, 0.45); ctx.stroke(); ctx.beginPath(); ctx.moveTo(mr + 14, 0); ctx.lineTo(mr + 50, 0); ctx.stroke(); }
+  ctx.restore();
+  // etichetta che pende dal punto
+  const a2 = clamp((u - 0.5) / 0.3);
+  if (etichetta && a2 > 0) {
+    ctx.save(); ctx.translate(cx, cy + r + 70); ctx.scale(pop(a2), pop(a2));
+    ctx.font = FONT(64, 900); const lw = ctx.measureText(etichetta).width + 70;
+    ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, -lw / 2 + 8, -48, lw, 96, 48); ctx.fill();
+    ctx.fillStyle = accento; rr(ctx, -lw / 2, -56, lw, 96, 48); ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+    ctx.fillStyle = INCHIOSTRO; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(etichetta, 0, -6);
+    ctx.restore();
+  }
+  ctx.restore();
+}

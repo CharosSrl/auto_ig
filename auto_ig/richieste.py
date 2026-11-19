@@ -132,6 +132,9 @@ def load(folder: Path) -> dict:
 FORMATI_CON_FOTO = ("quiz", "curiosita")   # marca/lezioni.md regola 12: foto Wikimedia dal fotogramma 0
 
 
+GRAFICHE_VIVE = ("contatore", "radar", "scena2d")
+
+
 def _regole_foto(data: dict) -> list[str]:
     """Quiz e curiosità in 2D: la prima scheda deve avere una foto (incorniciata e viva dal fotogramma 0)."""
     if data.get("formato") not in FORMATI_CON_FOTO or data.get("resa") != "2d":
@@ -139,9 +142,12 @@ def _regole_foto(data: dict) -> list[str]:
     righe = data.get("copione") or []
     prima = righe[0] if righe else None
     scheda = ((prima.get("scheda") if isinstance(prima, dict) else None) or {})
-    if not scheda.get("foto"):
-        return ["la prima frase deve avere una foto (scheda.foto): nei quiz e nelle curiosità 2D la foto Wikimedia "
-                "c'è dal fotogramma 0 — cercala con: python -m auto_ig.richieste foto <cartella> \"<ricerca>\""]
+    # Gancio vivo (Antonio, 2026-11-19): al posto della foto va bene una grafica in movimento dal fotogramma 0.
+    viva = isinstance(scheda.get("grafica"), dict) and scheda["grafica"].get("tipo") in GRAFICHE_VIVE
+    if not scheda.get("foto") and not viva:
+        return ["la prima frase deve avere una foto (scheda.foto) o una grafica viva (scheda.grafica: contatore, "
+                "radar, scena2d): nei quiz e nelle curiosità 2D al fotogramma 0 c'è già qualcosa — la foto si cerca "
+                "con: python -m auto_ig.richieste foto <cartella> \"<ricerca>\""]
     return []
 
 

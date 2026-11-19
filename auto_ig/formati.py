@@ -131,6 +131,14 @@ def schede(righe: list, censura=None) -> str:
                     sk[k] = censura(sk[k])
                 elif isinstance(sk.get(k), list):
                     sk[k] = [censura(x) if isinstance(x, str) else x for x in sk[k]]
+            gr = sk.get("grafica") if isinstance(sk.get("grafica"), dict) else sk   # grafiche vive: scritte anche lì
+            for k in ("etichetta", "unita"):
+                if isinstance(gr.get(k), str):
+                    gr[k] = censura(gr[k])
+            for el in (gr.get("attori") or []) + (gr.get("oggetti") or []):
+                for k in ("dice", "testo"):
+                    if isinstance(el, dict) and isinstance(el.get(k), str):
+                        el[k] = censura(el[k])
             for tp in sk.get("tappe") or []:                  # timeline: anche le tappe sono scritte a schermo
                 for k in ("quando", "testo"):
                     if isinstance(tp, dict) and isinstance(tp.get(k), str):

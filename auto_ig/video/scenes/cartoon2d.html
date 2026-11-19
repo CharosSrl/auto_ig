@@ -20,7 +20,8 @@ import { BORDEAUX, CIPRIA, SCURO, CREMA, gruccia } from '../preset/brand.js';
 import * as G from '../preset/grafica2d.js';
 import * as C from '../preset/cartoon2d.js';
 import { caricaFoto, fotoViva, nomeCornice } from '../preset/foto2d.js';
-import { timeline, mappa } from '../preset/infografica2d.js';
+import { timeline, mappa, contatore, radar } from '../preset/infografica2d.js';
+import { scena2d } from '../preset/personaggi2d.js';
 
 const ESEMPIO = [
   { tipo: 'gancio', titolo: '3 capi nati in guerra', evidenzia: 'guerra' },
@@ -104,7 +105,20 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       ctx.save(); ctx.translate(x, y); ctx.rotate(r.rot); ctx.scale(r.sc, r.sc); ctx.translate(-x, -y);
       C.adesivo(ctx, nome, x, y, lato, uu, { t, accento: acc, ...opz }); ctx.restore();
     };
-    if (s.tipo === 'timeline') {                      // infografica: la timeline cresce di una tappa a frase
+    // GRAFICA VIVA (Antonio, 2026-11-19: "serve qualcosa di dinamico fin dall'inizio"): contatore, radar, scena con
+    // personaggi. Come scheda a sé o dentro il gancio (`grafica:`), dove parte con `anticipo` (default 0.6 s) così
+    // il fotogramma 0 è già a metà movimento.
+    const viva = (x) => x.tipo === 'contatore' || x.tipo === 'radar' || x.tipo === 'scena2d';
+    const g = s.tipo === 'gancio' && s.grafica ? s.grafica : (s.tipo === 'contatore' || s.tipo === 'radar' || s.tipo === 'scena2d') ? s : null;
+    if (g && viva(g)) {
+      const ug = u + (s.tipo === 'gancio' ? (g.anticipo ?? (g.tipo === 'contatore' ? 0.25 : 0.6)) : 0);
+      if (g.tipo === 'contatore') contatore(ctx, g, ug, t, { accento: acc });
+      else if (g.tipo === 'radar') radar(ctx, g, ug, t, { accento: acc });
+      else scena2d(ctx, g, ug, t, { accento: acc });
+      const gancio = s.tipo === 'gancio';
+      C.scritta(ctx, s.titolo || '', 540, gancio ? 300 : 330, gancio ? 1 : u, { size: gancio ? 92 : 76, maxW: 940, evidenzia: s.evidenzia, accento: acc, passo: gancio ? 0 : 0.05 });
+      if (s.timbro && (nb >= 1 || gancio)) C.timbro(ctx, String(s.timbro).toUpperCase(), 820, gancio ? 500 : 520, gancio ? u + 1 : bt.dt + (nb > 1 ? 1 : 0), { size: 64, fondo: '#ffd166', ruota: 0.1 });
+    } else if (s.tipo === 'timeline') {               // infografica: la timeline cresce di una tappa a frase
       const prima = i > 0 && S[i - 1].tipo === 'timeline' && S[i - 1].titolo === s.titolo;
       C.scritta(ctx, s.titolo || '', 540, 330, prima ? 1 : u, { size: 76, maxW: 920, evidenzia: s.evidenzia, accento: acc, passo: prima ? 0 : 0.05 });
       timeline(ctx, s.tappe || [], s.attiva ?? 0, u, t, { accento: acc });
@@ -362,7 +376,9 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     } else scena(s, i, t, u, bt, nb);
     ctx.restore();
 
-    if (s.tipo !== 'cta') hud(t, i, s);
+    // gancio con grafica viva: niente intestazione "Cintre · LO SAPEVI?" (sembra un template), solo la barra
+    if (s.tipo === 'gancio' && s.grafica) C.barra(ctx, t / atti.fine, { colore: acc });
+    else if (s.tipo !== 'cta') hud(t, i, s);
     // esplosioni sulle rivelazioni e sul gancio, tendina sugli stacchi, flash
     if (bt.k === 'rivela') C.esplosione(ctx, s.tipo === 'risposta' ? 540 : L.ic, s.tipo === 'risposta' ? OPZ_Y(s.giusta ?? 0, !!s.foto) : 800, bt.dt, { seme: bt.b, ...(s.tipo === 'risposta' ? { n: 34, forza: 1300 } : {}) });
     if (bt.k === 'boom') C.esplosione(ctx, 540, 360, bt.dt, { seme: bt.b + 5, n: 30, forza: 1300 });

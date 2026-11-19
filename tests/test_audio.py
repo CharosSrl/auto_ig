@@ -222,3 +222,18 @@ class SuoniInfograficheTest(unittest.TestCase):
         self.assertEqual(len(mappa), audio.MAPPA_PUNTI)                    # un pop per puntino, come la scena
         self.assertAlmostEqual(mappa[0], 6.7, places=2)
         self.assertAlmostEqual(mappa[-1], 6.4 + 0.3 + (3.6 - 0.6), places=2)
+
+    def test_grafiche_vive_suonano_dal_fotogramma_0(self):
+        """Gancio vivo (Antonio, 2026-11-19): la grafica si muove al fotogramma 0 e i suoni seguono lo stesso orologio."""
+        from auto_ig import audio
+        frasi = [(0.0, 3.0), (3.4, 7.0), (7.4, 10.0)]
+        sk = [{"tipo": "gancio", "grafica": {"tipo": "contatore", "da": 0, "a": 3781, "durata": 2.2}},
+              {"tipo": "radar", "esplode": 1.0},
+              {"tipo": "scena2d", "attori": [{"azione": "sorpresa", "quando": 0.8, "dice": "BIKINI!"}]}]
+        ev = audio.suoni(frasi, sk, [(0.0, "boom"), (3.4, "stacco"), (7.4, "stacco")])
+        tic = [t for t, n, _ in ev if n == "tic" and t < 3.4]
+        self.assertTrue(tic and min(tic) >= 0 and len(tic) < 12)              # anticipo 0.25: i primi tic sono già passati
+        self.assertIn(round(2.2 - 0.25, 2), [t for t, n, _ in ev if n == "conferma"])
+        self.assertIn(4.4, [t for t, n, _ in ev if n == "impatto"])            # lampo del radar
+        self.assertTrue(any(n == "pop" and 3.4 <= t < 7.4 for t, n, _ in ev))  # ping
+        self.assertIn(8.2, [t for t, n, _ in ev if n == "swish"])              # salto dell'omino

@@ -54,6 +54,15 @@ class FotoReelTest(unittest.TestCase):
         d["copione"] = [{"testo": "Ciao.", "scheda": {"tipo": "scena", "titolo": "x"}}]
         self.assertEqual(richieste._regole_foto(d), [])
 
+    def test_gancio_vivo_al_posto_della_foto(self):
+        """Antonio, 2026-11-19: al fotogramma 0 va bene una grafica in movimento (contatore, radar, scena2d)."""
+        d = _richiesta(foto=False)
+        self.assertTrue(richieste._regole_foto(d))
+        d["copione"][0]["scheda"]["grafica"] = {"tipo": "contatore", "a": 3781}
+        self.assertEqual(richieste._regole_foto(d), [])
+        d["copione"][0]["scheda"]["grafica"] = {"tipo": "boh"}
+        self.assertTrue(richieste._regole_foto(d))
+
     @mock.patch("auto_ig.regole.errori", return_value=[])   # qui si prova altro, non le regole di Antonio
     def test_avvisi_scritte_lunghe(self, _r):
         d = _richiesta()
