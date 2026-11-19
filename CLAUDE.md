@@ -46,3 +46,10 @@ Schemi, tabelle, timeline, mappe, grafici e confronti animati si possono disegna
 
 Anche qui vale "il video fa quello che dice" (regia-reel §1). Per ogni frase chiediti: "si può *mostrare*, invece
 che scrivere?"
+
+**Anche nei quiz (Antonio, 2026-11-19: "mi piace come fai questi grafici… è un must per le prossime volte").** Ogni
+reel, quiz compreso, deve avere almeno una grafica a codice dove serve:
+- dopo la risposta, la scheda che spiega il perché può essere una `timeline` o una `mappa`, al posto di un'icona o
+  di una foto generica. Esempio: quiz jeans → mappa Genova → Nîmes;
+- una grafica dentro la schermata del quiz (per esempio la risposta che diventa una mappa) va ancora costruita in
+  `cartoon2d.html`. Proponila ad Antonio quando serve.

@@ -201,6 +201,11 @@ Oggi le schede 2D sono: gancio, fatto, dettaglio, domanda, risposta, foto, rehoo
 (`timeline`, `mappa`, `numero`, `confronto`, `schema`) vanno costruite in `cartoon2d.html` e nel catalogo
 `formati.yaml`, una alla volta, provandole su un reel vero.
 
+**Stato (2026-11-19):** `timeline` e `mappa` (USA) esistono già (`preset/infografica2d.js`) e ad Antonio sono piaciute.
+Sono **obbligatorie anche nei quiz**: dopo la risposta, il perché si mostra con una grafica, per esempio una timeline
+delle tappe o una mappa con la freccia. Da fare ancora: mappa Europa/Italia, contatore, prima/dopo, schema
+causa → effetto, grafica dentro la schermata del quiz.
+
 ## Da non fare
 
 - Effetti a raffica che coprono la voce, o un suono diverso per ogni parola.
