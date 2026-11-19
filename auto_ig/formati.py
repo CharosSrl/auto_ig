@@ -123,7 +123,7 @@ CAMPI_TESTO = ("titolo", "testo", "evidenzia", "opzioni", "timbro", "credito", "
 def schede(righe: list, censura=None) -> str:
     """Parametro `schede` per le scene 2d: JSON con una scheda per frase (vuoto se nessuna).
     censura(testo) -> testo: applicata ai campi scritti a schermo (le parole forti diventano m*rte)."""
-    s = [dict(_scheda(r) or {}) for r in righe]
+    s = [json.loads(json.dumps(_scheda(r) or {})) for r in righe]   # copia profonda: le tappe non toccano la richiesta
     if censura:
         for sk in s:
             for k in CAMPI_TESTO:
@@ -131,6 +131,10 @@ def schede(righe: list, censura=None) -> str:
                     sk[k] = censura(sk[k])
                 elif isinstance(sk.get(k), list):
                     sk[k] = [censura(x) if isinstance(x, str) else x for x in sk[k]]
+            for tp in sk.get("tappe") or []:                  # timeline: anche le tappe sono scritte a schermo
+                for k in ("quando", "testo"):
+                    if isinstance(tp, dict) and isinstance(tp.get(k), str):
+                        tp[k] = censura(tp[k])
     return json.dumps(s, ensure_ascii=False, separators=(",", ":")) if any(s) else ""
 
 

@@ -28,15 +28,16 @@ class RegoleTest(unittest.TestCase):
         self.assertEqual(regole.formato_chiesto("Generami due video quiz per domani."), "quiz")
         self.assertIsNone(regole.formato_chiesto("un quiz o una curiosità, scegli tu"))
 
-    def test_parola_forte_obbligatoria_e_scritta(self):
+    def test_parola_forte_facoltativa_ma_se_ce_va_scritta(self):
+        """Antonio, 2026-11-19: obbligatoria produceva ganci forzati. Ora: solo se vera, e allora anche a schermo."""
         senza = reel(copione=[{"testo": "Chi era il Chuck delle tue Converse?",
                                "scheda": {"tipo": "gancio", "titolo": "Chi era Chuck?"}}])
-        self.assertTrue(any("parola forte" in x for x in regole.errori(senza)))
+        self.assertEqual(regole.errori(senza), [])
+        self.assertTrue(any("senza parola forte" in x for x in regole.avvisi(senza, Path(tempfile.mkdtemp()) / "x")))
+        self.assertIn("NO", regole.riepilogo(senza, 20.0))
         solo_voce = reel(copione=[{"testo": "I tuoi jeans sono andati in guerra.",
                                    "scheda": {"tipo": "gancio", "titolo": "I tuoi jeans"}}])
         self.assertTrue(any("non scritta" in x for x in regole.errori(solo_voce)))
-        self.assertTrue(any("motivo" in x for x in regole.errori(dict(senza, parola_forte=False))))
-        self.assertEqual(regole.errori(dict(senza, parola_forte=False, parola_forte_motivo="Antonio: no")), [])
 
     def test_suoni_voce_durata(self):
         e = regole.errori(reel(audio={"musica": True, "sfx": False}, voce={"modello": "qwen3-vivian", "velocita": 1.2}))
@@ -53,7 +54,7 @@ class RegoleTest(unittest.TestCase):
         for i in range(1, 5):
             (base / f"2026-11-1{i}-x").mkdir()
             (base / f"2026-11-1{i}-x" / "richiesta.yaml").write_text(yaml.safe_dump(reel(formato="quiz")))
-        self.assertTrue(regole.avvisi(reel(formato="quiz"), base / "2026-11-14-x"))
+        self.assertTrue(any("formato diverso" in x for x in regole.avvisi(reel(formato="quiz"), base / "2026-11-14-x")))
         self.assertFalse(regole.avvisi(reel(), base / "2026-11-14-x"))
 
 

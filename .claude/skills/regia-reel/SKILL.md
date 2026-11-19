@@ -23,6 +23,13 @@ e `marca/lezioni.md`.
 | [DZsS8QTTRXT](https://www.instagram.com/p/DZsS8QTTRXT/) | @michelemusiyevskyy_ (26,4K follower, personal brand strategist) | 15 s · 26,7K like · 1.167 commenti · 4.944 condivisioni (18% dei like) | Outlier: i suoi reel fanno di solito 2-30K views. Effetto giusto per ogni momento del montaggio + commento-parola-chiave. |
 | [Dd0bRh-IdRD](https://www.instagram.com/p/Dd0bRh-IdRD/) | @stezzygram (4,4K follower, SMM) | 54 s · **134K views (30 volte i follower)** · 4,3K like · 1.350 condivisioni (31% dei like) | "4 effetti sonori più virali": lista numerata, ogni effetto dimostrato dal vivo, caption-bigino, "Salva questo Reel". |
 
+Seconda tornata (studiati il 2026-11-19):
+
+| Reel | Account | Numeri | Perché è utile |
+|---|---|---|---|
+| [DfrEJGFTZ7J](https://www.instagram.com/p/DfrEJGFTZ7J/) | @robertmckeaveney (464K follower, co-fondatore di un marchio di vestiti) | 28 s · 28,3K like · 194 commenti · **11,2K invii (40% dei like)** | Come leggere la curva di retention: 3 forme = 3 problemi (gancio, sviluppo, finale). |
+| [Df2PFdyuyH8](https://www.instagram.com/p/Df2PFdyuyH8/) | @alibrandology (811 follower, agenzia, serie "Giorno 21/30") | 94 s · 130 like · 122 invii (94% dei like) · 1 giorno | 7 ganci a modello da riempire, in italiano. Utilità pura: quasi ogni like è anche un invio. |
+
 Sono due account piccoli, eppure entrambi i reel sono arrivati quasi solo a chi non li seguiva. È la stessa cosa che
 vediamo noi (lezione 2).
 
@@ -133,6 +140,66 @@ quasi tutti "Sound". Commenti e DM spingono la diffusione e intanto costruiscono
 - serve uno strumento come ManyChat, e io non posso mandare messaggi;
 - una parte del pubblico è minorenne, quindi nel DM va solo il link all'app o un contenuto utile, mai una richiesta
   di dati personali.
+
+## 9. Leggere la curva di retention (da @robertmckeaveney)
+
+La forma della curva negli Insights dice **dove** si perde il pubblico, e quindi cosa rifare:
+
+| Forma della curva | Problema | Cosa si fa |
+|---|---|---|
+| Crollo nei primi 2-3 s, poi piatta | **Gancio** | Accendere subito una domanda; gancio su tutti i canali insieme (immagine, voce, testo, suono); partire da formati di gancio che funzionano già |
+| Scende piano per tutto il video | **Sviluppo** | Rafforzare la domanda dopo averla posta; non tirarla per le lunghe; un rehook ogni pochi secondi |
+| Tiene, poi cala prima della fine | **Finale (payoff)** | La risposta arriva troppo presto o delude: tenerla per ultima e farla valere |
+| Ideale | — | Domanda → domanda rafforzata → risposta alla fine |
+
+Lui mostra ogni curva sopra la testa con una X rossa e l'etichetta, e intanto la spiega. Anche qui il video fa
+quello che dice.
+
+**Per Cintre:**
+- I nostri primi 4 reel crollavano del 45-50% nei primi 2 s (lezione 3): è un **problema di gancio**. Le
+  contromosse sono già nelle regole (foto, domanda, opzioni, parola forte e suono al fotogramma 0). Ad ogni batch si
+  guarda se il crollo diminuisce.
+- **Rafforzare la domanda** dopo il gancio, nel quiz e nelle curiosità: "Quasi tutti sbagliano", "La terza è la
+  peggiore". Il rehook non è più facoltativo.
+- **Il finale.** Dopo la risposta noi mettiamo una frase in più e la CTA (circa 4-5 s). Se la curva cala prima della
+  fine, è lì che si perde: in quel caso si accorcia la coda o si mette la risposta più tardi.
+- Si chiede ad Antonio lo screenshot della curva di ogni reel e lo si classifica con questa tabella in
+  `marca/lezioni.md`.
+
+## 10. Ganci a modello (da @alibrandology)
+
+Sette schemi da riempire. Ogni gancio è su una scheda grigia con "PRIMO GANCIO…" grande, e i segnaposto sono in
+arancione. Il numero è a schermo, quindi la struttura si capisce subito (§3).
+
+| # | Schema | Esempio per Cintre (vero, adatto ai minori) |
+|---|---|---|
+| 1 | È possibile [obiettivo] in [tempo]… | "È possibile capire l'età dei tuoi jeans in 3 secondi?" |
+| 2 | Sono le [orario] e ho promesso a [persona] di [obiettivo] | Storie con l'app: "Sono le 7:40 e ho promesso a mia madre di non mettere la felpa" (formato storia) |
+| 3 | Non so chi ha bisogno di sentirlo, ma… [pensiero] | "Non so chi ha bisogno di sentirlo, ma il taschino dei jeans non è per le monete" |
+| 4 | [N] giorni fa ho [azione]… | Diario: "3 giorni fa ho chiesto a Cintre cosa mettermi…" |
+| 5 | Ecco perché [azione/fatto]… | "Ecco perché le tue Converse hanno una firma" |
+| 6 | Se sei [momento specifico]… | Identità: "Se sei a scuola con le Nike ai piedi, guarda il logo" |
+| 7 | [Opinione a caldo] | "Opinione impopolare: …" (solo opinioni di stile innocue, mai sul corpo) |
+
+- Gli schemi si combinano con la parola forte vera (regola obbligatoria). Esempio: "Non so chi ha bisogno di
+  sentirlo, ma i tuoi jeans sono stati in guerra".
+- Il 6 ("Se sei…") parla a un gruppo preciso, ed è quello che fa mandare il video ("è uguale a te").
+- **Serie "Giorno N/30"**: dà un motivo per seguire. Da noi i follow sono a zero (lezione 8). Proposta per
+  Antonio: "Quiz di moda — giorno 1/30" nel timbro e in caption.
+- Copertina con 3 miniature e le views (2,4 Mln, 1,2 Mln, 1,4 Mln): è prova sociale al fotogramma 0. Da noi non
+  si può ancora fare, perché non abbiamo numeri da mostrare, e numeri inventati non si usano mai.
+- Limite: dura 94 s e ha 0 commenti, anche se in caption c'è la domanda. Funziona per salvare e mandare, non per i
+  commenti. Noi restiamo sotto i 25 s.
+
+## 11. Grafica a codice (spunto di Antonio, 2026-11-19)
+
+La scena 2D è codice, quindi può disegnare qualunque grafica, animata e sincronizzata con la voce, senza cercare
+foto: timeline, mappe con frecce, barre e contatori, schermo diviso prima/dopo, schemi causa → effetto, tabelle.
+Va usata soprattutto quando manca un'immagine giusta, o quando una foto da sola non spiega il fatto.
+
+Oggi le schede 2D sono: gancio, fatto, dettaglio, domanda, risposta, foto, rehook, cta. Le schede grafiche nuove
+(`timeline`, `mappa`, `numero`, `confronto`, `schema`) vanno costruite in `cartoon2d.html` e nel catalogo
+`formati.yaml`, una alla volta, provandole su un reel vero.
 
 ## Da non fare
 

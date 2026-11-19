@@ -43,6 +43,8 @@ schede_2d:
   # (polaroid | oro | pellicola | nastro; default quiz oro, curiosità polaroid). Foto viva: onda, riflesso, glitch.
   commenta:  "fumetto con titolo (domanda al pubblico) e icone commento/cuore"
   rehook:    "a metà video: titolo enorme che trema ('Aspetta l'ultima...') + carta mistero della prossima curiosità (solo cartoon2d)"
+  timeline:  "(solo cartoon2d) INFOGRAFICA a codice (preset infografica2d.js): titolo + tappe verticali che si disegnano (tappe: [{quando: '1871', testo: 'Tasche strappate', icona: jeans}], attiva: indice della tappa di questa frase). Più schede timeline CONSECUTIVE con le stesse tappe = una sola timeline che cresce, le tappe dopo restano nascoste. Testi delle tappe ≤ 4 parole. Usala per storie con date o passaggi in sequenza, soprattutto senza foto adatta"
+  mappa:     "(solo cartoon2d) INFOGRAFICA a codice: sagoma del paese (regione: usa) con un percorso tratteggiato, puntini che si accendono uno alla volta mentre la voce parla e un'icona che viaggia (icona: auto). Puntini illustrativi, mai presentati come dati. Usala per viaggi, diffusione, 'in tutta l'America'"
   cta:       "cartello finale secondo cta_azione del formato (salva_condividi: segnalibro + Invia; segui: bottone Segui; commenta: fumetto; app: telefono); messa dal sistema"
 
 # HOOK E CTA — la parte più importante di ogni contenuto (Antonio, 2026-11-14). Skill: .claude/skills/hook-writer,

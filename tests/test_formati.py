@@ -40,7 +40,10 @@ class TestCatalogo(unittest.TestCase):
 
     def test_tipi_di_scheda_gestiti_dalla_scena(self):
         html = (SCENES_DIR / "schede2d.html").read_text()
-        for tipo in formati.catalogo()["schede_2d"]:
+        for tipo, desc in formati.catalogo()["schede_2d"].items():
+            if str(desc).startswith("(solo cartoon2d)"):           # infografiche: solo nella scena ad alto ritmo
+                self.assertIn(f"s.tipo === '{tipo}'", (SCENES_DIR / "cartoon2d.html").read_text(), tipo)
+                continue
             self.assertRegex(html, rf"\n    {tipo}\(s, u", tipo)
 
     def test_descrivi(self):

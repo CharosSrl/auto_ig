@@ -5,8 +5,8 @@ Le note in memoria e in marca/lezioni.md si possono dimenticare; questi controll
 esplicitamente; per cambiarla si cambia il codice e glielo si dice.
 
 - formato: se Antonio ha scritto "curiosità" si fa una curiosità, se ha scritto "quiz" un quiz (mai convertire da soli);
-- parola forte: il gancio (voce + titolo a schermo) contiene UNA parola forte vera, censurata a schermo (m*rte);
-  si salta solo con `parola_forte: false` e il motivo in `parola_forte_motivo`, da dire ad Antonio prima del render;
+- parola forte: SOLO se è il cuore vero della storia (Antonio, 2026-11-19: obbligarla produceva ganci forzati, sempre
+  "guerra"). Se c'è, va detta e scritta censurata nel gancio (m*rte); se manca è un avviso, da dire ad Antonio con il motivo;
 - suoni: effetti e base sempre accesi;
 - voce: Aoede (chirp3-aoede) a velocità 1.0;
 - durata: sotto i 25 s (controllata dopo la voce, prima del render).
@@ -62,20 +62,13 @@ def errori(data: dict) -> list[str]:
     if chiesto and chiesto != data.get("formato"):
         errs.append(f"Antonio ha chiesto '{chiesto}' ma il formato è '{data.get('formato')}': si fa quello che ha "
                     "chiesto (se una lezione dice altro, glielo si chiede PRIMA)")
-    if data.get("parola_forte") is False:
-        if not str(data.get("parola_forte_motivo") or "").strip():
-            errs.append("parola_forte: false senza parola_forte_motivo: scrivi il motivo e dillo ad Antonio")
-    else:
-        detta, schermo = parola_forte(data)
-        if not detta:
-            errs.append("il gancio non ha una parola forte (morte, guerra, bomba, veleno… vedi auto_ig/censura.py): "
-                        "trovane una VERA nei fatti, va detta e scritta censurata a schermo")
-        else:
-            _, sc = _gancio(data)
-            scritto = " ".join(str(sc.get(k) or "") for k in ("titolo", "timbro", "testo")).lower()
-            if detta.lower() not in scritto:
-                errs.append(f"la parola forte '{detta}' è detta ma non scritta nel gancio (titolo o timbro): "
-                            f"a schermo deve comparire censurata ({schermo})")
+    detta, schermo = parola_forte(data)           # facoltativa: solo se è il cuore vero della storia (avvisi)
+    if detta:
+        _, sc = _gancio(data)
+        scritto = " ".join(str(sc.get(k) or "") for k in ("titolo", "timbro", "testo")).lower()
+        if detta.lower() not in scritto:
+            errs.append(f"la parola forte '{detta}' è detta ma non scritta nel gancio (titolo o timbro): "
+                        f"a schermo deve comparire censurata ({schermo})")
     au = data.get("audio") or {}
     if not (au.get("sfx") and au.get("musica")):
         errs.append("audio: {musica: true, sfx: true} (effetti a tempo con ogni evento, skill regia-reel)")
@@ -95,10 +88,12 @@ def errore_durata(data: dict, secondi: float) -> str | None:
 
 
 def avvisi(data: dict, folder: Path) -> list[str]:
-    """Varietà: se i 3 reel precedenti hanno tutti lo stesso formato di questo, va detto ad Antonio."""
+    """Da dire ad Antonio: gancio senza parola forte; ultimi reel tutti dello stesso formato."""
     if not si_applica(data):
         return []
     import yaml
+    out = [] if parola_forte(data)[0] else [
+        f"gancio senza parola forte: va bene se la storia non ne ha una vera ({data.get('parola_forte_motivo') or 'scrivi il motivo in parola_forte_motivo'}) — dillo ad Antonio"]
     prima = []
     for f in sorted(p for p in folder.parent.iterdir() if p.is_dir() and p.name < folder.name)[::-1]:
         try:
@@ -110,8 +105,8 @@ def avvisi(data: dict, folder: Path) -> list[str]:
         if len(prima) == 3:
             break
     if len(prima) == 3 and all(x == data.get("formato") for x in prima):
-        return [f"ultimi 4 reel tutti '{data.get('formato')}': proponi ad Antonio un formato diverso"]
-    return []
+        out.append(f"ultimi 4 reel tutti '{data.get('formato')}': proponi ad Antonio un formato diverso")
+    return out
 
 
 def riepilogo(data: dict, secondi: float) -> str:

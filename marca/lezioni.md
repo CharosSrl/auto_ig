@@ -64,7 +64,7 @@ Altri dati utili:
       Il credito va anche in caption.
     - Nei quiz il gancio porta `opzioni: [A, B, C]`, così domanda e opzioni sono a schermo dal fotogramma 0.
       Primo esempio: `richieste/2026-11-16-quiz-sneakers`.
-11. **Linguaggio dei ragazzi + una parola forte vera nel gancio** (richiesta di Antonio, 2026-11-16, da verificare
+11. **Linguaggio dei ragazzi + una parola forte vera nel gancio, solo se il fatto la contiene davvero (mai incollata)** (richiesta di Antonio, 2026-11-16, da verificare
     con gli Insights: percentuale ancora a 3 e a 6 s). Registro parlato, tu, sfida e non lezione.
     - Al massimo una parola forte (morte, guerra, bomba, vietato…), vera e nel contesto del fatto.
     - A schermo è censurata in automatico (`auto_ig/censura.py`: m*rte), la voce la dice intera.
@@ -95,13 +95,18 @@ Altri dati utili:
     - Se il video supera i 25 s, la prima cosa da togliere è la **trappola finale**, che non insegna niente.
       Poi si accorciano le frasi. La voce non si velocizza.
 
+14. **Una storia, non un elenco; italiano naturale** (Antonio, 2026-11-19: "italiano stentato, cose sconnesse,
+    frase iniziale forzata"). Le regole di scrittura sono in `CLAUDE.md`: una persona, un problema, una svolta,
+    frasi legate da perché, ma, così; prima del render il copione si rilegge ad alta voce.
+
 ## Regole controllate dal codice
 
 Dal 2026-11-19 queste regole non sono più solo scritte: `auto_ig/regole.py` blocca `richieste crea` se un reel 2D
 (quiz o curiosità) non le rispetta. Le aveva chieste Antonio, e io le avevo saltate.
 - formato uguale a quello chiesto da Antonio (campo `richiesta`);
-- **parola forte vera nel gancio**, detta dalla voce e scritta censurata nel titolo o nel timbro (regola 11: è
-  obbligatoria, non facoltativa). Si salta solo con `parola_forte: false` più `parola_forte_motivo`, da dire ad Antonio;
+- parola forte: **solo se è il cuore vero della storia** (Antonio, 2026-11-19: quando era obbligatoria produceva ganci
+  forzati, sempre "guerra"). Se c'è, va detta e scritta censurata nel gancio. Se manca arriva un avviso: il motivo
+  va scritto in `parola_forte_motivo` e detto ad Antonio;
 - suoni accesi (`audio: {musica: true, sfx: true}`), voce `chirp3-aoede` a 1.0;
 - durata sotto i 25 s, controllata prima del render.
 Il build stampa la riga "regole: …": va riportata ad Antonio con ogni video. Se gli ultimi 4 reel hanno lo stesso

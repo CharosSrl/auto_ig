@@ -20,6 +20,7 @@ import { BORDEAUX, CIPRIA, SCURO, CREMA, gruccia } from '../preset/brand.js';
 import * as G from '../preset/grafica2d.js';
 import * as C from '../preset/cartoon2d.js';
 import { caricaFoto, fotoViva, nomeCornice } from '../preset/foto2d.js';
+import { timeline, mappa } from '../preset/infografica2d.js';
 
 const ESEMPIO = [
   { tipo: 'gancio', titolo: '3 capi nati in guerra', evidenzia: 'guerra' },
@@ -103,7 +104,17 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       ctx.save(); ctx.translate(x, y); ctx.rotate(r.rot); ctx.scale(r.sc, r.sc); ctx.translate(-x, -y);
       C.adesivo(ctx, nome, x, y, lato, uu, { t, accento: acc, ...opz }); ctx.restore();
     };
-    if (s.foto && ['gancio', 'fatto', 'scena', 'dettaglio'].includes(s.tipo)) {   // curiosità con la foto: poca scritta, foto grande
+    if (s.tipo === 'timeline') {                      // infografica: la timeline cresce di una tappa a frase
+      const prima = i > 0 && S[i - 1].tipo === 'timeline' && S[i - 1].titolo === s.titolo;
+      C.scritta(ctx, s.titolo || '', 540, 330, prima ? 1 : u, { size: 76, maxW: 920, evidenzia: s.evidenzia, accento: acc, passo: prima ? 0 : 0.05 });
+      timeline(ctx, s.tappe || [], s.attiva ?? 0, u, t, { accento: acc });
+      if (s.timbro && nb >= 1) C.timbro(ctx, String(s.timbro).toUpperCase(), 820, 1120, bt.dt + (nb > 1 ? 1 : 0), { size: 64, fondo: '#ffd166', ruota: -0.08 });
+    } else if (s.tipo === 'mappa') {                  // infografica: la mappa con il viaggio che si disegna mentre la voce parla
+      const dur = (fini[i] ?? (u + 2)) - voceInizi[i];
+      C.scritta(ctx, s.titolo || '', 540, 330, u, { size: 76, maxW: 920, evidenzia: s.evidenzia, accento: acc, passo: 0.05 });
+      mappa(ctx, s.regione || 'usa', G.clamp((u - 0.3) / Math.max(0.8, dur - 0.6)), u, t, { accento: acc, mezzo: s.icona || 'auto' });
+      if (s.timbro && nb >= 1) C.timbro(ctx, String(s.timbro).toUpperCase(), 820, 1120, bt.dt + (nb > 1 ? 1 : 0), { size: 64, fondo: '#ffd166', ruota: -0.08 });
+    } else if (s.foto && ['gancio', 'fatto', 'scena', 'dettaglio'].includes(s.tipo)) {   // curiosità con la foto: poca scritta, foto grande
       if (s.tipo === 'fatto' || s.tipo === 'scena') C.contatore(ctx, n, fatti.length, 540, 268, u, { accento: acc });
       const tit = s.tipo === 'dettaglio' ? (s.testo || s.titolo || '') : (s.titolo || '');
       C.scritta(ctx, tit, 540, s.tipo === 'gancio' ? 300 : 380, u, { size: 80, maxW: 920, evidenzia: s.evidenzia, accento: acc, passo: i === 0 ? 0 : 0.05 });
@@ -333,7 +344,8 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     if (bt.k === 'boom') zoom += 0.12 * Math.exp(-bt.dt * 7);
     if (eQuiz(s) && s.foto) zoom = 1 + (zoom - 1) * 0.35;   // quiz con foto: pieno fino ai sottotitoli, zoom leggero
     const L = MASCOTTE ? lati(i) : { pc: 540, ic: s.tipo === 'dettaglio' ? 620 : 540 };
-    const inQuiz = eQuiz(s), iq = inQuiz ? inizioQuiz(i) : i;
+    let iq = i; while (s.tipo === 'timeline' && iq > 0 && S[iq - 1].tipo === 'timeline') iq--;   // timeline consecutive = una sola grafica
+    const inQuiz = eQuiz(s); if (inQuiz) iq = inizioQuiz(i);
     const fuoco = inQuiz ? [540, s.foto ? 660 : 700] : !MASCOTTE ? [L.ic + (nb % 2 ? -50 : 50), 780]
       : nb % 2 ? [L.pc, 520] : [s.tipo === 'fatto' || s.tipo === 'dettaglio' ? L.ic : 540, 760];
     const forte = bt.k === 'boom' || bt.k === 'rivela';
@@ -355,7 +367,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     if (bt.k === 'rivela') C.esplosione(ctx, s.tipo === 'risposta' ? 540 : L.ic, s.tipo === 'risposta' ? OPZ_Y(s.giusta ?? 0, !!s.foto) : 800, bt.dt, { seme: bt.b, ...(s.tipo === 'risposta' ? { n: 34, forza: 1300 } : {}) });
     if (bt.k === 'boom') C.esplosione(ctx, 540, 360, bt.dt, { seme: bt.b + 5, n: 30, forza: 1300 });
     if (s.tipo === 'cta') C.esplosione(ctx, 540, 450, u - 0.1, { seme: 99, n: 34, forza: 1200 });
-    if (bt.k !== 'punch' && bt.k !== 'tic' && !(inQuiz && i > iq) && bt.b > 0) C.tendina(ctx, bt.dt, { colore: acc, colore2: SCURO, dir: bt.b % 2 ? 1 : -1 });
+    if (bt.k !== 'punch' && bt.k !== 'tic' && !(i > iq) && bt.b > 0) C.tendina(ctx, bt.dt, { colore: acc, colore2: SCURO, dir: bt.b % 2 ? 1 : -1 });
     C.flash(ctx, ({ boom: 0.55, rivela: 0.3, punch: 0.12, stacco: 0, tic: 0.08 }[bt.k] ?? 0) * Math.exp(-bt.dt * 12) * (bt.b === 0 ? 0 : 1));
     // scatto fotografico (audio.suoni): flash bianco quando entra una foto nuova, non al fotogramma 0
     if (i > 0 && (s.tipo === 'foto' || (s.tipo === 'risposta' && s.foto_risposta))) {

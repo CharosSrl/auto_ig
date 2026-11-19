@@ -208,3 +208,17 @@ class SuoniEventiTest(unittest.TestCase):
             senza = audio.leggi_wav(audio.mix(v, [], 13.0, Path(d) / "m2.wav", musica=True, sfx=False))
             fx = x - senza
             self.assertLess(np.sqrt((fx ** 2).mean()), np.sqrt((senza ** 2).mean()))   # la voce resta davanti
+
+
+class SuoniInfograficheTest(unittest.TestCase):
+    def test_pop_su_nodo_timeline_e_puntini_mappa(self):
+        from auto_ig import audio
+        frasi = [(0.6, 3.0), (3.4, 6.0), (6.4, 10.0)]
+        sk = [{"tipo": "gancio"}, {"tipo": "timeline", "attiva": 1}, {"tipo": "mappa"}]
+        ev = audio.suoni(frasi, sk, [(0.0, "boom"), (3.4, "stacco"), (6.4, "stacco")])
+        pop = [t for t, n, _ in ev if n == "pop"]
+        self.assertIn(3.7, [round(t, 2) for t in pop])                    # nodo: 0,3 s dopo l'inizio della frase
+        mappa = [t for t in pop if t >= 6.4]
+        self.assertEqual(len(mappa), audio.MAPPA_PUNTI)                    # un pop per puntino, come la scena
+        self.assertAlmostEqual(mappa[0], 6.7, places=2)
+        self.assertAlmostEqual(mappa[-1], 6.4 + 0.3 + (3.6 - 0.6), places=2)

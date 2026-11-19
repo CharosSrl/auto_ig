@@ -200,6 +200,9 @@ def _parola(w: str) -> str:
 
 
 # --- Suoni a eventi ---------------------------------------------------------------------------------
+MAPPA_PUNTI = 8                                                          # = infografica2d.js MAPPA_PUNTI
+
+
 def suoni(frasi: list, schede: list | None, bt: list[tuple[float, str]]) -> list[tuple[float, str, dict]]:
     """Un suono per ogni cosa che succede a schermo (skill regia-reel). -> [(secondi, nome, opzioni)].
     opzioni: liv (moltiplica il livello), semitoni, durata (tagli/riser), opz (indice opzione A/B/C per la scena)."""
@@ -246,6 +249,12 @@ def suoni(frasi: list, schede: list | None, bt: list[tuple[float, str]]) -> list
             fine = tempi[i + 1][0] if i + 1 < len(tempi) else b
             if fine - primo > 0.3:
                 ev.append((primo, "riser", {"durata": fine - primo}))
+        if tipo == "timeline":                                            # il nodo nuovo arriva sulla linea
+            ev.append((t0 + 0.3, "pop", {"semitoni": 2 * min(int(s.get("attiva") or 0), 6)}))
+        if tipo == "mappa":                                               # un pop per ogni puntino che si accende
+            d = max(0.8, (b - a) - 0.6)                                   # stessa formula di infografica2d.tempiPuntini
+            ev += [(round(t0 + 0.3 + d * j / (MAPPA_PUNTI - 1), 2), "pop", {"semitoni": j % 5, "liv": 0.6})
+                   for j in range(MAPPA_PUNTI)]
         if tipo == "risposta" and s.get("testo") and len(str(s["testo"]).split()) <= 5:
             n = len(str(s["testo"]).split())
             ev.append((t0 + 0.5, "tastiera", {"durata": n * 0.05 + 0.25}))
