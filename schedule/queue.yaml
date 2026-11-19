@@ -253,3 +253,32 @@ posts:
   published_at: '2026-11-18T18:57:24+00:00'
   extra:
     cover: reel-2026-11-18-quiz-logo-nike.jpg
+- id: '12'
+  when: 2026-11-19T10:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-19-curiosita-chuck-converse.mp4
+  caption: 'Se hai le Converse ai piedi, sulla caviglia hai la firma di uno sconosciuto
+    👟
+
+
+    📌 La storia: Chuck Taylor giocava a basket, ma non era un campione. Il suo talento
+    era vendere. Dagli anni ''20, per quasi trent''anni, ha girato le palestre di
+    scuole e college americani: insegnava basket gratis e intanto vendeva le All Star.
+    Converse nel 1932 mise la sua firma sulla toppa, ed è ancora lì.
+
+
+    Mandalo a chi le ha ai piedi 👇
+
+    Segui @cintre_official: ogni giorno una curiosità di moda.
+
+
+    📷 Converse All Star (archivio Casa Bianca) via Wikimedia Commons, pubblico dominio
+
+    #cintre #curiosità #converse #chucktaylor #storiadellamoda'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-19-curiosita-chuck-converse.jpg
