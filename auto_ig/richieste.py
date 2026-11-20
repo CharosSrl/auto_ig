@@ -132,7 +132,7 @@ def load(folder: Path) -> dict:
 FORMATI_CON_FOTO = ("quiz", "curiosita")   # marca/lezioni.md regola 12: foto Wikimedia dal fotogramma 0
 
 
-GRAFICHE_VIVE = ("contatore", "radar", "scena2d")
+GRAFICHE_VIVE = ("contatore", "radar", "scena2d", "chat", "lente", "confronto")
 
 
 def _regole_foto(data: dict) -> list[str]:

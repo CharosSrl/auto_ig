@@ -88,7 +88,8 @@ def errore_durata(data: dict, secondi: float) -> str | None:
 
 
 def avvisi(data: dict, folder: Path) -> list[str]:
-    """Da dire ad Antonio: gancio senza parola forte; ultimi reel tutti dello stesso formato."""
+    """Da dire ad Antonio: gancio senza parola forte; ultimi reel tutti dello stesso formato; stesso tipo di gancio
+    o stesso argomento di uno degli ultimi 3 reel (varietà)."""
     if not si_applica(data):
         return []
     import yaml
@@ -101,12 +102,41 @@ def avvisi(data: dict, folder: Path) -> list[str]:
         except (OSError, yaml.YAMLError):
             continue
         if si_applica(d):
-            prima.append(d.get("formato"))
+            prima.append(d)
         if len(prima) == 3:
             break
-    if len(prima) == 3 and all(x == data.get("formato") for x in prima):
+    if len(prima) == 3 and all(x.get("formato") == data.get("formato") for x in prima):
         out.append(f"ultimi 4 reel tutti '{data.get('formato')}': proponi ad Antonio un formato diverso")
+    # VARIETÀ (Antonio, 2026-11-20: "le cose con i liquidi sono scontate… variegare il più possibile i contenuti")
+    g = tipo_gancio(data)
+    if g and any(tipo_gancio(x) == g for x in prima):
+        out.append(f"gancio '{g}' già usato in uno degli ultimi 3 reel: scegline un altro tipo (chat, lente, confronto, "
+                   "radar, scena2d, contatore…)")
+    ripetuti = sorted(argomenti(data) & set().union(*(argomenti(x) for x in prima))) if prima else []
+    if ripetuti:
+        out.append(f"argomento già visto negli ultimi 3 reel ({', '.join(ripetuti)}): cambia tema")
     return out
+
+
+def tipo_gancio(data: dict) -> str:
+    """Tipo di grafica viva del gancio (o '' se il gancio è una foto/icona)."""
+    _, sc = _gancio(data)
+    g = sc.get("grafica")
+    return str(g.get("tipo") or "") if isinstance(g, dict) else ""
+
+
+_VUOTE = {"curiosità", "curiosita", "quiz", "storia", "così", "sono", "hanno", "erano", "perché", "questo", "questi",
+          "quella", "quello", "tuoi", "tuo", "tue", "nostri", "venduti", "venduto", "inventati", "inventato", "colpa",
+          "nome", "fatto", "fatti", "prima", "dopo", "come", "anche", "molto", "senza", "della", "delle", "degli"}
+
+
+def argomenti(data: dict) -> set[str]:
+    """Parole chiave del tema: campo `argomento` (stringa o lista) se c'è, sennò le parole forti del titolo."""
+    a = data.get("argomento")
+    if a:
+        return {str(x).lower() for x in (a if isinstance(a, list) else [a])}
+    parole = re.findall(r"[a-zà-ù']+", str(data.get("titolo") or "").lower())
+    return {w.strip("'") for w in parole if len(w) >= 4 and w not in _VUOTE}
 
 
 def riepilogo(data: dict, secondi: float) -> str:

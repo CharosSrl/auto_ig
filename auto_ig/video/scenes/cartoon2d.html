@@ -20,7 +20,7 @@ import { BORDEAUX, CIPRIA, SCURO, CREMA, gruccia } from '../preset/brand.js';
 import * as G from '../preset/grafica2d.js';
 import * as C from '../preset/cartoon2d.js';
 import { caricaFoto, fotoViva, nomeCornice } from '../preset/foto2d.js';
-import { timeline, mappa, contatore, radar } from '../preset/infografica2d.js';
+import { timeline, mappa, contatore, radar, chat, lente, confronto } from '../preset/infografica2d.js';
 import { scena2d } from '../preset/personaggi2d.js';
 
 const ESEMPIO = [
@@ -108,12 +108,15 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     // GRAFICA VIVA (Antonio, 2026-11-19: "serve qualcosa di dinamico fin dall'inizio"): contatore, radar, scena con
     // personaggi. Come scheda a sé o dentro il gancio (`grafica:`), dove parte con `anticipo` (default 0.6 s) così
     // il fotogramma 0 è già a metà movimento.
-    const viva = (x) => x.tipo === 'contatore' || x.tipo === 'radar' || x.tipo === 'scena2d';
-    const g = s.tipo === 'gancio' && s.grafica ? s.grafica : (s.tipo === 'contatore' || s.tipo === 'radar' || s.tipo === 'scena2d') ? s : null;
+    const viva = (x) => ['contatore', 'radar', 'scena2d', 'chat', 'lente', 'confronto'].includes(x.tipo);
+    const g = s.tipo === 'gancio' && s.grafica ? s.grafica : (s.tipo === 'contatore' || s.tipo === 'radar' || s.tipo === 'scena2d' || s.tipo === 'chat' || s.tipo === 'lente' || s.tipo === 'confronto') ? s : null;
     if (g && viva(g)) {
       const ug = u + (s.tipo === 'gancio' ? (g.anticipo ?? (g.tipo === 'contatore' ? 0.25 : 0.6)) : 0);
       if (g.tipo === 'contatore') contatore(ctx, g, ug, t, { accento: acc });
       else if (g.tipo === 'radar') radar(ctx, g, ug, t, { accento: acc });
+      else if (g.tipo === 'chat') chat(ctx, g, ug, t, { accento: acc });
+      else if (g.tipo === 'lente') lente(ctx, g, ug, t, { accento: acc });
+      else if (g.tipo === 'confronto') confronto(ctx, g, ug, t, { accento: acc });
       else scena2d(ctx, g, ug, t, { accento: acc });
       const gancio = s.tipo === 'gancio';
       C.scritta(ctx, s.titolo || '', 540, gancio ? 300 : 330, gancio ? 1 : u, { size: gancio ? 92 : 76, maxW: 940, evidenzia: s.evidenzia, accento: acc, passo: gancio ? 0 : 0.05 });

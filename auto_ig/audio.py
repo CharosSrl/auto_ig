@@ -12,6 +12,7 @@ a intervalli irregolari.
 """
 from __future__ import annotations
 
+import math
 import wave
 from pathlib import Path
 
@@ -272,6 +273,25 @@ def tempi_contatore(durata: float = 2.2, n: int = 12) -> list[float]:
     return [durata * (1 - (1 - (j + 1) / (n + 1)) ** (1 / 3)) for j in range(n)]
 
 
+PASSO_OMINO = 150                                                        # = personaggi2d.js PASSO (px a scala 1)
+
+
+def tempi_passi(a: dict) -> list[float]:
+    """Istanti dei passi di un omino che cammina (= personaggi2d.js: spostamento easeInOut, un passo ogni PASSO px,
+    tallone a terra a metà passo). Senza da/a cammina sul posto: fase = t·7 → un passo ogni π/7 s."""
+    durata = float(a.get("durata", 2))
+    if a.get("a") is None:
+        return [j * math.pi / 7 for j in range(int(durata / (math.pi / 7)))]
+    tot = abs(float(a["a"]) - float(a.get("da", a.get("x", 540))))
+    passo = PASSO_OMINO * float(a.get("s", 1))
+    out, j = [], 0
+    while (d := passo * (j + 0.5)) < tot:
+        e = d / tot                                                      # e = 0.5 - 0.5 cos(πk) → k
+        out.append(durata * math.acos(1 - 2 * e) / math.pi)
+        j += 1
+    return out
+
+
 def suoni_grafica(g: dict, t0: float, t1: float, anticipo: float = 0.0) -> list[tuple[float, str, dict]]:
     """Suoni delle grafiche vive (contatore, radar, scena con personaggi), scheda a sé o dentro il gancio.
     anticipo: la grafica del gancio parte già avanti (fotogramma 0 in movimento), i suoni seguono lo stesso orologio."""
@@ -290,13 +310,23 @@ def suoni_grafica(g: dict, t0: float, t1: float, anticipo: float = 0.0) -> list[
             k += 1
         if float(g.get("esplode", -1)) >= 0:
             metti(float(g["esplode"]), "impatto", {"liv": 1.0})
+    elif tipo == "chat":                                                 # ding a ogni messaggio (= CHAT_INIZIO/PASSO)
+        for j, m in enumerate(g.get("messaggi") or []):
+            metti(0.45 + j * 1.0, "pop", {"semitoni": 7 if (m or {}).get("da") == "a" else 3, "liv": 0.9})
+    elif tipo == "lente":                                                # scorre, si ferma (= LENTE_ARRIVO), cerchio
+        metti(0.05, "whoosh", {"liv": 0.6, "durata": 1.1})
+        metti(1.3, "tic", {"semitoni": 4})
+        metti(1.45, "conferma")
+    elif tipo == "confronto":                                            # tendina (= CONFRONTO_CENTRO)
+        metti(0.0, "swish", {"liv": 2.0})
+        metti(0.55, "pop", {"semitoni": 2})
     elif tipo == "scena2d":
         for a in g.get("attori") or []:
             az = a.get("azione")
             if az == "cammina":
-                d = float(a.get("durata", 2))
-                for j in range(int(d / 0.35)):
-                    metti(j * 0.35, "tic", {"semitoni": -5 + 2 * (j % 2), "liv": 0.5})
+                acuto = 10 if a.get("tacchi") else 0                             # tacchi: toc-toc più secco
+                for j, u in enumerate(tempi_passi(a)):
+                    metti(u, "tic", {"semitoni": -5 + acuto + 2 * (j % 2), "liv": 0.5 + 0.3 * bool(acuto)})
             elif az == "sorpresa":
                 q = float(a.get("quando", 0))
                 metti(q, "swish", {"liv": 2.0, "semitoni": 5})

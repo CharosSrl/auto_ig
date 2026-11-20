@@ -237,3 +237,25 @@ class SuoniInfograficheTest(unittest.TestCase):
         self.assertIn(4.4, [t for t, n, _ in ev if n == "impatto"])            # lampo del radar
         self.assertTrue(any(n == "pop" and 3.4 <= t < 7.4 for t, n, _ in ev))  # ping
         self.assertIn(8.2, [t for t, n, _ in ev if n == "swish"])              # salto dell'omino
+
+    def test_ganci_nuovi_suonano(self):
+        from auto_ig import audio
+        ch = audio.suoni_grafica({"tipo": "chat", "messaggi": [{"da": "b", "testo": "x"}, {"da": "a", "testo": "y"}]}, 0, 5)
+        self.assertEqual([round(t, 2) for t, n, _ in ch if n == "pop"], [0.45, 1.45])
+        self.assertIn(1.45, [t for t, n, _ in audio.suoni_grafica({"tipo": "lente"}, 0, 5) if n == "conferma"])
+        self.assertTrue(audio.suoni_grafica({"tipo": "confronto"}, 0, 5))
+
+    def test_passi_dalla_distanza(self):
+        """Skill animazione-personaggi-2d: un passo ogni PASSO px, non a tempo fisso (niente moonwalk)."""
+        from auto_ig import audio
+        corto = audio.tempi_passi({"azione": "cammina", "da": 100, "a": 400, "durata": 2})
+        lungo = audio.tempi_passi({"azione": "cammina", "da": 100, "a": 900, "durata": 2})
+        self.assertLess(len(corto), len(lungo))
+        self.assertTrue(all(0 < t < 2 for t in lungo))
+
+    def test_passi_coi_tacchi_piu_acuti(self):
+        from auto_ig import audio
+        piatto = audio.suoni_grafica({"tipo": "scena2d", "attori": [{"azione": "cammina", "durata": 2}]}, 0, 5)
+        tacchi = audio.suoni_grafica({"tipo": "scena2d", "attori": [{"azione": "cammina", "durata": 2, "tacchi": "#c00"}]}, 0, 5)
+        self.assertEqual(len(piatto), len(tacchi))
+        self.assertGreater(tacchi[0][2]["semitoni"], piatto[0][2]["semitoni"])

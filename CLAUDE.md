@@ -6,6 +6,8 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 
 1. Leggi `marca/lezioni.md`: sono le regole ricavate dai dati, vincono su tutto.
 2. Carica le skill `regia-reel` (suoni, formati, curva di retention, ganci a modello) e `linguaggio-giovani`.
+   Se il reel ha personaggi o oggetti animati, carica anche `animazione-personaggi-2d` e `motion-design`
+   (camminata giusta, anticipazione, easing; Antonio 2026-11-20: "sono importantissime").
 3. Fai il formato che Antonio ha chiesto. "Curiosità" vuol dire curiosità, "quiz" vuol dire quiz. Se una lezione
    suggerisce altro, chiediglielo prima.
 4. In ogni gruppo di video alterna i formati: quiz, "N cose", storia con suspense, gancio "Se sei…".
@@ -33,6 +35,22 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 - **Una persona, un problema, una svolta.** "I minatori strappavano le tasche → un sarto inventa i rivetti → non ha
   i soldi per il brevetto → scrive a Levi Strauss". Questo intrattiene, la lista di fatti no.
 - **Prova finale:** se il copione, letto ad alta voce, non lo racconteresti a un amico, va riscritto.
+
+## Gancio vivo dal fotogramma 0 (obbligatorio; Antonio, 2026-11-20: il reel jeans/acqua "è andato bene")
+
+Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO, con titolo grande e senza intestazione.
+- Si mette nella scheda del gancio: `grafica: {tipo: contatore | radar | scena2d | chat | lente | confronto, ...}`
+  (vedi `formati.yaml`).
+- Esempi:
+  - un numero che sale con la vasca che si riempie;
+  - un radar che pulsa su un luogo;
+  - un omino che fa già qualcosa (cammina sui tacchi, salta, versa).
+- Vale anche per i quiz. Se serve una grafica che non esiste, si costruisce in `infografica2d.js` /
+  `personaggi2d.js`.
+- **Varia sempre** (Antonio, 2026-11-20: "le cose con i liquidi sono scontate… variegare il più possibile i
+  contenuti"). Ogni reel cambia tipo di gancio (`contatore`, `radar`, `scena2d`, `chat`, `lente`, `confronto`…),
+  argomento e formato rispetto agli ultimi. Il build avvisa quando si ripetono: l'avviso va preso sul serio,
+  non ignorato. La vasca che si riempie è già usata: non riproporla.
 
 ## Grafica fatta a codice (spunto di Antonio, 2026-11-19)
 

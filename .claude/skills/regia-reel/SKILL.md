@@ -206,6 +206,13 @@ Sono **obbligatorie anche nei quiz**: dopo la risposta, il perché si mostra con
 delle tappe o una mappa con la freccia. Da fare ancora: mappa Europa/Italia, contatore, prima/dopo, schema
 causa → effetto, grafica dentro la schermata del quiz.
 
+**Gancio vivo (2026-11-20, confermato dai dati):** il reel jeans/acqua parte con il contatore che sale (0 → 3.781 litri)
+già al fotogramma 0 ed è andato bene. Da allora ogni reel apre con `grafica:` nel gancio:
+- `contatore` e `radar` in `infografica2d.js`;
+- `scena2d` con gli omini in `personaggi2d.js`.
+
+La grafica è già in movimento (`anticipo`), con titolo grande e senza intestazione.
+
 ## Da non fare
 
 - Effetti a raffica che coprono la voce, o un suono diverso per ogni parola.

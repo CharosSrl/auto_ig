@@ -57,6 +57,22 @@ class RegoleTest(unittest.TestCase):
         self.assertTrue(any("formato diverso" in x for x in regole.avvisi(reel(formato="quiz"), base / "2026-11-14-x")))
         self.assertFalse(regole.avvisi(reel(), base / "2026-11-14-x"))
 
+    def test_avviso_stesso_gancio_e_argomento(self):
+        """Antonio, 2026-11-20: liquidi 'scontati', variare il più possibile: stesso gancio o tema = avviso."""
+        base = Path(tempfile.mkdtemp())
+        vecchio = reel(titolo="Curiosità: quanta acqua si beve un paio di jeans")
+        vecchio["copione"][0]["scheda"]["grafica"] = {"tipo": "contatore"}
+        (base / "2026-11-20-a").mkdir()
+        (base / "2026-11-20-a" / "richiesta.yaml").write_text(yaml.safe_dump(vecchio, allow_unicode=True))
+        nuovo = reel(titolo="Curiosità: jeans trovati in miniera")
+        nuovo["copione"][0]["scheda"]["grafica"] = {"tipo": "contatore"}
+        av = regole.avvisi(nuovo, base / "2026-11-21-b")
+        self.assertTrue(any("gancio 'contatore'" in x for x in av))
+        self.assertTrue(any("jeans" in x and "argomento" in x for x in av))
+        diverso = reel(titolo="Curiosità: i tacchi erano da uomini")
+        diverso["copione"][0]["scheda"]["grafica"] = {"tipo": "chat"}
+        self.assertFalse([x for x in regole.avvisi(diverso, base / "2026-11-21-b") if "gancio" in x or "argomento" in x])
+
 
 if __name__ == "__main__":
     unittest.main()

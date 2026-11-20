@@ -135,6 +135,12 @@ def schede(righe: list, censura=None) -> str:
             for k in ("etichetta", "unita"):
                 if isinstance(gr.get(k), str):
                     gr[k] = censura(gr[k])
+            for m in gr.get("messaggi") or []:                       # chat
+                if isinstance(m, dict) and isinstance(m.get("testo"), str):
+                    m["testo"] = censura(m["testo"])
+            for lato in ("prima", "dopo"):                           # confronto
+                if isinstance(gr.get(lato), dict) and isinstance(gr[lato].get("etichetta"), str):
+                    gr[lato]["etichetta"] = censura(gr[lato]["etichetta"])
             for el in (gr.get("attori") or []) + (gr.get("oggetti") or []):
                 for k in ("dice", "testo"):
                     if isinstance(el, dict) and isinstance(el.get(k), str):

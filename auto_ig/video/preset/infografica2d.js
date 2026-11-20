@@ -232,3 +232,123 @@ export function radar(ctx, { etichetta = '', esplode = -1 } = {}, u, t, { accent
   }
   ctx.restore();
 }
+
+// ---- CHAT --------------------------------------------------------------------------------------------------------
+// Telefono con i messaggi di due amici INVENTATI (mai profili veri): prima i tre puntini che scrivono, poi il
+// fumetto che arriva con un "ding" (audio.suoni_grafica, stessi tempi: CHAT_INIZIO + j·CHAT_PASSO).
+// messaggi: [{da: 'a'|'b', testo}], 'a' = a destra (colore accento), 'b' = a sinistra (grigio).
+export const CHAT_INIZIO = 0.45, CHAT_PASSO = 1.0;
+export function chat(ctx, { messaggi = [], nome = 'Giulia' } = {}, u, t, { accento = '#ffd166' } = {}) {
+  const x = 230, y = 450, w = 620, h = 760;
+  ctx.save();
+  ctx.translate(0, Math.sin(t * 1.6) * 6);                          // il telefono "respira" in mano
+  ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, x + 14, y + 18, w, h, 64); ctx.fill();
+  ctx.fillStyle = '#16161a'; rr(ctx, x, y, w, h, 64); ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+  ctx.fillStyle = '#f4f1ec'; rr(ctx, x + 22, y + 22, w - 44, h - 44, 46); ctx.fill();
+  // intestazione: avatar e nome
+  ctx.fillStyle = '#ffffff'; rr(ctx, x + 22, y + 22, w - 44, 110, 46); ctx.fill();
+  ctx.fillStyle = accento; ctx.beginPath(); ctx.arc(x + 90, y + 78, 32, 0, 7); ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+  ctx.fillStyle = INCHIOSTRO; ctx.font = FONT(40, 900); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(nome, x + 140, y + 70);
+  ctx.font = FONT(26, 700); ctx.fillStyle = '#2e9e5b'; ctx.fillText('online', x + 140, y + 104);
+  // messaggi: ognuno entra dal basso con un piccolo rimbalzo, i vecchi scorrono su
+  ctx.save(); rr(ctx, x + 22, y + 132, w - 44, h - 154, 30); ctx.clip();
+  const arrivati = messaggi.map((m, j) => ({ ...m, k: clamp((u - CHAT_INIZIO - j * CHAT_PASSO) / 0.3) })).filter((m) => m.k > 0);
+  let yy = y + h - 60;
+  const prossimo = messaggi.length > arrivati.length ? messaggi[arrivati.length] : null;
+  const scrive = prossimo && u > CHAT_INIZIO + arrivati.length * CHAT_PASSO - 0.55;
+  if (scrive) {                                                       // tre puntini che scrivono
+    const dx = prossimo.da === 'a' ? x + w - 170 : x + 50;
+    ctx.fillStyle = prossimo.da === 'a' ? accento : '#ffffff'; rr(ctx, dx, yy - 70, 120, 64, 32); ctx.fill();
+    for (let q = 0; q < 3; q++) { ctx.fillStyle = '#7a7a7a'; ctx.beginPath(); ctx.arc(dx + 32 + q * 28, yy - 38 - Math.max(0, Math.sin(t * 10 - q)) * 8, 9, 0, 7); ctx.fill(); }
+    yy -= 90;
+  }
+  ctx.font = FONT(44, 800);
+  for (let j = arrivati.length - 1; j >= 0 && yy > y + 140; j--) {
+    const m = arrivati[j], righe = [], parole = String(m.testo || '').split(' ');
+    let r = '';
+    for (const p of parole) { const prova = r ? r + ' ' + p : p; if (ctx.measureText(prova).width > w - 200 && r) { righe.push(r); r = p; } else r = prova; }
+    righe.push(r);
+    const bw = Math.max(...righe.map((q) => ctx.measureText(q).width)) + 48, bh = righe.length * 52 + 28;
+    const bx = m.da === 'a' ? x + w - 50 - bw : x + 50, by = yy - bh;
+    ctx.save(); ctx.translate(bx + (m.da === 'a' ? bw : 0), by + bh); ctx.scale(pop(m.k), pop(m.k)); ctx.translate(-(bx + (m.da === 'a' ? bw : 0)), -(by + bh));
+    ctx.fillStyle = m.da === 'a' ? accento : '#ffffff'; rr(ctx, bx, by, bw, bh, 28); ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(42,15,25,0.25)'; ctx.stroke();
+    ctx.fillStyle = INCHIOSTRO; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    righe.forEach((q, n) => ctx.fillText(q, bx + 24, by + 40 + n * 52));
+    ctx.restore();
+    yy = by - 22;
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
+// ---- LENTE -------------------------------------------------------------------------------------------------------
+// Un oggetto disegnato grande; una lente d'ingrandimento lo scorre e si ferma su un dettaglio (punto: [dx, dy] in
+// -1..1 rispetto al centro dell'oggetto), che si cerchia di rosso con l'etichetta. LENTE_ARRIVO: quando si ferma.
+export const LENTE_ARRIVO = 1.3;
+export function lente(ctx, { icona: ic = 'jeans', punto = [0.3, -0.3], etichetta = '' } = {}, u, t, { accento = '#ffd166', cx = W / 2, cy = 820, lato = 620 } = {}) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,4,10,0.35)'; ctx.beginPath(); ctx.arc(cx + 12, cy + 16, lato * 0.55, 0, 7); ctx.fill();
+  ctx.fillStyle = CREMA; ctx.beginPath(); ctx.arc(cx, cy, lato * 0.55, 0, 7); ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+  icona(ctx, ic, cx, cy, lato * 0.8, { t, accento });
+  // percorso della lente: arco dal basso a sinistra fino al dettaglio, con easeInOut e un piccolo assestamento
+  const k = clamp(u / LENTE_ARRIVO), e = k < 1 ? 0.5 - 0.5 * Math.cos(Math.PI * k) : 1;
+  const tx = cx + punto[0] * lato * 0.4, ty = cy + punto[1] * lato * 0.4, sx = cx - lato * 0.55, sy = cy + lato * 0.5;   // parte dal basso: non copre il titolo
+  const arco = Math.sin(Math.PI * e) * 120;
+  const assest = u > LENTE_ARRIVO ? Math.exp(-(u - LENTE_ARRIVO) * 8) * Math.sin((u - LENTE_ARRIVO) * 30) * 10 : 0;
+  const lx = sx + (tx - sx) * e + assest, ly = sy + (ty - sy) * e - arco, R = 150;
+  ctx.save(); ctx.beginPath(); ctx.arc(lx, ly, R, 0, 7); ctx.clip();          // dentro la lente: ingrandito 2×
+  ctx.fillStyle = '#fffaf0'; ctx.fillRect(lx - R, ly - R, 2 * R, 2 * R);
+  ctx.translate(lx, ly); ctx.scale(2, 2); ctx.translate(-lx, -ly);
+  icona(ctx, ic, cx + (cx - lx) * 0, cy, lato * 0.8, { t, accento });
+  ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(lx - 50, ly - 50, 40, 0, 7); ctx.fill();   // riflesso
+  ctx.lineWidth = 22; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(lx, ly, R, 0, 7); ctx.stroke();
+  ctx.lineWidth = 12; ctx.strokeStyle = '#c9c9c9'; ctx.beginPath(); ctx.arc(lx, ly, R, 0, 7); ctx.stroke();
+  ctx.lineCap = 'round'; ctx.lineWidth = 46; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.moveTo(lx + R * 0.72, ly + R * 0.72); ctx.lineTo(lx + R * 1.5, ly + R * 1.5); ctx.stroke();
+  ctx.lineWidth = 32; ctx.strokeStyle = '#8a5a3c'; ctx.beginPath(); ctx.moveTo(lx + R * 0.78, ly + R * 0.78); ctx.lineTo(lx + R * 1.48, ly + R * 1.48); ctx.stroke();
+  // cerchio rosso che si disegna e etichetta
+  const c = clamp((u - LENTE_ARRIVO - 0.1) / 0.4);
+  if (c > 0) {
+    ctx.lineWidth = 12; ctx.strokeStyle = '#e8435a'; ctx.beginPath(); ctx.arc(lx, ly, R + 30, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * easeOut(c)); ctx.stroke();
+    if (etichetta) {
+      const a = clamp((c - 0.5) / 0.5); ctx.save(); ctx.translate(lx < cx ? lx + 60 : lx - 60, ly - R - 90); ctx.scale(pop(a), pop(a)); ctx.rotate(-0.06);
+      ctx.font = FONT(56, 900); const lw = ctx.measureText(etichetta).width + 60;
+      ctx.fillStyle = '#e8435a'; rr(ctx, -lw / 2, -46, lw, 88, 44); ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(etichetta, 0, -2); ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+// ---- CONFRONTO ---------------------------------------------------------------------------------------------------
+// Schermo diviso PRIMA | DOPO con una tendina che scorre (entra da destra, rimbalza al centro, poi oscilla piano).
+// prima/dopo: {icona, etichetta}. CONFRONTO_CENTRO: quando la tendina arriva al centro (suono).
+export const CONFRONTO_CENTRO = 0.55;
+export function confronto(ctx, { prima = {}, dopo = {} } = {}, u, t, { accento = '#ffd166', y = 470, h = 760 } = {}) {
+  const k = clamp(u / CONFRONTO_CENTRO), e = 1 - Math.pow(1 - k, 3);
+  const over = u > CONFRONTO_CENTRO ? Math.exp(-(u - CONFRONTO_CENTRO) * 5) * Math.sin((u - CONFRONTO_CENTRO) * 18) * 60 : 0;
+  const dx = 1000 + (W / 2 - 1000) * e + over + (u > 1.5 ? Math.sin((u - 1.5) * 1.4) * 70 : 0);
+  const pannello = (lato, x0, x1) => {
+    ctx.save(); ctx.beginPath(); ctx.rect(x0, y, x1 - x0, h); ctx.clip();
+    ctx.fillStyle = lato === prima ? '#3a3a44' : accento; ctx.fillRect(x0, y, x1 - x0, h);
+    ctx.save(); if (lato === prima) ctx.filter = 'grayscale(1)';
+    icona(ctx, lato.icona || 'stella', lato === prima ? W * 0.27 : W * 0.73, y + h * 0.48, 380, { t, accento: lato === prima ? '#bbbbbb' : '#ffffff' });
+    ctx.restore();
+    ctx.font = FONT(58, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+    const lx = lato === prima ? W * 0.27 : W * 0.73;
+    ctx.lineWidth = 14; ctx.strokeStyle = INCHIOSTRO; ctx.strokeText(String(lato.etichetta || (lato === prima ? 'PRIMA' : 'DOPO')).toUpperCase(), lx, y + h - 80);
+    ctx.fillStyle = '#fff'; ctx.fillText(String(lato.etichetta || (lato === prima ? 'PRIMA' : 'DOPO')).toUpperCase(), lx, y + h - 80);
+    ctx.restore();
+  };
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, 56, y + 16, W - 100, h, 40); ctx.fill();
+  ctx.save(); rr(ctx, 44, y, W - 88, h, 40); ctx.clip();
+  pannello(prima, 0, dx); pannello(dopo, dx, W);
+  ctx.restore();
+  ctx.lineWidth = 8; ctx.strokeStyle = INCHIOSTRO; rr(ctx, 44, y, W - 88, h, 40); ctx.stroke();
+  // la tendina: barra bianca con la maniglia
+  ctx.fillStyle = '#fff'; ctx.fillRect(dx - 7, y, 14, h);
+  ctx.beginPath(); ctx.arc(dx, y + h / 2, 44, 0, 7); ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+  ctx.fillStyle = INCHIOSTRO; ctx.font = FONT(40, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('‹ ›', dx, y + h / 2 + 2);
+  ctx.restore();
+}
