@@ -15,14 +15,14 @@ GRAFICA = SCENES_DIR.parent / "preset" / "grafica2d.js"
 def curiosita(**kw):
     d = {"formato": "curiosita", "resa": "2d", "copione": [
         {"testo": "Tre curiosità.", "scheda": {"tipo": "gancio", "titolo": "3 curiosità", "icona": "lampadina"}},
-        {"testo": "Uno: il tacco.", "scheda": {"tipo": "fatto", "numero": 1, "titolo": "Il tacco", "icona": "tacco"}},
+        {"testo": "Uno: il primo torneo.", "scheda": {"tipo": "fatto", "numero": 1, "titolo": "Il primo torneo", "icona": "trofeo"}},
     ]}
     d.update(kw)
     return d
 
 
 class TestCatalogo(unittest.TestCase):
-    def test_ogni_formato_ha_scaletta_cta_e_due_rese(self):
+    def test_ogni_formato_ha_scaletta_cta_e_rese(self):
         for nome, f in formati.catalogo()["formati"].items():
             self.assertTrue(f["cta"] and f["struttura"] and f["hashtag"], nome)
             self.assertEqual(set(f["rese"]), set(formati.RESE), nome)
@@ -53,7 +53,7 @@ class TestRegole(unittest.TestCase):
         self.assertEqual(righe[-1]["scheda"]["tipo"], "cta")
         self.assertEqual(righe[-1]["testo"], formati.formato("curiosita")["cta"])
         self.assertEqual(len(formati.copione({**curiosita(), "copione": righe})), 3)   # già presente: non raddoppia
-        self.assertEqual(formati.copione(curiosita(cta="Scarica Cintre!"))[-1]["testo"], "Scarica Cintre!")
+        self.assertEqual(formati.copione(curiosita(cta="Scarica TeamUp!"))[-1]["testo"], "Scarica TeamUp!")
 
     def test_senza_formato_nulla_cambia(self):
         d = {"copione": ["a", "b"], "scena": "testo"}
@@ -71,8 +71,7 @@ class TestRegole(unittest.TestCase):
         self.assertIn("icona 'drago'", " ".join(formati.valida(d)))
         d = curiosita(); d["copione"].reverse()
         self.assertIn("gancio", " ".join(formati.valida(d)))
-        self.assertIn("va creata", " ".join(formati.valida(curiosita(resa="3d", copione=["x"]))))
-        self.assertEqual(formati.valida(curiosita(resa="3d", copione=["x"], scena="armadio_infinito")), [])
+        self.assertIn("resa '3d' non valida", " ".join(formati.valida(curiosita(resa="3d"))))
 
     def test_schede_e_scena(self):
         s = json.loads(formati.schede(formati.copione(curiosita())))
@@ -83,11 +82,11 @@ class TestRegole(unittest.TestCase):
 class TestRichiesta(unittest.TestCase):
     def test_nuova_con_formato_e_build(self):
         base = Path(tempfile.mkdtemp())
-        f = richieste.new("Quiz moda", base=base, day=date(2026, 11, 20), formato="quiz", resa="2d")
+        f = richieste.new("Quiz esports", base=base, day=date(2026, 11, 20), formato="quiz", resa="2d")
         data = yaml.safe_load((f / "richiesta.yaml").read_text())
         self.assertEqual((data["formato"], data["resa"], data["scena"]), ("quiz", "2d", "cartoon2d"))
         self.assertEqual([r["scheda"]["tipo"] for r in data["copione"]], ["gancio", "domanda", "domanda", "risposta", "commenta"])
-        self.assertIn("#cintre", data["pubblicazione"]["caption"])
+        self.assertIn("#teamupesports", data["pubblicazione"]["caption"])
         richieste.load(f)                                     # lo scheletro è già valido
 
         calls = []
@@ -98,8 +97,6 @@ class TestRichiesta(unittest.TestCase):
             wav.write_bytes(b"RIFF")
             return [voce.Sentence(t, i, i + 0.5, voce.word_timings(t, i, i + 0.5), tone)
                     for i, (t, tone) in enumerate(voce.normalize_lines(lines))], 7.0
-        with self.assertRaisesRegex(ValueError, "foto"):     # quiz 2D: senza foto dal fotogramma 0 non si genera
-            richieste.build(f, render_fn=render, speak_fn=speak)
         data["copione"][0]["scheda"]["foto"] = "x.jpg"
         (f / "foto").mkdir(); (f / "foto" / "x.jpg").write_bytes(b"jpg")
         (f / "richiesta.yaml").write_text(yaml.safe_dump(data, allow_unicode=True))

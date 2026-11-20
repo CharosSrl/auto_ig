@@ -1,4 +1,4 @@
-# Palinsesto di @cintre_official — modificabile a mano.
+# Palinsesto di @teamupesportsofficial — modificabile a mano.
 # "Genera bozze" (UI o `python -m auto_ig.planner`) riempie i giorni liberi con BOZZE:
 # niente viene pubblicato finché non premi "Approva" nella pagina Coda.
 
@@ -7,53 +7,53 @@ giorni_avanti: 7           # quanti giorni futuri riempire
 giorni: [lun, mar, mer, gio, ven, sab, dom]
 alternanza: [image, reel]  # tipo di post a rotazione, un giorno ciascuno
 
-hashtag: "#moda #fashion #stile #outfit #cintre"
+hashtag: "#esports #gaming #gamingitalia #torneo #teamupesports"
 
 immagini:
   fonte: wikimedia         # wikimedia | openverse | pixabay | auto
   crediti: true            # aggiunge "📷 autore via fonte (licenza)" alla caption
   # Ricerche in inglese (più risultati). Usate a rotazione.
   ricerche:
-    - fashion plate
-    - vintage dress
-    - fashion illustration
-    - hat fashion
-    - haute couture
-    - vintage shoes
-    - embroidery textile
-    - kimono
-    - fashion photography 1950s
-    - wardrobe
-    - textile pattern
-    - vintage handbag
+    - esports
+    - esports arena
+    - LAN party
+    - video game tournament
+    - gaming setup
+    - game controller
+    - arcade cabinet
+    - Intel Extreme Masters
+    - DreamHack
+    - mechanical keyboard
+    - gaming headset
+    - retro video game console
   caption:
-    - "Lo stile non passa mai di moda. ✨"
-    - "Ispirazione del giorno: dettagli che fanno la differenza."
-    - "Ogni capo racconta una storia. Qual è la tua?"
-    - "Eleganza senza tempo. 🖤"
-    - "Il guardaroba perfetto parte da un'idea."
-    - "Tessuti, forme, colori: la moda è arte da indossare."
-    - "Vintage oggi, ispirazione per domani."
-    - "Salva questo post per il tuo prossimo outfit. 📌"
+    - "Il setup conta. Il team di più. 🎮"
+    - "Da soli si gioca. In squadra si vince. 🏆"
+    - "Ogni campione ha iniziato da una partita in LAN."
+    - "Qual è il gioco che ti ha fatto innamorare degli esports? 👇"
+    - "Il tuo prossimo torneo inizia da qui."
+    - "GG a chi gioca per vincere, e a chi gioca per divertirsi. 💜"
+    - "La storia dei videogiochi, una partita alla volta."
+    - "Salvalo per la prossima serata con il tuo team. 📌"
 
 reel:
   durata: 8                # secondi
   scene: [testo, particelle, oggetto]
   # Coppie [sfondo, accento] a rotazione
   colori:
-    - ["#1d3557", "#e63946"]
-    - ["#111111", "#d4af37"]
-    - ["#f1e3d3", "#8c5e58"]
-    - ["#0b0c10", "#66fcf1"]
+    - ["#5b21b6", "#22d3ee"]
+    - ["#0b0a14", "#a855f7"]
+    - ["#0b0a14", "#22d3ee"]
+    - ["#111827", "#facc15"]
   testi:
-    - "Il tuo stile, il tuo armadio."
-    - "Meno cose, più stile."
-    - "Un capo giusto vale dieci capi a caso."
-    - "Cambia il tuo look al meglio."
-    - "Ordina l'armadio, libera lo stile."
-    - "Ogni giorno è un buon giorno per vestirsi bene."
+    - "Il tuo team ti sta cercando."
+    - "Da solo si gioca. Insieme si vince."
+    - "Ti manca il quinto? Trovalo su TeamUp."
+    - "Ogni torneo inizia da un team."
+    - "Smetti di giocare in solo queue."
+    - "Il prossimo campione potresti essere tu."
   caption:
-    - "Un pensiero di stile per oggi. ✨"
+    - "Un pensiero per chi gioca oggi. 🎮"
     - "Ti ritrovi? Scrivilo nei commenti 👇"
-    - "Condividilo con chi ha bisogno di sentirlo. 💬"
-    - "Salvalo per quando serve. 📌"
+    - "Mandalo al tuo duo. 💬"
+    - "Salvalo per il prossimo torneo. 📌"

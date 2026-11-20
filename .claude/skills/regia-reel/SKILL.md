@@ -1,19 +1,19 @@
 ---
 name: regia-reel
 description: >-
-  Regia, sound design e formati dei reel di Cintre: quale suono mettere su ogni evento a schermo (foto, opzioni,
+  Regia, sound design e formati dei reel di TeamUp Esports: quale suono mettere su ogni evento a schermo (foto, opzioni,
   3-2-1, risposta), formato "N cose" accanto al quiz, caption-bigino da salvare e mandare, finale che riparte,
-  copertina, seguiti dei reel che vanno bene. Usala quando progetti, scrivi o monti un reel per @cintre_official,
+  copertina, seguiti dei reel che vanno bene. Usala quando progetti, scrivi o monti un reel per @teamupesportsofficial,
   insieme a linguaggio-giovani e marca/lezioni.md. Nasce dallo studio di due reel virali italiani sugli effetti sonori.
 ---
 
-# Regia dei reel — Cintre
+# Regia dei reel — TeamUp Esports
 
 Questa skill dice **come si mostra e come si sente** un reel. Le regole su cosa dire stanno in `linguaggio-giovani`
 e `marca/lezioni.md`.
 
 > Queste sono **ispirazioni esterne, da verificare**. Vengono da 2 reel di creator italiani sul montaggio, non da
-> reel di moda né dai nostri dati. Le nostre lezioni (`marca/lezioni.md`, basate sugli Insights di Cintre) vincono
+> reel di esports né dai nostri dati. Le nostre lezioni (`marca/lezioni.md`) vincono
 > sempre. Dopo ogni batch si controlla negli Insights se una regola qui sotto ha aiutato.
 
 ## Le fonti (studiate il 2026-11-17)
@@ -24,7 +24,7 @@ e `marca/lezioni.md`.
 | [Dd0bRh-IdRD](https://www.instagram.com/p/Dd0bRh-IdRD/) | @stezzygram (4,4K follower, SMM) | 54 s · **134K views (30 volte i follower)** · 4,3K like · 1.350 condivisioni (31% dei like) | "4 effetti sonori più virali": lista numerata, ogni effetto dimostrato dal vivo, caption-bigino, "Salva questo Reel". |
 
 Sono due account piccoli, eppure entrambi i reel sono arrivati quasi solo a chi non li seguiva. È la stessa cosa che
-vediamo noi (lezione 2).
+succede a ogni account nuovo (lezione 2).
 
 ## 1. Il video fa quello che dice
 
@@ -32,10 +32,10 @@ Nei due reel nessun suono viene solo nominato: lo senti e lo vedi applicato nell
 arriva sul boom, il pop mentre spunta lo sticker, il whoosh porta dentro il segnalibro che ti invita a salvare.
 Chi guarda impara e prova piacere insieme.
 
-**Per Cintre:** ogni fatto detto dalla voce va anche *visto*.
-- Se diciamo "1942", compare il timbro 1942 sulla foto.
-- Se diciamo "blocca i raggi", la foto si scurisce come una lente.
-- Se diciamo "lui fondò la Puma", entra la scarpa Puma.
+**Per TeamUp:** ogni fatto detto dalla voce va anche *visto*.
+- Se diciamo "1972", compare il timbro 1972 sulla foto o sull'icona.
+- Se diciamo "cinque contro cinque", entra l'icona squadra.
+- Se diciamo "montepremi", entra il trofeo; se diciamo "in diretta", il bollino LIVE.
 
 Se una frase non ha niente da far vedere, va riscritta o tolta.
 
@@ -46,7 +46,7 @@ copre e non va messo a caso.
 
 | Evento nel reel 2D | Suono | Note |
 |---|---|---|
-| Entra la foto Wikimedia, o cambia sulla risposta | 📸 scatto fotografico + flash bianco breve | È il suono "nostro": le nostre sono foto vere |
+| Entra la foto Wikimedia, o cambia sulla risposta | 📸 scatto fotografico + flash bianco breve | Solo quando c'è una foto vera |
 | Compare un'opzione A / B / C | pop (uno per opzione, scalati) | Tono leggermente crescente A→B→C |
 | Compare il titolo o un testo a schermo | tastiera (typing) | Solo sui titoli, mai sui sottotitoli parola per parola: stancherebbe |
 | 3-2-1 | riser che sale per tutto il conto alla rovescia | Deve finire esattamente sul colpo della risposta |
@@ -75,13 +75,14 @@ lettere pronunciate. Se le lettere non ci sono, i pop cadono nel primo secondo d
 
 ## 3. Struttura dichiarata dal fotogramma 0
 
-- **Quiz** (il nostro formato vincente): domanda e opzioni A/B/C a schermo dal fotogramma 0, come dice la lezione 3.
+- **Quiz** (il formato principale): domanda e opzioni A/B/C a schermo dal fotogramma 0, come dice la lezione 3.
 - **Formato "N cose"**, da affiancare al quiz:
-  - il numero va enorme dal fotogramma 0 ("4 capi che hai e che sono nati in guerra");
+  - il numero va enorme dal fotogramma 0 ("3 record esports che sembrano finti");
   - ogni punto ha il suo "1.", "2." grande;
   - chi guarda conosce la struttura e resta fino all'ultimo numero.
 
-  Temi sempre da ragazzi: sneakers, felpe, jeans, scuola, marchi che hanno. Massimo 3-4 punti per stare sotto i 25 s.
+  Temi sempre da chi gioca: i giochi che hanno installati, tornei che guardano, situazioni di squadra. Massimo 3-4
+  punti per stare sotto i 25 s.
 - **Niente presentazioni.** Al fotogramma 0 si è già dentro il contenuto. Mai "Ciao ragazzi, oggi vi parlo di…".
 
 ## 4. Finale che riparte
@@ -89,7 +90,7 @@ lettere pronunciate. Se le lettere non ci sono, i pop cadono nel primo secondo d
 L'ultimo fotogramma deve richiamare il primo: lo stesso titolo, la stessa foto, la stessa domanda. Così il video
 ricomincia senza stacco e il tempo di visione supera il 100%.
 
-**Per Cintre:** dopo la CTA, l'ultimo mezzo secondo torna sulla foto del gancio con la domanda. Da implementare.
+**Per TeamUp:** dopo la CTA, l'ultimo mezzo secondo torna sulla foto del gancio con la domanda. Da implementare.
 
 ## 5. Utilità da salvare e da mandare
 
@@ -101,7 +102,7 @@ con un amico.
   ricordarsela, la trova lì. Aiuta anche la ricerca: le caption sono un segnale per la ricerca di Instagram.
 - **Una CTA alla volta, legata all'utilità:**
   - "Salvalo per il prossimo quiz con gli amici";
-  - "Mandalo a chi ha le Nike ai piedi".
+  - "Mandalo al tuo duo prima della prossima ranked".
 
   Il solo "Mandalo a…" senza un motivo non ha funzionato (lezione 8).
 - Il commento "Tu cosa avevi detto?" resta la CTA del video. Salva e manda vanno in caption.
@@ -112,24 +113,24 @@ Stezzy ha una griglia riconoscibile: titolo enorme, font misti (bastone + corsiv
 occhiali. I suoi formati utili con un numero ("Top 3 agende", "Checklist", "Fai queste 3 cose") volano. Quelli solo
 estetici, come il reel locale "East Market" (3,5K), no.
 
-**Per Cintre:** la copertina (`video.jpg`) va progettata, non presa da un fotogramma a caso:
-- foto incorniciata;
-- titolo corto e grande nello stile di Cintre;
-- sempre uguale nella struttura, così la griglia di @cintre_official si riconosce.
+**Per TeamUp:** la copertina (`video.jpg`) va progettata, non presa da un fotogramma a caso:
+- icona o foto grande al centro;
+- titolo corto e grande nello stile TeamUp (viola e ciano, simbolo a doppio chevron);
+- sempre uguale nella struttura, così la griglia di @teamupesportsofficial si riconosce.
 
-Il nostro "volto" non è una persona: è **la voce fissa di Cintre** (la voce "amica", 25 anni) più la cornice oro.
+Il nostro "volto" non è una persona: è **la voce fissa del brand** più la palette viola/ciano e il simbolo.
 
 ## 7. Seguiti dei reel che vanno bene
 
 Dopo il successo Stezzy ha fatto subito "Effetti sonori a tema Halloween". Quando un nostro reel supera la media,
-come il quiz jeans, si fa entro pochi giorni una variante con lo stesso schema e un tema vicino.
+si fa entro pochi giorni una variante con lo stesso schema e un tema vicino (stesso gioco, o stesso schema su un altro gioco).
 
 ## 8. Commento con parola chiave → DM (solo se lo decide Antonio)
 
 Michele ha fissato il commento "Commenta con 'Sound' e ti mando gli effetti audio" e ha ottenuto 1.167 commenti,
 quasi tutti "Sound". Commenti e DM spingono la diffusione e intanto costruiscono una lista di contatti.
 
-**Per Cintre è solo un'idea**, da proporre ad Antonio:
+**Per TeamUp è solo un'idea**, da proporre ad Antonio:
 - serve uno strumento come ManyChat, e io non posso mandare messaggi;
 - una parte del pubblico è minorenne, quindi nel DM va solo il link all'app o un contenuto utile, mai una richiesta
   di dati personali.
@@ -140,7 +141,8 @@ quasi tutti "Sound". Commenti e DM spingono la diffusione e intanto costruiscono
 - Promettere nel gancio qualcosa che il video non dà (bait-and-switch). Le regole di verità di `marca/lezioni.md`
   restano valide.
 - Copiare lo stile o i contenuti di questi creator: si prendono i meccanismi, non le loro idee.
-- Usare effetti o musiche protetti da copyright: solo CC0 o generati da noi.
+- Usare effetti o musiche protetti da copyright: solo CC0 o generati da noi. Niente suoni presi dai giochi
+  (sono di chi li ha fatti), niente screenshot o loghi di giochi, team e tornei.
 
 ## Checklist prima del render
 

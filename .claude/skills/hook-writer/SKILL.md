@@ -15,7 +15,7 @@ metadata:
 license: MIT
 ---
 
-> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+> **TeamUp Esports:** prima di usare questa skill leggi `marca/lezioni.md` (regole dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
 
 
 # Hook Writer

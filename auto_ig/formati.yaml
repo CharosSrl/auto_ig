@@ -1,133 +1,116 @@
 # FORMATI DEI CONTENUTI — catalogo letto dal codice (auto_ig/formati.py) e guida per Claude.
 #
-# Livelli:   formato (storia | quiz | curiosita)  →  resa (3d | 2d)  →  scena + preset
+# Livelli:   formato (storia | quiz | curiosita)  →  resa (2d)  →  scena + preset
 #   - formato: COSA raccontiamo e con che scaletta (ruoli delle frasi, durata, tono, CTA).
-#   - resa:    COME lo mostriamo. 3d = modella Cintre e preset three.js; 2d = grafica piatta a schede.
+#   - resa:    COME lo mostriamo. 2d = grafica piatta a schede (scene cartoon2d e schede2d).
 #   - ricetta: regole da seguire per generare scene coerenti (è il "prompt" fisso di Claude).
 #
-# In richiesta.yaml:   formato: curiosita   resa: 2d   cta: ""  (vuoto = CTA predefinita del formato)   mascotte: false
-# MASCOTTE (modella Cintre 3D/2D): SOLO se la chiede Antonio (al massimo proporla nelle domande). Vedi hook_e_cta.
+# In richiesta.yaml:   formato: curiosita   resa: 2d   cta: ""  (vuoto = CTA predefinita del formato)
 # La CTA viene AGGIUNTA SEMPRE come ultima frase dal sistema: non va scritta nel copione.
 # Con resa 2d ogni frase del copione ha una `scheda` (cosa si vede mentre la voce parla):
-#   - {testo: "...", scheda: {tipo: fatto, numero: 1, titolo: "Il taschino dei jeans", icona: taschino}}
+#   - {testo: "...", scheda: {tipo: fatto, numero: 1, titolo: "Il primo torneo", icona: trofeo}}
 
 regole_comuni:
-  - "Brand Cintre: bordeaux #6d1a36, rosa cipria #e8c4c0, scuro #1a0710, crema #fffaf9; logo = gruccia (brand.js)."
+  - "Brand TeamUp Esports (@teamupesportsofficial): viola #5b21b6, ciano neon #22d3ee, quasi nero #0b0a14, bianco lavanda #f5f3ff; simbolo = doppio chevron 'UP' (brand.js)."
+  - "TeamUp è un'app per trovare compagni e team, iscriversi ai tornei e seguire la scena esports: ogni contenuto parla a chi gioca."
   - "Una frase del copione = un atto della scena = una scheda (sincronizzati con la voce dal parametro atti)."
   - "Frasi brevi da parlato (max ~14 parole), seconda persona o prima persona, niente elenchi letti."
   - "Contenuto importante nel 58% alto dell'immagine: sotto ci sono sottotitoli e caption di Instagram."
-  - "PRIMA DI TUTTO leggi marca/lezioni.md: sono le regole ricavate dagli Insights dei nostri reel e hanno la precedenza. In breve: vince il tempo di visione, domanda + opzioni A/B/C dal primo fotogramma, quiz invece di lezione, argomenti Gen Z adatti ai minori, sotto i 25 s."
+  - "PRIMA DI TUTTO leggi marca/lezioni.md: hanno la precedenza. In breve: vince il tempo di visione, domanda + opzioni A/B/C dal primo fotogramma, quiz invece di lezione, argomenti per chi gioca, adatti ai minori, sotto i 25 s."
   - "HOOK E CTA SONO LA COSA PIÙ IMPORTANTE (regola di Antonio): seguire hook_e_cta qui sotto, senza eccezioni."
-  - "Mascotte (modella Cintre) solo se Antonio la chiede: mascotte: false di default; se sembra adatta, chiederlo nelle domande."
-  - "Solo fatti verificabili: niente date o attribuzioni inventate; se incerto si riformula o si toglie."
+  - "Solo fatti verificabili (montepremi, date, risultati, regole dei giochi): niente numeri o attribuzioni inventate; se incerto si riformula o si toglie."
+  - "Adatto ai minori: niente scommesse, skin gambling, casse premio a pagamento, violenza grafica o insulti; niente tossicità verso giocatori o community."
   - "Ultima frase SEMPRE la call to action (la aggiunge il sistema): UNA sola, legata al valore del video (vedi hook_e_cta)."
-  - "Caption (skill caption-writer): prima riga = gancio entro 125 caratteri, 1-2 righe di valore, la STESSA CTA del video, 3-5 hashtag (#cintre sempre)."
+  - "Caption (skill caption-writer): prima riga = gancio entro 125 caratteri, 1-2 righe di valore, la STESSA CTA del video, 3-5 hashtag (#teamupesports sempre)."
 
 # Icone vettoriali della resa 2d (preset/grafica2d.js → ICONE). Per un'icona nuova: disegnala lì e aggiungila qui.
-icone_2d: [taschino, orologio, tacco, staffa, tubino, auto, lampadina, domanda, commento, cuore, stella, gruccia, telefono, armadio, outfit,
-           trench, elmetto, cardigan, medaglia, bikini, atomo, cravatta, sciabole, sneaker, pugnale, silenzio,
-           jeans, sposa, corona, maglia, mutande, zeppa, sughero, borsa, bambu, aereo, polso, baule, lucchetto, lente]
+icone_2d: [controller, cuffie, trofeo, tastiera, mouse, squadra, bracket, fulmine, mirino, monitor, live, simbolo,
+           orologio, auto, lampadina, domanda, commento, cuore, stella, telefono, elmetto, medaglia, atomo, sciabole,
+           pugnale, silenzio, corona, aereo, polso, baule, lucchetto, lente]
 
-# Tipi di scheda della resa 2d (scena schede2d) e campi usati.
+# Tipi di scheda della resa 2d (scene schede2d e cartoon2d) e campi usati.
 schede_2d:
   gancio:    "titolo grande (evidenzia = parola in colore accento), icona, timbro 'Lo sapevi?'/'Quiz!'; nel QUIZ con opzioni: [A, B, C] è già la schermata del quiz (domanda + opzioni dal fotogramma 0, solo cartoon2d)"
   fatto:     "numero (cerchio), titolo, icona grande: apre un punto (curiosità n, consiglio n)"
   dettaglio: "stessa card del fatto prima; testo breve (la 'risposta') e icona nuova a fianco"
   domanda:   "domanda del quiz (titolo) e opzioni A/B/C (opzioni: [..]); con conto: 3 è l'attesa (3-2-1 con tic, voce \"Tre. Due. Uno.\")"
   risposta:  "le stesse opzioni, quella giusta (giusta: indice da 0) si illumina con la spunta; testo = perché"
-  scena:     "illustrazione piatta di una situazione (icona grande + titolo), per le storie in 2d"
+  scena:     "illustrazione piatta di una situazione (icona grande + titolo), per le storie"
   foto:      "foto VERA grande (foto: file in <richiesta>/foto/, scaricato con 'python -m auto_ig.richieste foto'; solo PD/CC0 da Wikimedia), entra in bianco e nero e si colora; titolo corto sopra, timbro facoltativo (es. anno), credito nella cornice (credito: '...'). È il PREMIO dopo la risposta"
-  # FOTO DAL FOTOGRAMMA 0 (marca/lezioni.md n. 12): nei quiz/curiosità 2D la PRIMA scheda ha sempre `foto` (+ credito);
-  # vale anche su fatto/dettaglio (la foto viva al posto dell'icona). Quiz: domanda/risposta ereditano la foto del
-  # gancio; `foto_risposta` la cambia sulla risposta. Cornice: `cornice:` nella richiesta o nella scheda
-  # (polaroid | oro | pellicola | nastro; default quiz oro, curiosità polaroid). Foto viva: onda, riflesso, glitch.
+  # FOTO: nei quiz/curiosità la foto vera è facoltativa (marca/lezioni.md): per gli esports Wikimedia ha poche foto
+  # libere (eventi, arene, hardware storico). Se c'è, va anche su fatto/dettaglio (foto viva al posto dell'icona).
+  # Quiz: domanda/risposta ereditano la foto del gancio; `foto_risposta` la cambia sulla risposta.
+  # Cornice: `cornice:` nella richiesta o nella scheda (polaroid | oro | pellicola | nastro; default quiz oro,
+  # curiosità polaroid). Foto viva: onda, riflesso, glitch.
   commenta:  "fumetto con titolo (domanda al pubblico) e icone commento/cuore"
   rehook:    "a metà video: titolo enorme che trema ('Aspetta l'ultima...') + carta mistero della prossima curiosità (solo cartoon2d)"
   cta:       "cartello finale secondo cta_azione del formato (salva_condividi: segnalibro + Invia; segui: bottone Segui; commenta: fumetto; app: telefono); messa dal sistema"
 
-# HOOK E CTA — la parte più importante di ogni contenuto (Antonio, 2026-11-14). Skill: .claude/skills/hook-writer,
+# HOOK E CTA — la parte più importante di ogni contenuto (Antonio). Skill: .claude/skills/hook-writer,
 # short-form-video-script, caption-writer, viral-hooks; profilo e voce del brand in marca/.
 hook_e_cta:
   hook:
     - "Si estrae dal fatto più forte e VERO del video (mai inventato, mai una promessa che il video non mantiene)."
-    - "Scrivi 5-10 candidati con meccanismi diversi (curiosità, contrasto, specificità/numero, posta in gioco, identità, domanda)."
-    - "Punteggio 0-2 su: gap, specificità, verità, entra in 3 s, voce Cintre, 'devo vedere il resto'. Verità e pull = 0 → scartato. Tieni solo ≥ 9/12."
-    - "≤ 12 parole, argomento nelle prime 5, detto in ≤ 3 s; a schermo dal fotogramma 0 (testo + immagine + voce insieme, funziona anche muto)."
+    - "Scrivi 5-10 candidati con meccanismi diversi (curiosità, contrasto, specificità/numero, posta in gioco, identità da gamer, domanda)."
+    - "Punteggio 0-2 su: gap, specificità, verità, entra in 3 s, voce TeamUp, 'devo vedere il resto'. Verità e pull = 0 → scartato. Tieni solo ≥ 9/12."
+    - "≤ 12 parole, argomento (gioco, ruolo, situazione) nelle prime 5, detto in ≤ 3 s; a schermo dal fotogramma 0 (testo + immagine + voce insieme, funziona anche muto)."
     - "Mai aprire con saluti, 'Oggi parliamo di', 'Lo sapevi che', logo o intro lente. Non svelare il payoff: tieni aperto il loop."
     - "In richiesta.yaml annota i candidati scartati e il punteggio del vincente (commento), così Antonio vede la scelta."
   cta:
-    - "UNA sola richiesta, ~2 s, legata al valore del video e concreta (chi/cosa): 'Mandalo a chi ha un trench nell'armadio!'."
+    - "UNA sola richiesta, ~2 s, legata al valore del video e concreta (chi/cosa): 'Mandalo al tuo duo!'."
     - "Obiettivo per formato (cta_azione): curiosità → salva/condividi, quiz → commenta, storia → app (link in bio)."
     - "Mai 'segui e metti like', 'grazie per aver guardato', 'fammi sapere cosa ne pensi' generico, né due CTA insieme."
     - "La stessa CTA va nel video (voce + cartello animato) e nella caption."
   attenzione:
     - "Promessa aperta nei primi 3 s, ripagata per ultima; rehook al 40-60% del video; ogni frase deve agganciare, insegnare o preparare il payoff, sennò si taglia."
 
-# RITMO ALTO (resa 2d con scena cartoon2d). Sintesi della ricerca del 2026-11-14 (skill .claude/skills/viral-hooks e
+# RITMO ALTO (scena cartoon2d). Sintesi della ricerca del 2026-11-14 (skill .claude/skills/viral-hooks e
 # short-form-video; skip rate di Instagram = chi esce entro 3 s). I numeri dei blog sono indicativi, le regole no.
 ritmo_alto:
   - "Gancio a schermo dal fotogramma 0 (niente dissolvenza dal nero); parola chiave detta entro 1-1,5 s."
-  - "Gancio = una sola promessa aperta (open loop): numero preciso + contrasto ('3 capi nati in guerra. L'ultimo è esplosivo')."
+  - "Gancio = una sola promessa aperta (open loop): numero preciso + contrasto ('3 record esports che sembrano finti. L'ultimo è assurdo')."
   - "Svela l'ultima curiosità per ultima; a metà (~12-15 s) un rehook ('Ma aspetta l'ultima...') con scheda rehook."
   - "Un cambio visivo ogni 1,5-3 s, irregolare: le battute le calcola auto_ig/audio.py e valgono anche per gli effetti sonori."
-  - "Sottotitoli a blocco (default: 2 righe ferme, parola detta evidenziata), voce velocita 1.0 + pausa 0.4-0.5, frasi intere e chiare (marca/lezioni.md n. 13); titoli schede di max 4-7 parole."
-  - "Durata 20-25 s (dati reali: il reel da 24 s ha battuto quelli da 27-35 s); frasi brevi, niente pause morte; audio: {musica: true, sfx: true}."
+  - "Sottotitoli a blocco (default: 2 righe ferme, parola detta evidenziata), voce velocita 1.0 + pausa 0.4-0.5, frasi intere e chiare (marca/lezioni.md); titoli schede di max 4-7 parole."
+  - "Durata 20-25 s; frasi brevi, niente pause morte; audio: {musica: true, sfx: true}."
   - "Hook: due varianti di categorie diverse (stop-scroll: negazione/numero/domanda + ritenzione: storia/emozione), scegli la più forte."
 
 formati:
   storia:
     nome: Storia
-    scopo: "Mini racconto: un problema di stile reale risolto grazie all'app (con la modella Cintre solo se Antonio la chiede)."
+    scopo: "Mini racconto: un problema reale di chi gioca (niente squadra, compagni a caso, torneo senza il quinto) risolto grazie all'app TeamUp."
     durata: [15, 30]
     struttura:
-      - {ruolo: gancio,     guida: "Situazione + problema in 1 frase (\"Stasera ho una cena di lavoro...\")."}
-      - {ruolo: problema,   guida: "1-2 frasi che peggiorano il problema, con emozione (tono arrabbiata)."}
-      - {ruolo: svolta,     guida: "Apre Cintre e chiede aiuto (frase con il nome dell'app)."}
-      - {ruolo: soluzione,  guida: "L'app propone l'outfit giusto: si vede il cambio d'abito (tono felice)."}
-      - {ruolo: risultato,  guida: "La scena finale dimostra il successo (complimenti, sicurezza)."}
-    cta: "Prova Cintre, l'app che ti aiuta a vestirti: link in bio!"
+      - {ruolo: gancio,     guida: "Situazione + problema in 1 frase (\"Torneo sabato e ci manca il quinto...\")."}
+      - {ruolo: problema,   guida: "1-2 frasi che peggiorano il problema, con emozione (solo queue, compagni che quittano, iscrizioni che chiudono)."}
+      - {ruolo: svolta,     guida: "Apre TeamUp e cerca (frase con il nome dell'app e cosa cerca: ruolo, gioco, rank)."}
+      - {ruolo: soluzione,  guida: "L'app trova il compagno o il team giusto (si vede la squadra che si completa)."}
+      - {ruolo: risultato,  guida: "La scena finale dimostra il successo (iscritti al torneo, prima vittoria insieme)."}
+    cta: "Scarica TeamUp e trova il tuo team: link in bio!"
     cta_azione: app
-    hashtag: "#cintre #outfit #moda #stile #ootd"
+    hashtag: "#teamupesports #esports #gaming #gamingitalia #torneo"
     rese:
-      3d:
-        scene: [armadio_infinito, cintre_storia, genitori_cintre]
-        ricetta:
-          - "Modella Cintre (creaModella) SOLO se Antonio la chiede (mascotte: true); in quel caso sempre lei, stessa faccia/capelli."
-          - "Genitori (mamma e papà, preset genitori.js → creaGenitore): personaggi secondari con gesti (bracciaConserte, rimprovera, copriOcchi, maniAlViso, applaude, pollice). Scena pronta: genitori_cintre."
-          - "Outfit: prima un outfit 'spento' (OUTFIT_CASA/OUTFIT_GRIGIO), dopo uno da OUTFITS o creato con capi del guardaroba."
-          - "Umore segue il copione: neutra → arrabbiata/sorpresa sul problema → felice dalla svolta in poi."
-          - "Set dai preset ambienti.js (cameraDaLetto, armadio, corridoioArmadio, studio, ristorante, passerella...), uno ogni 30-40 unità su x; cambio set con dissolvenza."
-          - "La svolta mostra SEMPRE l'app (telefonoCintre / studio con telefono grande) con la richiesta scritta (ricerca)."
-          - "Ultimo atto = cartelloFinale (logo) mentre la voce dice la CTA."
-          - "Camera: figura intera o 3/4, testa nel terzo alto; mai inquadrature sotto il 58% dell'immagine."
-          - "Nuovi oggetti o ambienti riutilizzabili vanno nei preset, la scena contiene solo la regia."
       2d:
-        scene: [schede2d]
+        scene: [schede2d, cartoon2d]
         ricetta:
-          - "Una scheda 'scena' per atto: icona grande della situazione (armadio, telefono, cena...) + titolo di 2-4 parole."
-          - "Il gancio usa 'gancio'; il momento dell'app usa l'icona telefono; la soluzione usa l'icona outfit (figurino)."
+          - "Una scheda 'scena' per atto: icona grande della situazione (controller, cuffie, squadra, bracket...) + titolo di 2-4 parole."
+          - "Il gancio usa 'gancio'; il momento dell'app usa l'icona telefono; la soluzione usa l'icona squadra; il risultato trofeo o bracket."
+          - "Mai prendere in giro giocatori reali o community: il 'cattivo' è la situazione (solo queue, iscrizioni chiuse), non le persone."
 
   quiz:
     nome: Quiz
-    scopo: "Domanda di stile con 2-3 risposte: fa commentare e salvare."
+    scopo: "Domanda sugli esports o sui giochi competitivi con 3 risposte: fa commentare e salvare."
     durata: [15, 35]
     struttura:
-      - {ruolo: gancio,   guida: "Sfida concreta legata a qualcosa che chi guarda ha addosso o conosce, ≤ 12 parole (hook_e_cta): \"I tuoi jeans portano il nome di una città. Quale?\""}
+      - {ruolo: gancio,   guida: "Sfida concreta su un gioco che chi guarda ha installato, ≤ 12 parole (hook_e_cta): \"Il primo torneo esports della storia. Che premio c'era?\""}
       - {ruolo: domanda,  guida: "La domanda letta per intero con le opzioni A, B, C (frase un po' più lunga: dà tempo per pensare)."}
       - {ruolo: attesa,   guida: "\"Tre. Due. Uno.\" con ritmo: 1.0 (una parola al secondo) e scheda domanda + conto: 3 (numeri giganti, tic, anello): la suspense prima della risposta."}
-      - {ruolo: risposta, guida: "\"È la B: Genova!\" + perché, in 1-2 frasi; meglio se c'è una trappola (l'opzione quasi giusta) da spiegare in un dettaglio."}
+      - {ruolo: risposta, guida: "\"È la B: ...\" + perché, in 1-2 frasi; meglio se c'è una trappola (l'opzione quasi giusta) da spiegare in un dettaglio."}
       - {ruolo: commenta, guida: "Reazione breve, senza chiedere nulla (la richiesta di commento è la CTA): \"Quanti l'avranno sbagliata?\""}
     cta: "Scrivi la tua risposta nei commenti: A, B o C?"
     cta_azione: commenta
-    hashtag: "#cintre #quizmoda #moda #stile #lo_sapevi"
+    hashtag: "#teamupesports #quizesports #esports #gaming #gamingitalia"
     rese:
-      3d:
-        scene: []
-        ricetta:
-          - "(Solo con mascotte: true) Modella Cintre nello studio (studioFotografico o studio) che indica i cartelli A/B/C (card di oggetti.js)."
-          - "Domanda sugli abbinamenti: la modella cambia outfit (indossa) per ogni opzione, una alla volta."
-          - "Risposta: la modella con l'outfit giusto fa 'gioia', scintille (oggetti.scintille)."
-          - "Ultimo atto = cartelloFinale."
       2d:
         scene: [cartoon2d, schede2d]
         ricetta:
@@ -136,31 +119,26 @@ formati:
           - "Opzioni brevi (max 2-3 parole), sempre 3, tutte plausibili; una 'trappola' quasi giusta rende il commento irresistibile. La giusta non sempre la stessa lettera."
           - "La risposta arriva solo dopo il conto (3-5 s di suspense dalla fine della domanda): è ciò che tiene fino alla fine. Durata totale sotto i 30 s."
           - "Domanda e opzioni leggibili a schermo anche senza audio; niente testo sotto il 58% dell'altezza (lì vanno i sottotitoli)."
+          - "Giochi e fatti verificabili su fonti ufficiali (sito del gioco, Liquipedia, sito del torneo); niente leak o rumor."
 
   curiosita:
     nome: Curiosità
-    scopo: "\"Lo sapevi?\" di moda: fatti storici o pratici veri e sorprendenti, in serie numerata."
+    scopo: "\"Lo sapevi?\" esports: record, storia dei tornei, regole e dietro le quinte dei giochi competitivi, in serie numerata."
     durata: [20, 40]
     struttura:
-      - {ruolo: gancio,    guida: "Il fatto più forte e vero con contrasto e loop aperto, ≤ 12 parole (hook_e_cta): \"Il tuo trench è nato in trincea. E il bikini? Ancora peggio.\""}
-      - {ruolo: fatto,     guida: "Per ogni curiosità: frase titolo (\"Uno: il taschino dei jeans\")."}
+      - {ruolo: gancio,    guida: "Il fatto più forte e vero con contrasto e loop aperto, ≤ 12 parole (hook_e_cta): \"Un torneo di videogiochi ha riempito uno stadio. Anzi, più di uno.\""}
+      - {ruolo: fatto,     guida: "Per ogni curiosità: frase titolo (\"Uno: il primo torneo della storia\")."}
       - {ruolo: dettaglio, guida: "...e la frase che sorprende (il perché), con un fatto verificabile."}
       - {ruolo: rehook,    guida: "Prima dell'ultima curiosità (40-60% del video): \"Ma aspetta, la terza è la più assurda.\""}
-    cta: "Salvalo e mandalo a chi ama la moda!"   # meglio una CTA mirata per video nel campo cta della richiesta
+    cta: "Mandalo al tuo duo!"   # meglio una CTA mirata per video nel campo cta della richiesta
     cta_azione: salva_condividi
-    hashtag: "#cintre #curiosità #moda #storiadellamoda #lo_sapevi #stile"
+    hashtag: "#teamupesports #esports #gaming #curiosità #gamingitalia"
     rese:
-      3d:
-        scene: []
-        ricetta:
-          - "(Solo con mascotte: true) La modella Cintre fa da presentatrice nello studio: 'posa' sul gancio, 'gioia' sulle sorprese."
-          - "Ogni fatto mostra il capo di cui si parla: vetrinaCapo (pedana girevole) o la modella che lo indossa (indossa)."
-          - "Numero del fatto su card (oggetti.js) nella parte alta; ultimo atto = cartelloFinale."
       2d:
         scene: [cartoon2d, schede2d]
         ricetta:
-          - "Scena predefinita cartoon2d (motion graphics a ritmo alto, vedi ritmo_alto; modella Cintre 2D solo con mascotte: true); schede2d per una versione calma."
+          - "Scena predefinita cartoon2d (motion graphics a ritmo alto, vedi ritmo_alto); schede2d per una versione calma."
           - "Schede: gancio → (fatto → dettaglio) × 3 con un rehook prima dell'ultimo fatto. Poi cta (UNA richiesta: niente scheda commenta prima, sarebbe una seconda CTA)."
-          - "Nel dettaglio 'evidenzia' (o 'timbro') diventa il timbro che sbatte sullo schermo: una parola forte (TRINCEE, ATOMICA)."
-          - "Ogni fatto ha un'icona del capo (taschino, tacco, tubino...) e il dettaglio un'icona della spiegazione (orologio, staffa, auto...)."
+          - "Nel dettaglio 'evidenzia' (o 'timbro') diventa il timbro che sbatte sullo schermo: una parola forte (RECORD, CLUTCH)."
+          - "Ogni fatto ha un'icona (trofeo, controller, monitor...) e il dettaglio un'icona della spiegazione (bracket, fulmine, live...)."
           - "Titoli delle schede brevi (max 5 parole): il testo completo lo danno voce e sottotitoli."

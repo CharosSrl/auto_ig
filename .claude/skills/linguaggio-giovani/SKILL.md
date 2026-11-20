@@ -1,16 +1,18 @@
 ---
 name: linguaggio-giovani
 description: >-
-  Come parlare a ragazzi e young adult (13-25 anni) nei reel di Cintre: registro, lessico, parole forti
-  censurate a schermo (m*rte) e cosa non dire mai. Usala SEMPRE quando scrivi o riscrivi un copione, un gancio,
-  le schede a schermo o una caption per @cintre_official, insieme a marca/lezioni.md e marca/voice.md.
+  Come parlare a ragazzi e young adult che giocano (13-25 anni) nei reel di TeamUp Esports: registro, lessico,
+  gergo dei giochi, parole forti censurate a schermo (m*rte) e cosa non dire mai. Usala SEMPRE quando scrivi o
+  riscrivi un copione, un gancio, le schede a schermo o una caption per @teamupesportsofficial, insieme a
+  marca/lezioni.md e marca/voice.md.
 ---
 
-# Linguaggio giovani — Cintre
+# Linguaggio giovani — TeamUp Esports
 
-**Per chi scriviamo:** il pubblico ha 13-17 anni per circa il 25% e meno di 25 anni per circa il 60%.
-Il 92-98% non ci segue (vedi `marca/lezioni.md`). Scriviamo per un ragazzo che scrolla, non per un adulto che studia.
-Tutto deve andare bene per un quattordicenne.
+**Per chi scriviamo:** ragazzi e ragazze di 13-25 anni che giocano (PC, console, telefono) e guardano tornei e
+streamer. Quasi tutti quelli che vedono un reel non ci seguono (vedi `marca/lezioni.md`). Scriviamo per chi scrolla
+tra una partita e l'altra, non per un adulto che studia. Tutto deve andare bene per un quattordicenne.
+Conoscono i giochi meglio di noi: mai spiegare le basi, mai sbagliare un termine.
 
 ## Cosa dice la ricerca (e cosa ne facciamo)
 
@@ -30,39 +32,43 @@ Si giudica dai dati (`marca/lezioni.md` regola 9).
 ## Registro
 
 - **Parlato, non scritto.** Frasi da 4 a 10 parole, un'idea per frase, presente indicativo, dare del tu.
-- **Il "tuo".** Si parla di quello che ha addosso: "la tua felpa", "le tue Converse", "ce l'hai nell'armadio".
+- **Il "tuo".** Si parla della sua vita da giocatore: "il tuo main", "il tuo duo", "la tua solo queue", "il tuo rank".
 - **Sfida, non lezione.** "Scommetto che sbagli." / "Quasi tutti dicono la A." al posto di "Oggi scopriamo…".
-- **Iperbole vera.** "Questo cappotto ha fatto due guerre" va bene solo se è vero.
-- **Ironia secca, mai cattiva.** Una battuta breve dopo la risposta ("Altro che marketing.") e nessuna presa in giro di chi guarda.
-- **Ritmo da botta e risposta.** Domanda → pausa (il conto) → risposta → premio (la foto).
-- **Chiaro al primo ascolto** (Antonio, 17/11: "non si capisce niente"). Frasi intere da 6 a 14 parole, mai frammenti
-  telegrafici. La risposta dice la lettera e il perché in una frase sola. Voce a 1.0 con le pause, sottotitoli a blocco.
-  "Secco" vuol dire corto e chiaro, non a pezzi (`marca/lezioni.md` regola 13).
+- **Iperbole vera.** "Questo torneo ha riempito uno stadio" va bene solo se è vero.
+- **Ironia secca, mai cattiva.** Una battuta breve dopo la risposta ("Altro che solo queue.") e nessuna presa in giro
+  di chi guarda, di altri giocatori o di chi gioca a un altro gioco.
+- **Ritmo da botta e risposta.** Domanda → pausa (il conto) → risposta → premio (la foto o l'icona).
+- **Chiaro al primo ascolto.** Frasi intere da 6 a 14 parole, mai frammenti telegrafici. La risposta dice la lettera
+  e il perché in una frase sola. Voce a 1.0 con le pause, sottotitoli a blocco (`marca/lezioni.md` regola 13).
 
 ## Lessico
 
-- **Sì, parole normali per un 16enne:** outfit, crush, cringe, flex, vibe, top, assurdo, letteralmente, tipo (con
-  misura), "ok ma", "aspetta", "spoiler", "plot twist".
+- **Sì, il gergo dei giochi che usano davvero** (ma uno o due per reel, e solo se il pubblico di quel gioco lo usa):
+  rank, main, duo, team, clutch, ace, GG, LAN, scrim, smurf, meta, nerf, buff, tilt, carry.
+  Nomi dei giochi, dei ruoli e delle modalità scritti come li scrive il gioco (Valorant, League of Legends, CS2).
+- **Sì, parole normali per un 16enne:** cringe, flex, vibe, top, assurdo, letteralmente, tipo (con misura),
+  "ok ma", "aspetta", "spoiler", "plot twist".
 - **No, slang da brand che si sforza o già datato:** bestie, slay, rizz, aura, bro, fra, POV, "è giovedì e quindi…",
-  "periodt", "skibidi", 6-7, "boomer" detto da noi. Al massimo **una** parola gergale per reel, e solo se serve.
+  "periodt", "skibidi", 6-7, "boomer" detto da noi, "noob" detto a chi guarda.
 - **No, linguaggio da adulto o da marketing:** "incredibile", "pazzesco", "devi assolutamente", "Lo sapevi che",
-  "oggi parliamo di", "ragazzi". Vale anche `marca/voice.md`.
+  "oggi parliamo di", "ragazzi", "il futuro del gaming", "gamer" come etichetta. Vale anche `marca/voice.md`.
 
 ## Parole forti (gancio)
 
-Scelta di Antonio (16/11/2026): **forti ma pulite**.
+Scelta di Antonio: **forti ma pulite**.
 
-- **Ammesse se vere e nel contesto del fatto:** morte/morto, ucciso, guerra, bomba, veleno, sangue (storico),
-  vietato, illegale, arrestato, scandalo, prigione, maledetto.
-  "Sesso" solo nel senso di maschi e femmine ("vestiti senza sesso"), mai sessuale.
-- **Mai:** parolacce e bestemmie, allusioni sessuali, droghe e alcol, autolesionismo e suicidio, corpo/peso/aspetto fisico,
-  violenza descritta.
+- **Ammesse se vere e nel contesto del fatto:** bannato, squalificato, vietato, illegale, scandalo, truccato,
+  record, distrutto (un record, non una persona), eliminato, maledetto, morte/morto e guerra solo in senso storico
+  o figurato documentato.
+- **Mai:** parolacce e bestemmie, insulti tra giocatori, allusioni sessuali, droghe e alcol, scommesse e gioco
+  d'azzardo (skin gambling, casse premio), autolesionismo e suicidio, corpo/peso/aspetto fisico, violenza descritta
+  (anche quella dei giochi: si parla di giocate, non di uccisioni).
 - **Una per reel**, nel gancio o nella risposta. Se il fatto non ha una parola forte vera, non se ne inventa una:
   un gancio forzato è clickbait e tradisce la fiducia (`hook-writer`: il gancio deve essere vero).
-- Esempi:
-  - "I tuoi Ray-Ban sono nati in guerra." Vero: piloti militari USA.
-  - "Il bikini prende il nome da una bomba." Vero: atollo di Bikini, test atomici del 1946.
-  - "Questa scarpa era vietata." Va bene solo se c'è un divieto documentato.
+- Esempi di forma (prima di usarli si verifica il fatto su fonti ufficiali o Liquipedia):
+  - "Questo pro è stato bannato a vita. Per cosa?"
+  - "Un torneo di videogiochi ha riempito uno stadio."
+  - "Questa mossa è stata vietata dai tornei."
 
 ## Censura a schermo (automatica)
 
@@ -74,18 +80,18 @@ Scelta di Antonio (16/11/2026): **forti ma pulite**.
 
 ## Checklist copione
 
-1. Il gancio è sotto le 9 parole, dà del tu e parla di un capo o marchio che il ragazzo ha davvero?
+1. Il gancio è sotto le 9 parole, dà del tu e parla di un gioco o di una situazione che il ragazzo vive davvero?
 2. C'è al massimo una parola forte, vera e nel suo contesto? Se è nella lista, apparirà censurata a schermo?
 3. Ci sono "devi", "ascolta", "oggi parliamo"? Se sì, vanno tolti.
-4. C'è più di una parola gergale? Ce n'è una della lista "no"? Se sì, va tolta.
-5. Letto ad alta voce, sembra un amico di 20 anni o un prof? Deve sembrare un amico. E si capisce al primo ascolto?
+4. Il gergo è quello giusto per quel gioco, e non più di uno o due termini? C'è una parola della lista "no"? Va tolta.
+5. Letto ad alta voce, sembra un compagno di team di 20 anni o un prof? Deve sembrare il compagno. E si capisce al
+   primo ascolto?
 6. Il reel resta sotto i 25 s, con domanda e opzioni dal fotogramma 0 (`marca/lezioni.md`)?
-7. Più immagini che scritte: c'è la foto Wikimedia in cornice dal fotogramma 0? Le scritte a schermo sono minime
-   (titolo ≤ 7 parole, opzioni ≤ 4)? La voce dice il resto (`marca/lezioni.md` regola 12).
+7. Più immagini che scritte: le scritte a schermo sono minime (titolo ≤ 7 parole, opzioni ≤ 4)? La voce dice il resto.
+8. C'è qualcosa di tossico, di scommesse o di violento? Se sì, va tolto.
 
-## Prima → dopo (dai nostri reel)
+## Prima → dopo
 
-- "Perché i tuoi occhiali si chiamano Ray-Ban?" → "I tuoi Ray-Ban sono nati in guerra. Ma il nome?"
-- "B. Ray, raggio. Ban, blocca. Fine." (troppo telegrafico, non si capiva) → "È la B: ray vuol dire raggio, ban vuol dire bloccare."
-- "Nel 1923 gli promisero una valigia di coccodrillo, se vinceva." → "1923: se vinci, ti regalo una valigia di coccodrillo."
-- "Animale, soprannome o città?" → "Animale, soprannome o città? Scegli."
+- "Oggi parliamo del primo torneo esports della storia." → "Il primo torneo esports della storia. Che premio c'era?"
+- "B. Cinque. Fine." (troppo telegrafico) → "È la B: in Valorant si gioca cinque contro cinque."
+- "Gli esports sono il futuro dell'intrattenimento!" (marketing) → "Ti manca il quinto per il torneo? Succede a tutti."

@@ -55,16 +55,16 @@ class FormatiCartoonTest(unittest.TestCase):
         data = {"formato": "curiosita", "resa": "2d", "copione": [
             {"testo": "a", "scheda": {"tipo": "gancio", "titolo": "x"}},
             {"testo": "b", "scheda": {"tipo": "rehook", "titolo": "Aspetta"}},
-            {"testo": "c", "scheda": {"tipo": "fatto", "icona": "trench"}}]}
+            {"testo": "c", "scheda": {"tipo": "fatto", "icona": "controller"}}]}
         self.assertEqual(formati.valida(data), [])
         self.assertEqual(formati.scena(data), "cartoon2d")
 
 
 
 class RegoleAntonioTest(unittest.TestCase):
-    """Mascotte solo su richiesta; hook corto; CTA unica con azione del formato."""
+    """Hook corto; CTA unica con azione del formato."""
     def base(self, **kw):
-        d = {"formato": "curiosita", "resa": "2d", "copione": [{"testo": "Il tuo trench è nato in trincea.",
+        d = {"formato": "curiosita", "resa": "2d", "copione": [{"testo": "Il primo torneo esports aveva un premio assurdo.",
              "scheda": {"tipo": "gancio", "titolo": "x"}}]}
         d.update(kw)
         return d
@@ -73,35 +73,13 @@ class RegoleAntonioTest(unittest.TestCase):
         cta = formati.copione(self.base())[-1]["scheda"]
         self.assertEqual((cta["tipo"], cta["azione"]), ("cta", "salva_condividi"))
         self.assertNotIn("Segui", cta["bottone"])
-        self.assertEqual(formati.copione(self.base(cta_azione="segui"))[-1]["scheda"]["bottone"], "Segui @cintre_official")
+        self.assertEqual(formati.copione(self.base(cta_azione="segui"))[-1]["scheda"]["bottone"], "Segui @teamupesportsofficial")
         self.assertTrue(formati.valida(self.base(cta_azione="boh")))
 
     def test_hook_troppo_lungo(self):
         lungo = self.base(copione=[{"testo": " ".join(["parola"] * 15), "scheda": {"tipo": "gancio"}}])
         self.assertTrue(any("hook troppo lungo" in e for e in formati.valida(lungo)))
         self.assertEqual(formati.valida(self.base()), [])
-
-    def test_mascotte(self):
-        self.assertTrue(formati.valida(self.base(mascotte="si")))
-        self.assertEqual(formati.valida(self.base(mascotte=True)), [])
-
-    def test_mascotte_spenta_di_default_nel_build(self):
-        from auto_ig import richieste
-        with tempfile.TemporaryDirectory() as d:
-            f = Path(d) / "r"; f.mkdir()
-            dati = self.base(titolo="t", scena="cartoon2d", colori={"sfondo": "#000000", "accento": "#ffffff"})
-            dati["copione"][0]["scheda"]["foto"] = "x.jpg"           # curiosità 2D: foto dal fotogramma 0
-            (f / "foto").mkdir(); (f / "foto" / "x.jpg").write_bytes(b"jpg")
-            (f / "richiesta.yaml").write_text(yaml_dump(dati))
-            calls = []
-            def render(scene, params, seconds, out_dir, **kw):
-                calls.append(params); (out_dir / "video.mp4").write_bytes(b"x")
-            def speak(lines, wav, *a, **kw):
-                wav.write_bytes(b"RIFF")
-                return [voce.Sentence(t, i, i + 0.5, voce.word_timings(t, i, i + 0.5), tone)
-                        for i, (t, tone) in enumerate(voce.normalize_lines(lines))], 3.0
-            richieste.build(f, render_fn=render, speak_fn=speak)
-            self.assertEqual(calls[0]["mascotte"], "0")
 
 
 class QuizTest(unittest.TestCase):
@@ -131,9 +109,9 @@ class QuizTest(unittest.TestCase):
 
     def test_valida_quiz_e_cta(self):
         d = {"formato": "quiz", "resa": "2d", "copione": [
-            {"testo": "I tuoi jeans portano il nome di una città.", "scheda": {"tipo": "gancio", "icona": "jeans"}},
-            {"testo": "Quale?", "scheda": {"tipo": "domanda", "titolo": "?", "opzioni": ["Nîmes", "Genova", "Londra"]}},
-            {"testo": "È Genova!", "scheda": {"tipo": "risposta", "titolo": "?", "opzioni": ["Nîmes", "Genova", "Londra"], "giusta": 1}}]}
+            {"testo": "In quanti si gioca una partita di Valorant?", "scheda": {"tipo": "gancio", "icona": "controller"}},
+            {"testo": "Quanti?", "scheda": {"tipo": "domanda", "titolo": "?", "opzioni": ["4 contro 4", "5 contro 5", "6 contro 6"]}},
+            {"testo": "Cinque contro cinque!", "scheda": {"tipo": "risposta", "titolo": "?", "opzioni": ["4 contro 4", "5 contro 5", "6 contro 6"], "giusta": 1}}]}
         self.assertEqual(formati.valida(d), [])
         self.assertEqual(formati.scena(d), "cartoon2d")
         self.assertEqual(formati.copione(d)[-1]["scheda"]["azione"], "commenta")

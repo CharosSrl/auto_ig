@@ -4,7 +4,7 @@ description: This skill should be used when the user asks to "make a Reels/TikTo
 version: 0.1.0
 ---
 
-> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+> **TeamUp Esports:** prima di usare questa skill leggi `marca/lezioni.md` (regole dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
 
 
 # Short-Form Video

@@ -34,7 +34,7 @@
   <a href="{{ url_for('cerca') }}" class="{{ 'attivo' if p.startswith('/cerca') }}">Cerca immagini</a>
   <a href="{{ url_for('coda') }}" class="{{ 'attivo' if p.startswith('/coda') }}">Coda</a>
   <a href="{{ url_for('video') }}" class="{{ 'attivo' if p.startswith('/video') }}">Video</a>
-  <span class="acc">@cintre_official</span>
+  <span class="acc">@teamupesportsofficial</span>
 </nav>
 {% for cat, m in get_flashed_messages(with_categories=true) %}<div class="msg {{ cat }}">{{ m }}</div>{% endfor %}
 {% block corpo %}{% endblock %}

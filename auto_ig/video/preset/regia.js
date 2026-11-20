@@ -2,7 +2,7 @@
 //
 //   const atti = tempiAtti(p, 8);          // p.atti = "0.6,3.1,..." (inizio di ogni frase), p.fine
 //   const { i, u, len } = atti.a(t);       // atto corrente, secondi dall'inizio dell'atto, durata atto
-//   const velo = dissolvenza(THREE, camera, '#1a0710');  velo(opacita)
+//   const velo = dissolvenza(THREE, camera, '#0b0a14');  velo(opacita)
 //   inquadra(camera, [x, y, z], [lx, ly, lz]);
 // Regola d'oro: il contenuto importante sta nel 58% alto dell'immagine (sotto ci sono i sottotitoli).
 
@@ -25,7 +25,7 @@ export function tempiAtti(p, numero, predefiniti = null) {
   };
 }
 
-export function dissolvenza(THREE, camera, colore = '#1a0710') {
+export function dissolvenza(THREE, camera, colore = '#0b0a14') {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(10, 10),
     new THREE.MeshBasicMaterial({ color: colore, transparent: true, opacity: 0, depthTest: false, toneMapped: false }));
   m.position.z = -1; m.renderOrder = 999; camera.add(m);

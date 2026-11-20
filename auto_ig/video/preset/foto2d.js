@@ -5,7 +5,7 @@
 // del primo fotogramma: una foto che manca blocca il render invece di dare un video senza foto.
 // Regola (marca/lezioni.md n. 12): nei quiz e nelle curiosità la foto c'è dal fotogramma 0.
 import { clamp, pop, rr, FONT, INCHIOSTRO } from './grafica2d.js';
-import { CREMA } from './brand.js';
+import { CHIARO } from './brand.js';
 
 export const CARTELLA_FOTO = '../_foto/';
 
@@ -43,7 +43,7 @@ export const CORNICI = {
   polaroid: {
     bordi: (cred) => ({ lato: 26, sopra: 26, piede: cred ? 70 : 26 }),
     disegna(c, X, Y, W, H) {
-      c.fillStyle = CREMA; rr(c, X, Y, W, H, 14); c.fill(); c.lineWidth = 7; c.strokeStyle = INCHIOSTRO; c.stroke();
+      c.fillStyle = CHIARO; rr(c, X, Y, W, H, 14); c.fill(); c.lineWidth = 7; c.strokeStyle = INCHIOSTRO; c.stroke();
     },
     credito: '#6b4a55',
   },
@@ -80,11 +80,11 @@ export const CORNICI = {
   nastro: {                                                  // bordo crema e due pezzi di nastro adesivo
     bordi: (cred) => ({ lato: 30, sopra: 30, piede: cred ? 72 : 30 }),
     disegna(c, X, Y, W, H) {
-      c.fillStyle = '#fbf4e4'; c.fillRect(X, Y, W, H); c.lineWidth = 3; c.strokeStyle = 'rgba(42,15,25,0.25)'; c.strokeRect(X, Y, W, H);
+      c.fillStyle = '#fbf4e4'; c.fillRect(X, Y, W, H); c.lineWidth = 3; c.strokeStyle = 'rgba(18,13,36,0.25)'; c.strokeRect(X, Y, W, H);
     },
     sopra(c, X, Y, W, H) {
       for (const [x, y, a] of [[X + 20, Y + 10, -0.6], [X + W - 20, Y + 10, 0.6]]) {
-        c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = 'rgba(232,196,192,0.82)'; c.fillRect(-90, -26, 180, 52);
+        c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = 'rgba(240,232,205,0.85)'; c.fillRect(-90, -26, 180, 52);
         c.fillStyle = 'rgba(255,255,255,0.25)'; for (let k = -80; k < 90; k += 22) c.fillRect(k, -26, 9, 52); c.restore();
       }
     },
@@ -119,7 +119,7 @@ function piatta(c, img, ox, oy, w, h, u, { cornice = 'polaroid', credito = '', z
   const v = c.createRadialGradient(fx + w / 2, fy + h / 2, Math.min(w, h) * 0.35, fx + w / 2, fy + h / 2, Math.max(w, h) * 0.75);
   v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.35)'); c.fillStyle = v; c.fillRect(fx, fy, w, h);   // vignetta
   c.restore();
-  c.lineWidth = 4; c.strokeStyle = 'rgba(42,15,25,0.35)'; c.strokeRect(fx, fy, w, h);
+  c.lineWidth = 4; c.strokeStyle = 'rgba(18,13,36,0.35)'; c.strokeRect(fx, fy, w, h);
   if (P.sopra) P.sopra(c, X, Y, W, H, f);
   if (credito) {
     c.font = FONT(credito.length > 48 ? 24 : 28, 700); c.fillStyle = P.credito; c.textAlign = 'center'; c.textBaseline = 'middle';

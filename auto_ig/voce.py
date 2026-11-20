@@ -118,7 +118,7 @@ def _qwen_synth(speaker: str, text: str, speed: float) -> tuple[bytes, int, int,
 
 
 # --- Google Cloud TTS, voci Chirp 3 HD (madrelingua italiane) ------------------------------------
-# modello: "chirp3-aoede" (la voce di Cintre, scelta da Antonio il 2026-11-18) o un'altra voce Chirp 3 HD.
+# modello: "chirp3-aoede" (voce del brand, scelta da Antonio il 2026-11-18) o un'altra voce Chirp 3 HD.
 # Chiave in .env: GOOGLE_TTS_API_KEY (limitata alla sola Text-to-Speech API). Gratis fino a 1M caratteri/mese;
 # le frasi già fatte stanno in .voci/cache e non consumano caratteri.
 CHIRP_URL = "https://texttospeech.googleapis.com/v1/text:synthesize"
@@ -205,7 +205,7 @@ def ritmi(lines) -> list[float]:
 def tts_text(text: str, pronuncia: dict | None = None) -> str:
     """Testo da far leggere alla voce (i sottotitoli restano invariati):
     - parole TUTTE MAIUSCOLE -> minuscole (enfasi a schermo, altrimenti Piper le compita: "MAI" = "emme a i");
-    - pronuncia: {"Cintre": "Sèntr"} sostituisce parole intere solo nell'audio."""
+    - pronuncia: {"TeamUp": "Tìm ap"} sostituisce parole intere solo nell'audio."""
     for word, say in (pronuncia or {}).items():
         text = re.sub(rf"\b{re.escape(word)}\b", say, text)
     return re.sub(r"\b[A-ZÀ-Ý]{2,}\b", lambda m: m.group(0).lower(), text)

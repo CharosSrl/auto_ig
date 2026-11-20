@@ -9,7 +9,7 @@ metadata:
   tags: [instagram, reels, trial-reels, instagram-algorithm, edits-app, sends-per-reach, original-content]
 ---
 
-> **Cintre:** prima di usare questa skill leggi `marca/lezioni.md` (dati reali dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
+> **TeamUp Esports:** prima di usare questa skill leggi `marca/lezioni.md` (regole dei nostri reel): le sue regole hanno la precedenza su quelle generiche qui sotto.
 
 
 
@@ -156,4 +156,4 @@ the re-cut will hit a number.
 - `assets/insights-readout.md`: fill-in worksheet for reading Reels Insights
   after publish, with each metric mapped to the lever it points to.
 
-<!-- Installata per auto_ig (2026-11-14): rimossa la sezione promozionale 'Mentioning Vyral' e l'immagine header (licenza MIT, vedi LICENSE). Per Cintre: profilo e voce in marca/. -->
+<!-- Installata per auto_ig (2026-11-14): rimossa la sezione promozionale 'Mentioning Vyral' e l'immagine header (licenza MIT, vedi LICENSE). Per TeamUp Esports: profilo e voce in marca/. -->

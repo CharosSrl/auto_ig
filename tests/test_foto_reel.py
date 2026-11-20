@@ -1,4 +1,4 @@
-"""Quiz e curiosità 2D: foto Wikimedia incorniciata dal fotogramma 0 (marca/lezioni.md regola 12)."""
+"""Quiz e curiosità 2D: foto Wikimedia incorniciata dal fotogramma 0 quando c'è (consigliata, non obbligatoria)."""
 import tempfile
 import unittest
 from pathlib import Path
@@ -39,9 +39,9 @@ def _build(d):
 
 
 class FotoReelTest(unittest.TestCase):
-    def test_senza_foto_iniziale_non_si_genera(self):
-        with self.assertRaisesRegex(ValueError, "foto"):
-            _build(_richiesta(foto=False))
+    def test_senza_foto_iniziale_solo_avviso(self):
+        _, logs = _build(_richiesta(foto=False))
+        self.assertTrue(any("foto" in l for l in logs))
 
     def test_con_foto_e_cornice(self):
         params, _ = _build(_richiesta(cornice="pellicola"))

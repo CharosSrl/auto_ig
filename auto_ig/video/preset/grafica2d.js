@@ -1,15 +1,15 @@
-// PRESET — Grafica 2D Cintre (resa "2d" dei formati): sfondi, card, testi, icone vettoriali di moda,
+// PRESET — Grafica 2D TeamUp Esports (resa "2d" dei formati): sfondi, card, testi, icone vettoriali gaming/esports,
 // animazioni. Si disegna su un canvas 2D nello spazio 1080x1920 (il canvas può essere 2x per la qualità alta).
 //
 //   const tela = tela2d(THREE, renderer)   -> { ctx, scene, camera, inizia(), fine() }  (piano a schermo intero)
-//   sfondo(ctx, t, { colore, accento })     icona(ctx, 'tacco', cx, cy, 300, { t })
-//   testo(ctx, 'Il tubino nero', 540, 900, { size: 76, colore: SCURO, evidenzia: 'nero', accento })
+//   sfondo(ctx, t, { colore, accento })     icona(ctx, 'controller', cx, cy, 300, { t })
+//   testo(ctx, 'Il primo torneo', 540, 900, { size: 76, colore: SCURO, evidenzia: 'torneo', accento })
 //   card(ctx, x, y, w, h)                   pop(u), entra(u, ritardo, durata)
 // Icone disponibili: vedi ICONE (nomi elencati anche in auto_ig/formati.yaml → icone_2d).
-import { BORDEAUX, CIPRIA, SCURO, CREMA, gruccia, figurino, logo, OUTFITS } from './brand.js';
+import { PRIMARIO, ACCENTO, SCURO, CHIARO, simbolo, logo } from './brand.js';
 
 export const W = 1080, H = 1920;
-export const ORO = '#d4af37', DENIM = '#3b5b8c', INCHIOSTRO = '#2a0f19';
+export const ORO = '#d4af37', INCHIOSTRO = '#120d24';
 export const FONT = (px, w = 800) => `${w} ${px}px Lato, "DejaVu Sans", sans-serif`;
 export const SERIF = (px, stile = 'italic 400') => `${stile} ${px}px P052, "DejaVu Serif", serif`;
 
@@ -45,15 +45,15 @@ export function rr(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 
-export function card(ctx, x, y, w, h, { r = 48, colore = CREMA, ombra = true } = {}) {
+export function card(ctx, x, y, w, h, { r = 48, colore = CHIARO, ombra = true } = {}) {
   ctx.save();
-  if (ombra) { ctx.shadowColor = 'rgba(20,4,10,0.38)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 22; }
+  if (ombra) { ctx.shadowColor = 'rgba(8,4,20,0.38)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 22; }
   ctx.fillStyle = colore; rr(ctx, x, y, w, h, r); ctx.fill(); ctx.restore();
 }
 
 // Va a capo dentro maxW; `evidenzia` = parole (stringa) colorate con `accento`. Ritorna l'altezza usata.
 // Le parole appaiono una alla volta se `parole` (0..1) < 1.
-export function testo(ctx, str, x, y, { size = 72, peso = 800, colore = '#fff', maxW = 860, evidenzia = '', accento = CIPRIA,
+export function testo(ctx, str, x, y, { size = 72, peso = 800, colore = '#fff', maxW = 860, evidenzia = '', accento = ACCENTO,
   allinea = 'center', interlinea = 1.15, font = null, parole = 1, ombra = false } = {}) {
   const f = font || FONT(size, peso);
   ctx.save(); ctx.font = f; ctx.textBaseline = 'middle';
@@ -89,7 +89,7 @@ export function testo(ctx, str, x, y, { size = 72, peso = 800, colore = '#fff', 
 }
 
 // Pillola con testo (etichette, opzioni, bottoni). Ritorna la larghezza.
-export function pillola(ctx, str, cx, cy, { size = 40, fondo = CIPRIA, colore = BORDEAUX, padX = 36, h = null, peso = 800, w = null, font = null } = {}) {
+export function pillola(ctx, str, cx, cy, { size = 40, fondo = ACCENTO, colore = PRIMARIO, padX = 36, h = null, peso = 800, w = null, font = null } = {}) {
   ctx.save(); ctx.font = font || FONT(size, peso);
   const ww = w || ctx.measureText(str).width + padX * 2, hh = h || size * 1.9;
   ctx.fillStyle = fondo; rr(ctx, cx - ww / 2, cy - hh / 2, ww, hh, hh / 2); ctx.fill();
@@ -97,34 +97,34 @@ export function pillola(ctx, str, cx, cy, { size = 40, fondo = CIPRIA, colore = 
   ctx.restore(); return ww;
 }
 
-// --- Sfondo: tinta del brand con luce morbida, grucce che salgono piano, coriandoli di luce ------
-export function sfondo(ctx, t, { colore = BORDEAUX, accento = CIPRIA, chiaro = false } = {}) {
+// --- Sfondo: tinta del brand con luce morbida, simboli che salgono piano, coriandoli di luce ------
+export function sfondo(ctx, t, { colore = PRIMARIO, accento = ACCENTO, chiaro = false } = {}) {
   ctx.save();
   ctx.fillStyle = colore; ctx.fillRect(0, 0, W, H);
   const g = ctx.createRadialGradient(W * 0.5, H * 0.3, 60, W * 0.5, H * 0.35, H * 0.75);
   g.addColorStop(0, chiaro ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.16)'); g.addColorStop(1, 'rgba(0,0,0,0.28)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  // righe diagonali sottilissime (texture "tessuto")
+  // righe diagonali sottilissime (texture "scanline")
   ctx.globalAlpha = 0.05; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
   for (let x = -H; x < W; x += 34) { ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x + H, 0); ctx.stroke(); }
-  // grucce che fluttuano
+  // simboli TeamUp che fluttuano
   for (let i = 0; i < 11; i++) {
     const s = 70 + hash(i) * 90, vel = 18 + hash(i + 7) * 22;
     const y = ((hash(i + 3) * (H + 300) - t * vel) % (H + 300) + H + 300) % (H + 300) - 150;
     const x = hash(i + 11) * W + Math.sin(t * 0.5 + i) * 25;
     ctx.globalAlpha = 0.09 + hash(i + 5) * 0.07;
     ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(t * 0.4 + i * 2) * 0.25);
-    gruccia(ctx, 0, 0, s, accento, 5); ctx.restore();
+    simbolo(ctx, 0, 0, s, accento, 5); ctx.restore();
   }
   ctx.restore();
 }
 
 // Intestazione in alto: logo piccolo + etichetta del formato, e i pallini di avanzamento.
-export function intestazione(ctx, etichetta, { passi = 0, attuale = -1, accento = CIPRIA, alpha = 1 } = {}) {
+export function intestazione(ctx, etichetta, { passi = 0, attuale = -1, accento = ACCENTO, alpha = 1 } = {}) {
   ctx.save(); ctx.globalAlpha = alpha;
-  gruccia(ctx, 112, 196, 62, accento, 5);
-  ctx.fillStyle = '#fff'; ctx.font = '700 46px "DejaVu Serif", serif'; ctx.textBaseline = 'middle'; ctx.fillText('Cintre', 160, 196);
-  ctx.font = FONT(30, 700); ctx.fillStyle = accento; ctx.fillText(etichetta.toUpperCase(), 330, 199);
+  simbolo(ctx, 112, 196, 62, accento, 5);
+  ctx.fillStyle = '#fff'; ctx.font = FONT(46, 900); ctx.textBaseline = 'middle'; ctx.fillText('TeamUp', 160, 196);
+  ctx.font = FONT(30, 700); ctx.fillStyle = accento; ctx.fillText(etichetta.toUpperCase(), 350, 199);
   for (let k = 0; k < passi; k++) {
     const x = W - 90 - (passi - 1 - k) * 46, on = k <= attuale;
     ctx.fillStyle = on ? accento : 'rgba(255,255,255,0.25)';
@@ -134,10 +134,10 @@ export function intestazione(ctx, etichetta, { passi = 0, attuale = -1, accento 
 }
 
 // Numero in un cerchio (curiosità n, consiglio n)
-export function numero(ctx, n, cx, cy, r, { fondo = BORDEAUX, colore = CIPRIA, k = 1 } = {}) {
+export function numero(ctx, n, cx, cy, r, { fondo = PRIMARIO, colore = ACCENTO, k = 1 } = {}) {
   if (k <= 0) return;
   ctx.save(); ctx.translate(cx, cy); ctx.scale(pop(k), pop(k)); ctx.rotate((1 - easeOut(k)) * -0.6);
-  ctx.shadowColor = 'rgba(20,4,10,0.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
+  ctx.shadowColor = 'rgba(8,4,20,0.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
   ctx.fillStyle = fondo; ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
   ctx.shadowColor = 'transparent'; ctx.strokeStyle = colore; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, r - 12, 0, 7); ctx.stroke();
   ctx.fillStyle = colore; ctx.font = SERIF(r * 1.15, 'italic 700'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -145,7 +145,7 @@ export function numero(ctx, n, cx, cy, r, { fondo = BORDEAUX, colore = CIPRIA, k
 }
 
 // Freccia curva tra due punti (dal capo alla spiegazione); k = quanto è disegnata
-export function freccia(ctx, x1, y1, x2, y2, { colore = BORDEAUX, k = 1, lw = 9 } = {}) {
+export function freccia(ctx, x1, y1, x2, y2, { colore = PRIMARIO, k = 1, lw = 9 } = {}) {
   if (k <= 0) return;
   ctx.save(); ctx.strokeStyle = colore; ctx.fillStyle = colore; ctx.lineWidth = lw; ctx.lineCap = 'round';
   const mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 70;
@@ -178,30 +178,7 @@ export function mano(ctx, x, y, s, tocco = 0) {
 const L = 7;   // spessore del contorno
 function stileIcona(ctx) { ctx.lineWidth = L; ctx.strokeStyle = INCHIOSTRO; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; }
 function fs(ctx, fill) { ctx.fillStyle = fill; ctx.fill(); ctx.stroke(); }
-function cucitura(ctx, disegna, colore = '#e9b44c') {
-  ctx.save(); ctx.setLineDash([9, 8]); ctx.lineWidth = 4; ctx.strokeStyle = colore; disegna(); ctx.stroke(); ctx.restore();
-}
-function rivetto(ctx, x, y) { ctx.save(); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fillStyle = '#e0b04a'; ctx.fill(); ctx.stroke(); ctx.restore(); }
-
 export const ICONE = {
-  // Tasca destra dei jeans con il taschino piccolo (evidenziato) e i rivetti
-  taschino(ctx, { t = 0, accento = CIPRIA }) {
-    ctx.beginPath(); ctx.moveTo(-95, -92); ctx.lineTo(95, -92); ctx.lineTo(95, 100); ctx.quadraticCurveTo(0, 88, -95, 100); ctx.closePath();
-    fs(ctx, DENIM);
-    ctx.beginPath(); ctx.moveTo(-95, -92); ctx.lineTo(95, -92); ctx.lineTo(95, -62); ctx.lineTo(-95, -62); ctx.closePath(); fs(ctx, '#33507c');
-    cucitura(ctx, () => { ctx.beginPath(); ctx.moveTo(-90, -54); ctx.lineTo(90, -54); });
-    // tasca grande (apertura curva) e taschino
-    ctx.beginPath(); ctx.moveTo(-95, -62); ctx.quadraticCurveTo(-30, -55, -10, 40); ctx.lineTo(-95, 40); ctx.closePath(); fs(ctx, '#2f4b75');
-    cucitura(ctx, () => { ctx.beginPath(); ctx.moveTo(-86, -48); ctx.quadraticCurveTo(-36, -42, -20, 34); });
-    const gl = 0.5 + 0.5 * Math.sin(t * 5);
-    ctx.save(); ctx.shadowColor = accento; ctx.shadowBlur = 25 + gl * 25;
-    ctx.beginPath(); rr(ctx, 15, -50, 58, 62, 6); fs(ctx, '#4d72a8'); ctx.restore();
-    ctx.lineWidth = L; ctx.beginPath(); rr(ctx, 15, -50, 58, 62, 6); ctx.stroke();
-    cucitura(ctx, () => { ctx.beginPath(); ctx.moveTo(21, -40); ctx.lineTo(67, -40); });
-    rivetto(ctx, -12, 36); rivetto(ctx, 15, -50); rivetto(ctx, 73, -50);
-    ctx.save(); ctx.strokeStyle = accento; ctx.lineWidth = 6; ctx.setLineDash([12, 10]); ctx.lineDashOffset = -t * 40;
-    ctx.beginPath(); ctx.arc(44, -19, 58, 0, 7); ctx.stroke(); ctx.restore();
-  },
   // Orologio da taschino con catenella
   orologio(ctx, { t = 0 }) {
     ctx.save(); ctx.strokeStyle = '#b8902c'; ctx.lineWidth = 6; ctx.setLineDash([10, 6]);
@@ -216,44 +193,6 @@ export const ICONE = {
     ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.sin(ah) * 28, -Math.cos(ah) * 28); ctx.stroke();
     ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.sin(am) * 42, -Math.cos(am) * 42); ctx.stroke();
     ctx.fillStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 7); ctx.fill(); ctx.restore();
-  },
-  // Décolleté con tacco a spillo (di profilo)
-  tacco(ctx, { accento = CIPRIA }) {
-    ctx.beginPath();
-    ctx.moveTo(-82, -38); ctx.quadraticCurveTo(-60, -20, -22, 2); ctx.quadraticCurveTo(30, 18, 58, 22);
-    ctx.quadraticCurveTo(98, 30, 100, 56); ctx.quadraticCurveTo(100, 70, 82, 70); ctx.lineTo(28, 70);
-    ctx.quadraticCurveTo(-20, 66, -52, 22); ctx.lineTo(-74, 14); ctx.quadraticCurveTo(-92, -10, -82, -38); ctx.closePath();
-    fs(ctx, BORDEAUX);
-    ctx.beginPath(); ctx.moveTo(-74, 14); ctx.lineTo(-52, 20); ctx.lineTo(-58, 96); ctx.lineTo(-68, 96); ctx.closePath(); fs(ctx, '#3b0d1e');
-    ctx.save(); ctx.strokeStyle = accento; ctx.lineWidth = 5; ctx.globalAlpha = 0.7;
-    ctx.beginPath(); ctx.moveTo(-64, -22); ctx.quadraticCurveTo(-30, 0, 10, 12); ctx.stroke(); ctx.restore();
-    ctx.beginPath(); ctx.moveTo(28, 70); ctx.lineTo(84, 70); ctx.lineWidth = 9; ctx.strokeStyle = '#c0392b'; ctx.stroke();
-  },
-  // Staffa da cavaliere con cinghia di cuoio
-  staffa(ctx) {
-    ctx.beginPath(); rr(ctx, -16, -100, 32, 70, 6); fs(ctx, '#8b5a2b');
-    ctx.save(); ctx.strokeStyle = '#e9b44c'; ctx.lineWidth = 4; ctx.setLineDash([7, 6]);
-    ctx.beginPath(); ctx.moveTo(-7, -94); ctx.lineTo(-7, -36); ctx.moveTo(7, -94); ctx.lineTo(7, -36); ctx.stroke(); ctx.restore();
-    ctx.beginPath(); ctx.moveTo(-20, -30); ctx.quadraticCurveTo(-92, 0, -78, 76); ctx.lineTo(-58, 76);
-    ctx.quadraticCurveTo(-66, 14, -10, -10); ctx.lineTo(10, -10); ctx.quadraticCurveTo(66, 14, 58, 76); ctx.lineTo(78, 76);
-    ctx.quadraticCurveTo(92, 0, 20, -30); ctx.closePath(); fs(ctx, '#b9c1c9');
-    ctx.beginPath(); rr(ctx, -90, 68, 180, 26, 8); fs(ctx, '#9aa3ad');
-    ctx.save(); ctx.lineWidth = 3; for (let x = -70; x <= 70; x += 20) { ctx.beginPath(); ctx.moveTo(x, 73); ctx.lineTo(x, 89); ctx.stroke(); } ctx.restore();
-  },
-  // Tubino nero appeso a una gruccia Cintre
-  tubino(ctx, { accento = CIPRIA }) {
-    gruccia(ctx, 0, -62, 110, ORO, 6);
-    ctx.beginPath();
-    ctx.moveTo(-26, -66); ctx.lineTo(-40, -30); ctx.quadraticCurveTo(-48, 0, -34, 18); ctx.quadraticCurveTo(-46, 60, -52, 100);
-    ctx.lineTo(52, 100); ctx.quadraticCurveTo(46, 60, 34, 18); ctx.quadraticCurveTo(48, 0, 40, -30); ctx.lineTo(26, -66);
-    ctx.quadraticCurveTo(14, -44, 0, -42); ctx.quadraticCurveTo(-14, -44, -26, -66); ctx.closePath();
-    fs(ctx, '#151515');
-    ctx.save(); ctx.strokeStyle = accento; ctx.globalAlpha = 0.5; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(-36, 18); ctx.quadraticCurveTo(0, 26, 36, 18); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-20, 40); ctx.quadraticCurveTo(-26, 70, -30, 92); ctx.stroke(); ctx.restore();
-    // filo di perle
-    ctx.save(); ctx.lineWidth = 2; for (let k = 0; k <= 10; k++) { const a = Math.PI * (0.15 + 0.7 * k / 10);
-      ctx.beginPath(); ctx.arc(Math.cos(a) * 30, -46 + Math.sin(a) * 22, 6, 0, 7); ctx.fillStyle = '#fbf6ee'; ctx.fill(); ctx.stroke(); } ctx.restore();
   },
   // Auto d'epoca (anni '20)
   auto(ctx, { t = 0 }) {
@@ -273,7 +212,7 @@ export const ICONE = {
     ctx.beginPath(); ctx.arc(94, 2, 9, 0, 7); fs(ctx, '#ffe9a8');
     ruota(-58); ruota(60);
   },
-  lampadina(ctx, { t = 0, accento = CIPRIA }) {
+  lampadina(ctx, { t = 0, accento = ACCENTO }) {
     ctx.save(); ctx.strokeStyle = accento; ctx.lineWidth = 7;
     for (let k = 0; k < 8; k++) { const a = -Math.PI / 2 + (k - 3.5) * 0.36, r1 = 86 + Math.sin(t * 6 + k) * 6;
       ctx.beginPath(); ctx.moveTo(Math.cos(a) * r1, -20 + Math.sin(a) * r1); ctx.lineTo(Math.cos(a) * (r1 + 22), -20 + Math.sin(a) * (r1 + 22)); ctx.stroke(); }
@@ -284,16 +223,15 @@ export const ICONE = {
     ctx.lineWidth = L; ctx.beginPath(); ctx.arc(0, -20, 62, Math.PI * 0.78, Math.PI * 2.22); ctx.stroke();
     ctx.beginPath(); rr(ctx, -28, 52, 56, 34, 8); fs(ctx, '#b9c1c9');
     ctx.save(); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-28, 64); ctx.lineTo(28, 64); ctx.moveTo(-28, 75); ctx.lineTo(28, 75); ctx.stroke(); ctx.restore();
-    gruccia(ctx, 0, -10, 70, BORDEAUX, 6);
   },
-  domanda(ctx, { accento = CIPRIA }) {
+  domanda(ctx, { accento = ACCENTO }) {
     ctx.beginPath(); ctx.arc(0, 0, 92, 0, 7); fs(ctx, accento);
-    ctx.fillStyle = BORDEAUX; ctx.font = SERIF(150, '700'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', 0, 8);
+    ctx.fillStyle = PRIMARIO; ctx.font = SERIF(150, '700'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', 0, 8);
   },
   commento(ctx, { t = 0 }) {
-    ctx.beginPath(); rr(ctx, -96, -78, 192, 132, 40); ctx.moveTo(-40, 50); ctx.lineTo(-62, 96); ctx.lineTo(-2, 52); fs(ctx, CREMA);
+    ctx.beginPath(); rr(ctx, -96, -78, 192, 132, 40); ctx.moveTo(-40, 50); ctx.lineTo(-62, 96); ctx.lineTo(-2, 52); fs(ctx, CHIARO);
     for (let k = 0; k < 3; k++) { const s = 1 + 0.3 * Math.max(0, Math.sin(t * 6 - k * 0.8));
-      ctx.fillStyle = BORDEAUX; ctx.beginPath(); ctx.arc(-44 + k * 44, -12, 13 * s, 0, 7); ctx.fill(); }
+      ctx.fillStyle = PRIMARIO; ctx.beginPath(); ctx.arc(-44 + k * 44, -12, 13 * s, 0, 7); ctx.fill(); }
   },
   cuore(ctx, { accento = '#e8435a' }) {
     ctx.beginPath(); ctx.moveTo(0, 86); ctx.bezierCurveTo(-120, 0, -80, -96, 0, -40); ctx.bezierCurveTo(80, -96, 120, 0, 0, 86); fs(ctx, accento);
@@ -301,33 +239,11 @@ export const ICONE = {
   stella(ctx, { accento = ORO }) {
     ctx.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 40 : 92, a = -Math.PI / 2 + k * Math.PI / 5; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); fs(ctx, accento);
   },
-  gruccia(ctx, { accento = CIPRIA }) { gruccia(ctx, 0, 10, 190, accento, 12); },
-  telefono(ctx, { accento = CIPRIA }) {
+  telefono(ctx, { accento = ACCENTO }) {
     ctx.beginPath(); rr(ctx, -62, -100, 124, 200, 24); fs(ctx, '#1b1b1b');
-    ctx.beginPath(); rr(ctx, -50, -84, 100, 168, 12); ctx.fillStyle = BORDEAUX; ctx.fill();
-    gruccia(ctx, 0, -10, 70, accento, 6);
-    ctx.fillStyle = accento; ctx.font = '700 22px "DejaVu Serif", serif'; ctx.textAlign = 'center'; ctx.fillText('Cintre', 0, 50);
-  },
-  armadio(ctx, { accento = CIPRIA }) {
-    ctx.beginPath(); rr(ctx, -84, -100, 168, 196, 10); fs(ctx, '#c49a6c');
-    ctx.beginPath(); ctx.moveTo(0, -96); ctx.lineTo(0, 92); ctx.stroke();
-    ctx.beginPath(); ctx.arc(-12, 0, 6, 0, 7); ctx.arc(12, 0, 6, 0, 7); ctx.fillStyle = ORO; ctx.fill();
-    ctx.beginPath(); rr(ctx, -70, -86, 60, 22, 4); ctx.strokeStyle = accento; ctx.lineWidth = 4; ctx.stroke(); stileIcona(ctx);
-  },
-  outfit(ctx) { figurino(ctx, 0, -100, 200, OUTFITS[0]); },
-
-  // --- Curiosità "capi nati in guerra" / "nomi nascosti" (2026-11-14) ---
-  // Trench doppiopetto color cammello con cintura e spalline
-  trench(ctx) {
-    ctx.beginPath(); ctx.moveTo(-30, -92); ctx.lineTo(-70, -78); ctx.quadraticCurveTo(-84, -40, -80, 0); ctx.lineTo(-92, 98); ctx.lineTo(92, 98);
-    ctx.lineTo(80, 0); ctx.quadraticCurveTo(84, -40, 70, -78); ctx.lineTo(30, -92); ctx.lineTo(0, -40); ctx.closePath(); fs(ctx, '#c8a26b');
-    ctx.beginPath(); ctx.moveTo(-30, -92); ctx.lineTo(-8, -30); ctx.lineTo(-30, -20); ctx.lineTo(-48, -74); ctx.closePath(); fs(ctx, '#b48d57');   // revers
-    ctx.beginPath(); ctx.moveTo(30, -92); ctx.lineTo(8, -30); ctx.lineTo(30, -20); ctx.lineTo(48, -74); ctx.closePath(); fs(ctx, '#b48d57');
-    ctx.beginPath(); rr(ctx, -84, 8, 168, 20, 4); fs(ctx, '#a07a45');                                   // cintura
-    ctx.beginPath(); rr(ctx, -14, 4, 28, 28, 4); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
-    for (const [x, y] of [[-22, -12], [22, -12], [-22, 50], [22, 50]]) { ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); fs(ctx, '#5a3d1e'); }
-    for (const s of [-1, 1]) { ctx.beginPath(); rr(ctx, s * 66 - 16, -86, 32, 12, 4); fs(ctx, '#a07a45'); } // spalline
-    ctx.save(); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 28); ctx.lineTo(0, 98); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); rr(ctx, -50, -84, 100, 168, 12); ctx.fillStyle = PRIMARIO; ctx.fill();
+    simbolo(ctx, 0, -14, 70, accento, 8);
+    ctx.fillStyle = '#fff'; ctx.font = FONT(22, 900); ctx.textAlign = 'center'; ctx.fillText('TeamUp', 0, 50);
   },
   // Elmetto da soldato (Prima guerra mondiale, forma a scodella)
   elmetto(ctx) {
@@ -337,21 +253,6 @@ export const ICONE = {
     ctx.beginPath(); ctx.arc(-6, -6, 46, Math.PI * 1.15, Math.PI * 1.45); ctx.stroke(); ctx.restore();
     ctx.beginPath(); ctx.moveTo(-40, 40); ctx.quadraticCurveTo(0, 96, 40, 40); ctx.lineWidth = 5; ctx.strokeStyle = '#8b5a2b'; ctx.stroke(); stileIcona(ctx);
   },
-  // Cardigan aperto con bottoni
-  cardigan(ctx, { accento = CIPRIA }) {
-    for (const s of [-1, 1]) {
-      ctx.save(); ctx.scale(s, 1);
-      ctx.beginPath(); ctx.moveTo(6, -86); ctx.lineTo(44, -92); ctx.quadraticCurveTo(86, -80, 96, -30); ctx.lineTo(100, 70); ctx.lineTo(74, 74);
-      ctx.lineTo(70, -10); ctx.lineTo(66, 96); ctx.lineTo(6, 96); ctx.closePath(); fs(ctx, '#d98e73');
-      ctx.restore();
-    }
-    ctx.beginPath(); ctx.moveTo(-6, -86); ctx.lineTo(0, 20); ctx.lineTo(6, -86); ctx.closePath(); fs(ctx, '#fffaf0');
-    ctx.save(); ctx.lineWidth = 3; ctx.globalAlpha = 0.5;
-    for (let y = -60; y < 90; y += 16) { ctx.beginPath(); ctx.moveTo(-60, y); ctx.lineTo(-12, y); ctx.moveTo(12, y); ctx.lineTo(60, y); ctx.stroke(); }
-    ctx.restore();
-    for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(-14, 30 + k * 18, 6, 0, 7); fs(ctx, accento); }
-    for (const y of [86, 92]) { ctx.beginPath(); ctx.moveTo(-66, y); ctx.lineTo(66, y); ctx.lineWidth = 3; ctx.stroke(); } stileIcona(ctx);
-  },
   // Medaglia militare con nastro
   medaglia(ctx, { t = 0 }) {
     ctx.beginPath(); ctx.moveTo(-40, -96); ctx.lineTo(40, -96); ctx.lineTo(24, -10); ctx.lineTo(-24, -10); ctx.closePath(); fs(ctx, '#c0392b');
@@ -360,15 +261,6 @@ export const ICONE = {
     ctx.beginPath(); for (let k = 0; k < 16; k++) { const r = k % 2 ? 44 : 60, a = -Math.PI / 2 + k * Math.PI / 8; ctx.lineTo(Math.cos(a) * r, 46 + Math.sin(a) * r); }
     ctx.closePath(); fs(ctx, ORO); ctx.restore(); ctx.lineWidth = L; ctx.stroke();
     ctx.beginPath(); ctx.arc(0, 46, 28, 0, 7); fs(ctx, '#e8c25a');
-  },
-  // Bikini a pois su filo
-  bikini(ctx, { accento = CIPRIA }) {
-    const pois = (x, y) => { ctx.save(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); ctx.restore(); };
-    ctx.save(); ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-96, -86); ctx.quadraticCurveTo(0, -60, 96, -86); ctx.stroke(); ctx.restore();
-    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 8, -40); ctx.quadraticCurveTo(s * 20, -82, s * 44, -82); ctx.quadraticCurveTo(s * 78, -64, s * 80, -14); ctx.quadraticCurveTo(s * 40, -4, s * 8, -40); fs(ctx, '#e8435a'); pois(s * 40, -50); pois(s * 58, -28); }
-    ctx.beginPath(); ctx.moveTo(-70, 26); ctx.quadraticCurveTo(0, 40, 70, 26); ctx.quadraticCurveTo(46, 66, 18, 92); ctx.lineTo(-18, 92); ctx.quadraticCurveTo(-46, 66, -70, 26); fs(ctx, '#e8435a');
-    pois(-30, 48); pois(10, 60); pois(36, 42);
-    ctx.save(); ctx.strokeStyle = accento; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-70, 26); ctx.lineTo(-96, 20); ctx.moveTo(70, 26); ctx.lineTo(96, 20); ctx.stroke(); ctx.restore();
   },
   // Fungo atomico stilizzato (test sull'atollo di Bikini) sopra un'isola con palma
   atomo(ctx, { t = 0 }) {
@@ -384,14 +276,6 @@ export const ICONE = {
     ctx.beginPath(); ctx.ellipse(26, -12, 24, 18, 0, 0, 7); fs(ctx, '#ffe3a3');
     ctx.restore();
   },
-  // Cravatta a righe
-  cravatta(ctx, { accento = CIPRIA }) {
-    ctx.beginPath(); ctx.moveTo(-22, -96); ctx.lineTo(22, -96); ctx.lineTo(14, -66); ctx.lineTo(-14, -66); ctx.closePath(); fs(ctx, BORDEAUX);
-    ctx.beginPath(); ctx.moveTo(-14, -66); ctx.lineTo(14, -66); ctx.lineTo(42, 66); ctx.lineTo(0, 100); ctx.lineTo(-42, 66); ctx.closePath(); fs(ctx, BORDEAUX);
-    ctx.save(); ctx.clip(); ctx.strokeStyle = accento; ctx.lineWidth = 9;
-    for (let y = -80; y < 140; y += 34) { ctx.beginPath(); ctx.moveTo(-60, y); ctx.lineTo(60, y - 40); ctx.stroke(); } ctx.restore();
-    ctx.beginPath(); ctx.moveTo(-14, -66); ctx.lineTo(14, -66); ctx.lineTo(42, 66); ctx.lineTo(0, 100); ctx.lineTo(-42, 66); ctx.closePath(); ctx.stroke();
-  },
   // Due sciabole incrociate (soldati a cavallo)
   sciabole(ctx) {
     for (const s of [-1, 1]) {
@@ -402,28 +286,18 @@ export const ICONE = {
       ctx.restore();
     }
   },
-  // Sneaker di profilo, suola di gomma bianca
-  sneaker(ctx, { accento = CIPRIA }) {
-    ctx.beginPath(); ctx.moveTo(-96, 40); ctx.lineTo(-92, -30); ctx.quadraticCurveTo(-60, -50, -40, -40); ctx.lineTo(-10, -20);
-    ctx.quadraticCurveTo(40, 0, 82, 14); ctx.quadraticCurveTo(100, 22, 98, 40); ctx.closePath(); fs(ctx, '#ffffff');
-    ctx.beginPath(); ctx.moveTo(-92, -30); ctx.quadraticCurveTo(-60, -50, -40, -40); ctx.lineTo(-30, 10); ctx.lineTo(-94, 10); ctx.closePath(); fs(ctx, accento);
-    ctx.beginPath(); rr(ctx, -100, 40, 202, 26, 12); fs(ctx, '#f3ead8');
-    ctx.save(); ctx.lineWidth = 3; for (let x = -88; x < 96; x += 14) { ctx.beginPath(); ctx.moveTo(x, 50); ctx.lineTo(x + 6, 58); ctx.stroke(); } ctx.restore();
-    ctx.save(); ctx.lineWidth = 4; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(-26 + k * 14, -16 + k * 6); ctx.lineTo(-14 + k * 14, -28 + k * 6); ctx.stroke(); } ctx.restore();
-    ctx.beginPath(); ctx.moveTo(30, 6); ctx.quadraticCurveTo(50, 14, 70, 14); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
-  },
   // Pugnale (stiletto)
   pugnale(ctx, { t = 0 }) {
     ctx.save(); ctx.rotate(-0.5);
     ctx.beginPath(); ctx.moveTo(-10, 10); ctx.lineTo(0, -108); ctx.lineTo(10, 10); ctx.closePath(); fs(ctx, '#e3e9ee');
     ctx.save(); ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 6); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-3, 0); ctx.lineTo(0, -80); ctx.stroke(); ctx.restore();
     ctx.beginPath(); rr(ctx, -40, 10, 80, 14, 7); fs(ctx, ORO);
-    ctx.beginPath(); rr(ctx, -10, 24, 20, 56, 8); fs(ctx, BORDEAUX);
+    ctx.beginPath(); rr(ctx, -10, 24, 20, 56, 8); fs(ctx, PRIMARIO);
     ctx.beginPath(); ctx.arc(0, 88, 12, 0, 7); fs(ctx, ORO);
     ctx.restore();
   },
   // Impronte silenziose + "shh"
-  silenzio(ctx, { t = 0, accento = CIPRIA }) {
+  silenzio(ctx, { t = 0, accento = ACCENTO }) {
     const passo = (x, y, a) => { ctx.save(); ctx.translate(x, y); ctx.rotate(a);
       ctx.beginPath(); ctx.ellipse(0, 0, 16, 30, 0, 0, 7); fs(ctx, '#fffaf0');
       for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(-10 + k * 7, -38 - (k === 0 ? 2 : 0), 5, 0, 7); fs(ctx, '#fffaf0'); } ctx.restore(); };
@@ -431,30 +305,6 @@ export const ICONE = {
     [[-60, 70, -0.2], [-20, 20, 0.2], [20, -30, -0.2], [60, -80, 0.2]].forEach(([x, y, a], k) => { if (k <= n) passo(x, y, a); });
     ctx.fillStyle = accento; ctx.font = SERIF(54, 'italic 700'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.save(); ctx.lineWidth = 8; ctx.strokeText('shh…', -40, -80); ctx.restore(); ctx.fillText('shh…', -40, -80);
-  },
-  // Paio di jeans (fronte) con cuciture e rivetti
-  jeans(ctx) {
-    ctx.beginPath(); ctx.moveTo(-70, -96); ctx.lineTo(70, -96); ctx.lineTo(84, 98); ctx.lineTo(18, 98); ctx.lineTo(0, -20);
-    ctx.lineTo(-18, 98); ctx.lineTo(-84, 98); ctx.closePath(); fs(ctx, DENIM);
-    ctx.beginPath(); rr(ctx, -70, -96, 140, 24, 4); fs(ctx, '#33507c');                                       // cintura
-    ctx.beginPath(); rr(ctx, -8, -92, 16, 16, 3); fs(ctx, ORO);                                             // bottone
-    cucitura(ctx, () => { ctx.beginPath(); ctx.moveTo(0, -70); ctx.lineTo(0, -24); ctx.moveTo(-64, -60); ctx.quadraticCurveTo(-30, -56, -26, -30);
-      ctx.moveTo(64, -60); ctx.quadraticCurveTo(30, -56, 26, -30); ctx.moveTo(-78, 80); ctx.lineTo(-24, 80); ctx.moveTo(78, 80); ctx.lineTo(24, 80); });
-    rivetto(ctx, -40, -40); rivetto(ctx, 40, -40);
-    ctx.save(); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-50, 10); ctx.lineTo(-56, 60); ctx.moveTo(50, 10); ctx.lineTo(56, 60); ctx.stroke(); ctx.restore();
-  },
-  // Abito da sposa bianco con velo
-  sposa(ctx, { t = 0, accento = CIPRIA }) {
-    ctx.save(); ctx.globalAlpha *= 0.55; ctx.beginPath(); ctx.moveTo(-20, -84); ctx.quadraticCurveTo(-110, -10, -96, 96); ctx.lineTo(96, 96);
-    ctx.quadraticCurveTo(110, -10, 20, -84); ctx.closePath(); ctx.fillStyle = '#f4f1ff'; ctx.fill(); ctx.restore();             // velo
-    ctx.beginPath(); ctx.moveTo(-26, -70); ctx.quadraticCurveTo(0, -60, 26, -70); ctx.lineTo(22, -14); ctx.lineTo(-22, -14); ctx.closePath(); fs(ctx, '#fffdf8');
-    ctx.beginPath(); ctx.moveTo(-22, -14); ctx.lineTo(22, -14); ctx.quadraticCurveTo(60, 40, 88, 98); ctx.lineTo(-88, 98); ctx.quadraticCurveTo(-60, 40, -22, -14);
-    fs(ctx, '#ffffff');
-    ctx.save(); ctx.strokeStyle = '#e6dccb'; ctx.lineWidth = 4; for (const x of [-40, 0, 40]) { ctx.beginPath(); ctx.moveTo(x * 0.3, -6); ctx.quadraticCurveTo(x * 0.8, 50, x * 1.4, 92); ctx.stroke(); } ctx.restore();
-    ctx.beginPath(); rr(ctx, -24, -20, 48, 12, 6); fs(ctx, accento);                                         // cintura
-    ctx.beginPath(); ctx.arc(-14, -86, 9, 0, 7); ctx.arc(0, -92, 9, 0, 7); ctx.arc(14, -86, 9, 0, 7); fs(ctx, '#ffffff');     // fiori
-    const s = 0.5 + 0.5 * Math.sin(t * 5);
-    ctx.save(); ctx.globalAlpha = s; ctx.fillStyle = '#ffd166'; ctx.font = FONT(34, 900); ctx.textAlign = 'center'; ctx.fillText('✦', 70, -60); ctx.restore();
   },
   // Corona reale
   corona(ctx, { t = 0 }) {
@@ -464,59 +314,6 @@ export const ICONE = {
     for (const [x, c] of [[-50, '#e8435a'], [0, '#3b8fc4'], [50, '#4c9a4a']]) { ctx.beginPath(); ctx.arc(x, 63, 10, 0, 7); fs(ctx, c); }
     ctx.save(); ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 4); ctx.strokeStyle = '#fff'; ctx.lineWidth = 5;
     ctx.beginPath(); ctx.moveTo(-60, -20); ctx.lineTo(-40, 0); ctx.stroke(); ctx.restore();
-  },
-  // Maglia di jersey a righe marinière (Chanel)
-  maglia(ctx, { accento = CIPRIA }) {
-    const corpo = () => { ctx.beginPath(); ctx.moveTo(-40, -86); ctx.quadraticCurveTo(0, -66, 40, -86); ctx.lineTo(100, -50); ctx.lineTo(82, 4); ctx.lineTo(60, -6);
-      ctx.lineTo(62, 92); ctx.lineTo(-62, 92); ctx.lineTo(-60, -6); ctx.lineTo(-82, 4); ctx.lineTo(-100, -50); ctx.closePath(); };
-    corpo(); fs(ctx, '#fffaf0');
-    ctx.save(); corpo(); ctx.clip(); ctx.fillStyle = '#1f2f5a';
-    for (let y = -56; y < 96; y += 30) ctx.fillRect(-110, y, 220, 12);
-    ctx.restore(); corpo(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-40, -86); ctx.quadraticCurveTo(0, -60, 40, -86); ctx.lineWidth = 9; ctx.strokeStyle = accento; ctx.stroke();
-  },
-  // Boxer da uomo (la biancheria in jersey): sobrio, a righine
-  mutande(ctx) {
-    ctx.beginPath(); ctx.moveTo(-84, -60); ctx.lineTo(84, -60); ctx.lineTo(92, 70); ctx.lineTo(14, 70); ctx.lineTo(0, 0); ctx.lineTo(-14, 70); ctx.lineTo(-92, 70); ctx.closePath();
-    fs(ctx, '#cfe3f2');
-    ctx.save(); ctx.strokeStyle = '#7aa7cc'; ctx.lineWidth = 5;
-    for (const x of [-60, -36, 36, 60]) { ctx.beginPath(); ctx.moveTo(x, -40); ctx.lineTo(x * 1.1, 64); ctx.stroke(); } ctx.restore();
-    ctx.beginPath(); rr(ctx, -88, -84, 176, 28, 8); fs(ctx, '#ffffff');
-    ctx.beginPath(); ctx.arc(-6, -20, 5, 0, 7); ctx.arc(6, -20, 5, 0, 7); ctx.fillStyle = INCHIOSTRO; ctx.fill();
-  },
-  // Sandalo con zeppa di sughero (di profilo)
-  zeppa(ctx, { accento = CIPRIA }) {
-    ctx.beginPath(); ctx.moveTo(-100, 40); ctx.lineTo(70, 40); ctx.lineTo(96, -30); ctx.lineTo(96, 80); ctx.lineTo(-100, 80); ctx.quadraticCurveTo(-112, 60, -100, 40); fs(ctx, '#c8955c');
-    ctx.save(); ctx.fillStyle = '#a5743f'; for (const [x, y] of [[-70, 60], [-30, 66], [10, 58], [50, 66], [80, 30], [76, 62], [-50, 52]]) { ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill(); } ctx.restore();
-    ctx.beginPath(); ctx.moveTo(-90, 40); ctx.quadraticCurveTo(-60, -30, -10, -26); ctx.lineTo(0, 40); fs(ctx, accento);           // fascia davanti
-    ctx.beginPath(); ctx.moveTo(40, 30); ctx.quadraticCurveTo(60, -40, 92, -36); ctx.lineTo(96, -20); ctx.quadraticCurveTo(70, -20, 62, 32); fs(ctx, accento);  // cinturino
-  },
-  // Tappo / blocco di sughero
-  sughero(ctx) {
-    ctx.beginPath(); ctx.moveTo(-60, -70); ctx.lineTo(60, -70); ctx.lineTo(80, 80); ctx.lineTo(-80, 80); ctx.closePath(); fs(ctx, '#c8955c');
-    ctx.beginPath(); ctx.ellipse(0, -70, 60, 18, 0, 0, 7); fs(ctx, '#ddb07a');
-    ctx.save(); ctx.fillStyle = '#9c6b38'; for (let k = 0; k < 16; k++) { ctx.beginPath(); ctx.arc(-56 + hash(k) * 112, -40 + hash(k + 9) * 110, 3 + hash(k + 3) * 4, 0, 7); ctx.fill(); } ctx.restore();
-  },
-  // Borsa a mano con manico curvo
-  borsa(ctx, { accento = CIPRIA }) {
-    ctx.save(); ctx.lineWidth = 16; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(0, -30, 62, Math.PI, 0); ctx.stroke();
-    ctx.lineWidth = 9; ctx.strokeStyle = '#d9a441'; ctx.stroke();
-    ctx.lineWidth = 5; ctx.strokeStyle = INCHIOSTRO; for (const a of [-2.6, -1.9, -1.25, -0.55]) {             // nodi del bambù
-      ctx.beginPath(); ctx.moveTo(Math.cos(a) * 54, -30 + Math.sin(a) * 54); ctx.lineTo(Math.cos(a) * 70, -30 + Math.sin(a) * 70); ctx.stroke(); }
-    ctx.restore();
-    ctx.beginPath(); ctx.moveTo(-96, -24); ctx.lineTo(96, -24); ctx.lineTo(84, 90); ctx.lineTo(-84, 90); ctx.closePath(); fs(ctx, accento);
-    ctx.beginPath(); ctx.moveTo(-96, -24); ctx.lineTo(96, -24); ctx.lineTo(90, 20); ctx.quadraticCurveTo(0, 40, -90, 20); ctx.closePath(); fs(ctx, '#ffffff22');
-    ctx.beginPath(); rr(ctx, -16, 14, 32, 24, 5); fs(ctx, ORO);
-  },
-  // Canne di bambù (manico Gucci)
-  bambu(ctx, { t = 0 }) {
-    for (const [x, r, h] of [[-50, -0.12, 190], [6, 0.04, 210], [58, 0.16, 180]]) {
-      ctx.save(); ctx.translate(x, 10); ctx.rotate(r + Math.sin(t * 2 + x) * 0.03);
-      ctx.beginPath(); rr(ctx, -16, -h / 2, 32, h, 14); fs(ctx, '#d9a441');
-      for (let y = -h / 2 + 46; y < h / 2 - 10; y += 52) { ctx.beginPath(); ctx.moveTo(-17, y); ctx.lineTo(17, y); ctx.stroke(); }
-      ctx.restore();
-    }
-    ctx.beginPath(); ctx.ellipse(40, -78, 28, 12, -0.6, 0, 7); fs(ctx, '#6aa84f');
   },
   // Aeroplano visto dall'alto, in volo in diagonale
   aereo(ctx, { t = 0 }) {
@@ -542,7 +339,7 @@ export const ICONE = {
     ctx.fillStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fill(); ctx.restore();
   },
   // Baule da viaggio con borchie e cinghie
-  baule(ctx, { accento = CIPRIA }) {
+  baule(ctx, { accento = ACCENTO }) {
     ctx.beginPath(); rr(ctx, -110, -66, 220, 146, 12); fs(ctx, '#8a5a2b');
     ctx.save(); ctx.fillStyle = '#6f4520'; for (let x = -100; x < 110; x += 26) ctx.fillRect(x, -60, 12, 136); ctx.restore();
     ctx.beginPath(); rr(ctx, -110, -66, 220, 146, 12); ctx.stroke();
@@ -569,10 +366,121 @@ export const ICONE = {
     ctx.save(); ctx.globalAlpha = 0.7; ctx.strokeStyle = '#fff'; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(-16, -16, 40, Math.PI * 1.1, Math.PI * 1.5); ctx.stroke(); ctx.restore();
     ctx.restore();
   },
+  // --- Esports e gaming (TeamUp, 2026-11-20) ---
+  // Controller (gamepad) con croce direzionale e quattro tasti
+  controller(ctx, { t = 0, accento = ACCENTO }) {
+    ctx.beginPath(); ctx.moveTo(-60, -50); ctx.lineTo(60, -50);
+    ctx.bezierCurveTo(105, -50, 112, 10, 100, 58); ctx.bezierCurveTo(92, 92, 60, 90, 44, 58); ctx.lineTo(30, 30); ctx.lineTo(-30, 30); ctx.lineTo(-44, 58);
+    ctx.bezierCurveTo(-60, 90, -92, 92, -100, 58); ctx.bezierCurveTo(-112, 10, -105, -50, -60, -50); ctx.closePath(); fs(ctx, '#2b2540');
+    ctx.save(); ctx.lineWidth = 4;
+    ctx.beginPath(); rr(ctx, -72, -16, 48, 16, 4); rr(ctx, -56, -32, 16, 48, 4); ctx.fillStyle = '#d9d6e6'; ctx.fill();
+    const colori = ['#22c55e', '#ef4444', '#3b82f6', '#facc15'];
+    [[54, -28], [76, -8], [32, -8], [54, 12]].forEach(([x, y], k) => {
+      const on = Math.floor(t * 3) % 4 === k;
+      ctx.beginPath(); ctx.arc(x, y, on ? 11 : 9, 0, 7); ctx.fillStyle = colori[k]; ctx.fill(); ctx.stroke(); });
+    ctx.beginPath(); ctx.arc(-24, 34, 12, 0, 7); ctx.arc(24, 34, 12, 0, 7); ctx.fillStyle = '#111'; ctx.fill();
+    ctx.restore();
+    ctx.beginPath(); rr(ctx, -16, -40, 32, 8, 4); ctx.fillStyle = accento; ctx.fill();
+  },
+  // Cuffie da gaming con microfono
+  cuffie(ctx, { t = 0, accento = ACCENTO }) {
+    ctx.save(); ctx.lineWidth = 22; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(0, 10, 84, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+    ctx.lineWidth = 12; ctx.strokeStyle = '#2b2540'; ctx.stroke(); ctx.restore(); stileIcona(ctx);
+    for (const sx of [-1, 1]) { ctx.beginPath(); rr(ctx, sx * 84 - 26, -4, 52, 92, 22); fs(ctx, '#2b2540');
+      ctx.beginPath(); rr(ctx, sx * 84 - 12, 14, 24, 56, 10); ctx.fillStyle = accento; ctx.fill(); }
+    ctx.beginPath(); ctx.moveTo(-84, 70); ctx.quadraticCurveTo(-70, 110, -20, 104); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-14, 104, 10, 0, 7); fs(ctx, '#111');
+    ctx.save(); ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 6); ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(-14, 104, 4, 0, 7); ctx.fill(); ctx.restore();
+  },
+  // Trofeo (coppa) con manici
+  trofeo(ctx, { t = 0 }) {
+    for (const sx of [-1, 1]) { ctx.save(); ctx.lineWidth = 14; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(sx * 62, -42, 30, sx > 0 ? -Math.PI / 2 : Math.PI / 2, sx > 0 ? Math.PI / 2 : Math.PI * 1.5); ctx.stroke();
+      ctx.lineWidth = 6; ctx.strokeStyle = ORO; ctx.stroke(); ctx.restore(); }
+    stileIcona(ctx);
+    ctx.beginPath(); ctx.moveTo(-66, -82); ctx.lineTo(66, -82); ctx.quadraticCurveTo(62, 10, 0, 28); ctx.quadraticCurveTo(-62, 10, -66, -82); ctx.closePath(); fs(ctx, ORO);
+    ctx.beginPath(); rr(ctx, -12, 26, 24, 34, 4); fs(ctx, '#b8902c');
+    ctx.beginPath(); rr(ctx, -50, 58, 100, 30, 6); fs(ctx, '#2b2540');
+    ctx.save(); ctx.globalAlpha = 0.35 + 0.35 * Math.sin(t * 3); ctx.strokeStyle = '#fff'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-40, -66); ctx.quadraticCurveTo(-40, -20, -20, 0); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = INCHIOSTRO; ctx.font = FONT(44, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('1', 0, -38);
+  },
+  // Tastiera meccanica RGB
+  tastiera(ctx, { t = 0 }) {
+    ctx.beginPath(); rr(ctx, -100, -48, 200, 96, 14); fs(ctx, '#2b2540');
+    ctx.save(); ctx.lineWidth = 3;
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 8; c++) {
+      const h = (c * 40 + r * 30 + t * 120) % 360;
+      ctx.fillStyle = `hsl(${h},85%,62%)`; ctx.beginPath(); rr(ctx, -88 + c * 22, -36 + r * 22, 18, 18, 4); ctx.fill(); }
+    ctx.fillStyle = '#d9d6e6'; ctx.beginPath(); rr(ctx, -50, 30, 100, 12, 4); ctx.fill(); ctx.restore();
+  },
+  // Mouse da gaming con rotella e luce
+  mouse(ctx, { t = 0, accento = ACCENTO }) {
+    ctx.save(); ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -78); ctx.bezierCurveTo(10, -110, 50, -100, 60, -120); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.moveTo(0, -78); ctx.bezierCurveTo(70, -78, 70, -20, 66, 30); ctx.bezierCurveTo(60, 90, 30, 100, 0, 100);
+    ctx.bezierCurveTo(-30, 100, -60, 90, -66, 30); ctx.bezierCurveTo(-70, -20, -70, -78, 0, -78); ctx.closePath(); fs(ctx, '#2b2540');
+    ctx.beginPath(); ctx.moveTo(0, -78); ctx.lineTo(0, -14); ctx.moveTo(-66, -14); ctx.quadraticCurveTo(0, -4, 66, -14); ctx.stroke();
+    ctx.beginPath(); rr(ctx, -8, -60, 16, 30, 8); fs(ctx, accento);
+    ctx.save(); ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 4); ctx.strokeStyle = accento; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(-40, 70); ctx.quadraticCurveTo(0, 86, 40, 70); ctx.stroke(); ctx.restore();
+  },
+  // Squadra: tre giocatori (quello al centro davanti)
+  squadra(ctx, { t = 0, accento = ACCENTO }) {
+    const gioc = (x, y, sc, col) => { ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+      ctx.beginPath(); ctx.moveTo(-50, 70); ctx.quadraticCurveTo(-50, 10, 0, 10); ctx.quadraticCurveTo(50, 10, 50, 70); ctx.closePath(); fs(ctx, col);
+      ctx.beginPath(); ctx.arc(0, -24, 30, 0, 7); fs(ctx, '#f2c6a4'); ctx.restore(); };
+    const b = Math.sin(t * 4) * 4;
+    gioc(-62, 0 - b, 0.8, '#7c3aed'); gioc(62, 0 + b, 0.8, '#7c3aed'); gioc(0, 18, 1.05, accento);
+  },
+  // Tabellone del torneo (bracket a eliminazione)
+  bracket(ctx, { t = 0, accento = ACCENTO }) {
+    ctx.save(); ctx.lineWidth = 7; ctx.strokeStyle = '#d9d6e6';
+    const y = [-75, -25, 25, 75];
+    for (let k = 0; k < 2; k++) { const a = y[k * 2], b = y[k * 2 + 1], m = (a + b) / 2;
+      ctx.beginPath(); ctx.moveTo(-70, a); ctx.lineTo(-30, a); ctx.lineTo(-30, b); ctx.lineTo(-70, b); ctx.moveTo(-30, m); ctx.lineTo(10, m); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(10, -50); ctx.lineTo(10, 50); ctx.moveTo(10, 0); ctx.lineTo(50, 0); ctx.stroke(); ctx.restore(); stileIcona(ctx);
+    for (const v of y) { ctx.beginPath(); rr(ctx, -100, v - 14, 34, 28, 6); fs(ctx, '#2b2540'); }
+    for (const v of [-50, 50]) { ctx.beginPath(); rr(ctx, -12, v - 14, 34, 28, 6); fs(ctx, '#7c3aed'); }
+    const s = 1 + 0.08 * Math.sin(t * 5);
+    ctx.save(); ctx.translate(76, 0); ctx.scale(s, s); ctx.beginPath(); rr(ctx, -26, -22, 52, 44, 8); fs(ctx, ORO);
+    ctx.fillStyle = INCHIOSTRO; ctx.font = FONT(30, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('1°', 0, 2); ctx.restore();
+  },
+  // Fulmine (energia, clutch, partita veloce)
+  fulmine(ctx, { accento = '#facc15' }) {
+    ctx.beginPath(); ctx.moveTo(22, -100); ctx.lineTo(-60, 14); ctx.lineTo(-6, 14); ctx.lineTo(-26, 100); ctx.lineTo(62, -18); ctx.lineTo(8, -18); ctx.closePath(); fs(ctx, accento);
+  },
+  // Mirino (headshot, precisione)
+  mirino(ctx, { t = 0, accento = '#ef4444' }) {
+    ctx.save(); ctx.rotate(t * 0.6);
+    ctx.lineWidth = 16; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(0, 0, 72, 0, 7); ctx.stroke();
+    ctx.lineWidth = 8; ctx.strokeStyle = accento; ctx.stroke();
+    for (let k = 0; k < 4; k++) { ctx.rotate(Math.PI / 2); ctx.lineWidth = 14; ctx.strokeStyle = INCHIOSTRO; ctx.beginPath(); ctx.moveTo(0, -100); ctx.lineTo(0, -40); ctx.stroke();
+      ctx.lineWidth = 6; ctx.strokeStyle = accento; ctx.stroke(); }
+    ctx.restore(); stileIcona(ctx);
+    ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); fs(ctx, accento);
+  },
+  // Monitor con partita in corso (barre vita)
+  monitor(ctx, { t = 0, accento = ACCENTO }) {
+    ctx.beginPath(); rr(ctx, -20, 62, 40, 26, 4); fs(ctx, '#2b2540');
+    ctx.beginPath(); rr(ctx, -60, 86, 120, 14, 6); fs(ctx, '#2b2540');
+    ctx.beginPath(); rr(ctx, -100, -82, 200, 146, 14); fs(ctx, '#2b2540');
+    ctx.beginPath(); rr(ctx, -86, -68, 172, 118, 6); ctx.fillStyle = '#1e1b4b'; ctx.fill();
+    const v1 = 0.5 + 0.4 * Math.sin(t * 2), v2 = 0.5 + 0.4 * Math.cos(t * 1.7);
+    ctx.fillStyle = '#22c55e'; ctx.fillRect(-76, -58, 64 * v1, 10); ctx.fillStyle = '#ef4444'; ctx.fillRect(12, -58, 64 * v2, 10);
+    ctx.fillStyle = accento; ctx.font = FONT(40, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('VS', 0, 4);
+  },
+  // Bollino LIVE (diretta, stream)
+  live(ctx, { t = 0 }) {
+    ctx.beginPath(); rr(ctx, -96, -44, 192, 88, 22); fs(ctx, '#ef4444');
+    ctx.save(); ctx.globalAlpha = 0.4 + 0.6 * (Math.sin(t * 6) > 0 ? 1 : 0); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-56, 0, 14, 0, 7); ctx.fill(); ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.font = FONT(52, 900); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('LIVE', -32, 3);
+  },
+  // Il simbolo TeamUp (doppio chevron) in un esagono
+  simbolo(ctx, { accento = ACCENTO }) {
+    ctx.beginPath(); for (let k = 0; k < 6; k++) { const a = Math.PI / 6 + k * Math.PI / 3; ctx.lineTo(Math.cos(a) * 96, Math.sin(a) * 96); } ctx.closePath(); fs(ctx, PRIMARIO);
+    simbolo(ctx, 0, 0, 120, accento, 16);
+  },
 };
 export const NOMI_ICONE = Object.keys(ICONE);
 
-export function icona(ctx, nome, cx, cy, s, { t = 0, accento = CIPRIA, k = 1, ruota = 0 } = {}) {
+export function icona(ctx, nome, cx, cy, s, { t = 0, accento = ACCENTO, k = 1, ruota = 0 } = {}) {
   if (k <= 0) return;
   const f = ICONE[nome] || ICONE.stella;
   ctx.save(); ctx.translate(cx, cy); const sc = (s / 200) * pop(k); ctx.scale(sc, sc); ctx.rotate(ruota + (1 - easeOut(k)) * 0.4);
@@ -581,7 +489,7 @@ export function icona(ctx, nome, cx, cy, s, { t = 0, accento = CIPRIA, k = 1, ru
   ctx.restore();
 }
 
-// Cartello finale (CTA): logo Cintre grande, testo e bottone che viene toccato
+// Cartello finale (CTA): logo TeamUp grande, testo e bottone che viene toccato
 // Cartello "salva e invia" (CTA delle curiosità): testo grande, poi la mano tocca Salva (il segnalibro si
 // riempie) e Invia (l'aeroplanino vola via). Il testo è la CTA detta dalla voce.
 function iconaSalva(ctx, pieno, colore) {
@@ -593,7 +501,7 @@ function iconaInvia(ctx, colore) {
   ctx.moveTo(4, 8); ctx.lineTo(44, -40);
   ctx.lineWidth = 8; ctx.lineJoin = 'round'; ctx.strokeStyle = colore; ctx.stroke();
 }
-export function finaleCondividi(ctx, u, { testo: frase = '', accento = CIPRIA, t = 0 } = {}) {
+export function finaleCondividi(ctx, u, { testo: frase = '', accento = ACCENTO, t = 0 } = {}) {
   const k = easeOut(u / 0.4);
   ctx.save(); ctx.globalAlpha = k; ctx.translate(W / 2 - 150, 190); ctx.scale(0.375, 0.375); logo(ctx, 800, 600, { colore: accento, slogan: '' }); ctx.restore();
   testo(ctx, frase, W / 2, 580, { size: 96, peso: 900, colore: '#fff', maxW: 900, parole: entra(u, 0.05, 0.6), evidenzia: 'salvalo mandalo', accento, ombra: true });
@@ -602,16 +510,16 @@ export function finaleCondividi(ctx, u, { testo: frase = '', accento = CIPRIA, t
     const kb = entra(u, 0.35 + n * 0.15, 0.35); if (kb <= 0) return;
     const premuto = u > b.tap, tap = clamp((u - b.tap) / 0.2);
     ctx.save(); ctx.translate(b.x, 860); const sc = 1.3 * pop(kb) * (1 - 0.1 * Math.sin(Math.PI * tap)); ctx.scale(sc, sc);
-    ctx.shadowColor = 'rgba(20,4,10,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
-    ctx.fillStyle = premuto ? accento : CREMA; ctx.beginPath(); ctx.arc(0, 0, 92, 0, 7); ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.shadowColor = 'rgba(8,4,20,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+    ctx.fillStyle = premuto ? accento : CHIARO; ctx.beginPath(); ctx.arc(0, 0, 92, 0, 7); ctx.fill(); ctx.shadowColor = 'transparent';
     if (premuto) {                                         // onda di conferma
       const v = clamp((u - b.tap) / 0.7); ctx.save(); ctx.globalAlpha = 1 - v; ctx.strokeStyle = accento; ctx.lineWidth = 6;
       ctx.beginPath(); ctx.arc(0, 0, 92 + v * 90, 0, 7); ctx.stroke(); ctx.restore();
     }
-    if (n === 0) iconaSalva(ctx, premuto, BORDEAUX);
+    if (n === 0) iconaSalva(ctx, premuto, PRIMARIO);
     else { const v = premuto ? easeOut(clamp((u - b.tap) / 0.6)) : 0;
-      ctx.save(); ctx.translate(v * 160, -v * 220); ctx.rotate(-v * 0.4); ctx.globalAlpha *= 1 - v * 0.9; iconaInvia(ctx, BORDEAUX); ctx.restore();
-      if (v > 0.6) { ctx.save(); ctx.globalAlpha *= clamp((v - 0.6) / 0.3); iconaInvia(ctx, BORDEAUX); ctx.restore(); } }
+      ctx.save(); ctx.translate(v * 160, -v * 220); ctx.rotate(-v * 0.4); ctx.globalAlpha *= 1 - v * 0.9; iconaInvia(ctx, PRIMARIO); ctx.restore();
+      if (v > 0.6) { ctx.save(); ctx.globalAlpha *= clamp((v - 0.6) / 0.3); iconaInvia(ctx, PRIMARIO); ctx.restore(); } }
     ctx.restore();
     ctx.save(); ctx.globalAlpha = kb; ctx.fillStyle = '#fff'; ctx.font = FONT(50, 900); ctx.textAlign = 'center'; ctx.fillText(b.nome, b.x, 1045); ctx.restore();
   });
@@ -627,7 +535,7 @@ const mix2 = (a, b, k) => a + (b - a) * k;
 
 // Cartello "commenta" (CTA dei quiz): testo grande, poi una barra commento in stile Instagram in cui si
 // scrive "Per me è la…", la mano tocca Pubblica e salgono fumetti A / B / C (come i commenti che arrivano).
-export function finaleCommenta(ctx, u, { testo: frase = '', accento = CIPRIA, t = 0 } = {}) {
+export function finaleCommenta(ctx, u, { testo: frase = '', accento = ACCENTO, t = 0 } = {}) {
   const k = easeOut(u / 0.4);
   ctx.save(); ctx.globalAlpha = k; ctx.translate(W / 2 - 150, 190); ctx.scale(0.375, 0.375); logo(ctx, 800, 600, { colore: accento, slogan: '' }); ctx.restore();
   testo(ctx, frase, W / 2, 560, { size: 92, peso: 900, colore: '#fff', maxW: 900, parole: entra(u, 0.05, 0.6), evidenzia: 'commenti A B C', accento, ombra: true });
@@ -635,14 +543,14 @@ export function finaleCommenta(ctx, u, { testo: frase = '', accento = CIPRIA, t 
   if (kb > 0) {
     const scritto = 'Per me è la…', n = Math.floor(clamp((u - 0.7) / 0.7) * scritto.length), tap = 1.65, premuto = u > tap;
     ctx.save(); ctx.translate(W / 2, 880); ctx.scale(pop(kb), pop(kb));
-    ctx.shadowColor = 'rgba(20,4,10,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
-    ctx.fillStyle = CREMA; rr(ctx, -440, -70, 880, 140, 70); ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.shadowColor = 'rgba(8,4,20,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+    ctx.fillStyle = CHIARO; rr(ctx, -440, -70, 880, 140, 70); ctx.fill(); ctx.shadowColor = 'transparent';
     ctx.save(); ctx.translate(-360, 0); ctx.scale(0.42, 0.42); icona(ctx, 'commento', 0, 0, 200, { accento }); ctx.restore();
-    ctx.font = FONT(54, 800); ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillStyle = n ? BORDEAUX : 'rgba(109,26,54,0.45)';
+    ctx.font = FONT(54, 800); ctx.textBaseline = 'middle'; ctx.textAlign = 'left'; ctx.fillStyle = n ? PRIMARIO : 'rgba(91,33,182,0.45)';
     const str = n ? scritto.slice(0, n) : 'Commenta…'; ctx.fillText(str, -300, 2);
     if (n && n < scritto.length && Math.sin(t * 14) > 0) { const w = ctx.measureText(str).width; ctx.fillRect(-300 + w + 6, -28, 5, 56); }
     const tb = clamp((u - tap) / 0.2), sb = 1 - 0.1 * Math.sin(Math.PI * tb);
-    ctx.save(); ctx.translate(300, 0); ctx.scale(sb, sb); pillola(ctx, premuto ? '✓' : 'Pubblica', 0, 0, { size: 40, fondo: premuto ? accento : BORDEAUX, colore: premuto ? BORDEAUX : '#fff', h: 92, w: 220 }); ctx.restore();
+    ctx.save(); ctx.translate(300, 0); ctx.scale(sb, sb); pillola(ctx, premuto ? '✓' : 'Pubblica', 0, 0, { size: 40, fondo: premuto ? accento : PRIMARIO, colore: premuto ? PRIMARIO : '#fff', h: 92, w: 220 }); ctx.restore();
     ctx.restore();
     // fumetti A / B / C che salgono dopo il tocco
     ['A', 'B', 'C'].forEach((l, j) => {
@@ -651,7 +559,7 @@ export function finaleCommenta(ctx, u, { testo: frase = '', accento = CIPRIA, t 
       ctx.save(); ctx.globalAlpha = clamp(v * 5); ctx.translate(x, y); const sc = pop(clamp(v * 3)); ctx.scale(sc, sc);
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 70, 0, 7); ctx.fill();
       ctx.beginPath(); ctx.moveTo(-30, 52); ctx.lineTo(-50, 92); ctx.lineTo(4, 66); ctx.fill();
-      ctx.fillStyle = BORDEAUX; ctx.font = FONT(76, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(l + '!', 0, 4);
+      ctx.fillStyle = PRIMARIO; ctx.font = FONT(76, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(l + '!', 0, 4);
       ctx.restore();
     });
     // mano: arriva da destra sotto la barra (non copre il testo) e tocca Pubblica
@@ -669,13 +577,13 @@ export function finale(ctx, u, opz = {}) {
   return finaleBottone(ctx, u, opz);
 }
 
-export function finaleBottone(ctx, u, { testo: frase = '', bottone = 'Segui @cintre_official', accento = CIPRIA, t = 0 } = {}) {
+export function finaleBottone(ctx, u, { testo: frase = '', bottone = 'Segui @teamupesportsofficial', accento = ACCENTO, t = 0 } = {}) {
   const k = easeOut(u / 0.6);
   ctx.save(); ctx.globalAlpha = k;
   ctx.translate(W / 2, 450); ctx.scale(0.9 + 0.1 * k, 0.9 + 0.1 * k); ctx.translate(-W / 2, -450);
   ctx.save(); ctx.translate(W / 2 - 360, 190); ctx.scale(0.9, 0.9); logo(ctx, 800, 600, { colore: accento }); ctx.restore();
   ctx.restore();
-  testo(ctx, frase, W / 2, 800, { size: 56, peso: 800, colore: '#fff', maxW: 880, parole: entra(u, 0.3, 1.0), evidenzia: 'Cintre', accento });
+  testo(ctx, frase, W / 2, 800, { size: 56, peso: 800, colore: '#fff', maxW: 880, parole: entra(u, 0.3, 1.0), evidenzia: 'TeamUp', accento });
   // bottone: compare, viene toccato (~1.6 s), diventa "✓"
   const kb = entra(u, 0.7, 0.4), tap = clamp((u - 1.5) / 0.25), dopo = u > 1.75;
   if (kb > 0) {
@@ -683,7 +591,7 @@ export function finaleBottone(ctx, u, { testo: frase = '', bottone = 'Segui @cin
     if (dopo) { ctx.globalAlpha = clamp((u - 1.75) / 0.6); ctx.strokeStyle = accento; ctx.lineWidth = 6;
       ctx.beginPath(); ctx.arc(0, 0, 60 + (u - 1.75) * 260, 0, 7); ctx.globalAlpha = Math.max(0, 1 - (u - 1.75) / 0.8); ctx.stroke(); ctx.globalAlpha = 1; }
     ctx.font = FONT(44, 800); const larg = ctx.measureText(bottone).width + 72;
-    pillola(ctx, dopo ? '✓ Segui già' : bottone, 0, 0, { size: 44, fondo: dopo ? '#fff' : accento, colore: BORDEAUX, h: 104, w: larg });
+    pillola(ctx, dopo ? '✓ Segui già' : bottone, 0, 0, { size: 44, fondo: dopo ? '#fff' : accento, colore: PRIMARIO, h: 104, w: larg });
     ctx.restore();
     const mx = W / 2 + 330 - 90 * easeOut(clamp((u - 0.9) / 0.6)), my = 1020 - 70 * easeOut(clamp((u - 0.9) / 0.6));
     if (u > 0.9 && u < 3.2) mano(ctx, mx, my, 120, tap * (1 - clamp((u - 1.8) / 0.3)));

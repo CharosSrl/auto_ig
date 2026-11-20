@@ -65,7 +65,7 @@ class TestPlanner(Base):
         types = [p.type for p in created]
         self.assertTrue(all(a != b for a, b in zip(types, types[1:])))     # alternanza
         img = next(p for p in created if p.type == "image")
-        self.assertIn("#moda", img.caption)
+        self.assertIn("#esports", img.caption)
         self.assertIn("📷 Autore via Wikimedia (CC0)", img.caption)
         reel = next(p for p in created if p.type == "reel")
         self.assertTrue(reel.extra["cover"].endswith(".jpg"))

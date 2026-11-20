@@ -7,7 +7,9 @@
 
 ## 📜 Preambolo (regole sempre valide — leggere prima di ogni task)
 
-**Scopo.** Pagina Instagram che pubblica contenuti in automatico. Uso personale: tutto deve essere
+**Scopo.** Pagina Instagram di **TeamUp Esports** (@teamupesportsofficial) che pubblica contenuti in automatico.
+TeamUp è un'app per trovare compagni e team, partecipare ai tornei e seguire la scena esports.
+(Fino al 2026-11-20 il progetto serviva Cintre, app di moda: vedi Fase 13.) Uso personale: tutto deve essere
 **funzionale, semplice e intuibile**, non bello. Niente fronzoli.
 
 **Come usare questo file (per Claude)**
@@ -20,16 +22,16 @@
 6. Non fare commit/push se il task non lo dice esplicitamente.
 
 **Modalità chat (richieste di contenuti)**
-> ⭐ **Due regole di Antonio che valgono in OGNI ragionamento (2026-11-14):**
-> 1. **La mascotte (modella Cintre 3D/2D) si mette solo quando la chiede Antonio.** Se sembra adatta, glielo si
->    chiede nelle domande; mai di propria iniziativa (`mascotte: false` è il default).
+> ⭐ **Regole di Antonio che valgono in OGNI ragionamento:**
+> 1. **Solo argomenti esports/gaming veri e adatti ai minori**: niente scommesse, skin gambling, casse premio a
+>    pagamento, violenza grafica, tossicità verso giocatori o community (dettagli in `marca/brand-profile.md`).
 > 2. **Hook e call to action sono la cosa più importante.** Hook: 5-10 candidati, punteggio, vince solo uno vero,
 >    ≤12 parole, a schermo dal fotogramma 0. CTA: una sola, legata al valore del video (curiosità → salva/condividi).
 >    Regole in `auto_ig/formati.yaml → hook_e_cta`, skill in `.claude/skills/` (hook-writer, short-form-video-script,
 >    caption-writer, viral-hooks), profilo e voce del brand in `marca/`.
-> 3. **Le lezioni dai dati reali in `marca/lezioni.md` hanno la precedenza (2026-11-16).** Vince il tempo di visione.
+> 3. **Le lezioni in `marca/lezioni.md` hanno la precedenza.** Vince il tempo di visione.
 >    Domanda e opzioni A/B/C vanno a schermo dal primo fotogramma. Quiz invece di lezione. Argomenti per
->    adolescenti e giovani adulti, sempre adatti ai minori. Durata sotto i 25 s. Dopo ogni gruppo di reel si
+>    chi gioca (13-25 anni), sempre adatti ai minori. Durata sotto i 25 s. Dopo ogni gruppo di reel si
 >    chiedono gli Insights ad Antonio e si aggiorna il file.
 Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, niente API a pagamento):
 "fammi un reel con…", "cerca immagini di…", "crea una scena nuova…". Regole:
@@ -50,15 +52,14 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - Dopo ogni render Claude guarda la copertina (o fotogrammi) e corregge difetti evidenti prima di proporla.
 - **Prima il formato**: ogni contenuto nuovo sceglie formato e resa da `auto_ig/formati.yaml` e ne segue scaletta e
   ricetta; la call to action finale la aggiunge il sistema.
-- **Ritmo alto (2D)**: scena `cartoon2d` (motion graphics; modella Cintre 2D solo con `mascotte: true`) con `sottotitoli: corti`
+- **Ritmo alto (2D)**: scena `cartoon2d` (motion graphics) con `sottotitoli: blocco`
   e `audio: {musica: true, sfx: true}` (base ed effetti generati a codice da `auto_ig/audio.py`, sincronizzati con le
   "battute" visive). Regole in `formati.yaml → ritmo_alto`; hook e ritmo dalle skill `.claude/skills/viral-hooks` e
   `.claude/skills/short-form-video` (MIT, solo Markdown).
-- **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `modella.js` (la modella Cintre, mascotte:
-  SOLO se Antonio la chiede), `grafica2d.js` (resa 2D: icone, card, CTA), `guardaroba.js` (capi: `lei.indossa({sopra, sotto, scarpe, colori})`, capi singoli
-  su gruccia/stender/vetrina), `ambienti.js`, `oggetti.js`, `brand.js`, `regia.js`, `qualita.js`.
-  Scena nuova = file in `auto_ig/video/scenes/` con solo la regia (vedi `cintre_storia.html`), anteprima
-  fotogrammi → correzioni → render. Nuovi pezzi riutilizzabili vanno nei preset, non nella scena.
+- **Usa i preset, non ripartire da zero** (`auto_ig/video/preset/`): `brand.js` (colori e simbolo TeamUp),
+  `grafica2d.js` (resa 2D: icone esports, card, CTA), `cartoon2d.js` (effetti ad alto ritmo), `foto2d.js` (foto vive
+  in cornice), `regia.js`. Scena nuova = file in `auto_ig/video/scenes/` con solo la regia (vedi `cartoon2d.html`),
+  anteprima fotogrammi → correzioni → render. Nuovi pezzi riutilizzabili vanno nei preset, non nella scena.
 - Antonio vede tutto nella UI (`./avvia.sh`): Video → "Video pronti", Coda → bozze.
 
 **Vincoli tecnici**
@@ -205,7 +206,7 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       pestaPiedi, maniNeiCapelli, digita, telefono, gioia, cammina, fermo).
 - [x] Scena a 8 atti `cintre_storia` sincronizzata con le frasi (`atti` = inizio frasi passato da `richieste.build`).
 - [x] Richiesta `richieste/2026-11-12-non-so-cosa-mettermi/`: video generato (18 s), **da valutare da Antonio**.
-- [ ] Antonio: decidere la pronuncia di "Cintre" (ora all'italiana /tʃintre/).
+- [x] ~~Antonio: decidere la pronuncia di "Cintre" (ora all'italiana /tʃintre/).~~ superato: progetto convertito a TeamUp Esports (Fase 13).
 
 ## Fase 9 — Preset e qualità alta
 - [x] **Modella Cintre** (`preset/modella.js`): bambola fashion castana, capelli lunghi mossi (ciocche animate),
@@ -234,7 +235,7 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       `stender(THREE, x, [{capo, colori}])` e `vetrinaCapo(THREE, x, {capo})` (pedana girevole).
 - [x] Scena di controllo `guardaroba`: `vista=modella|sfilata|stender|vetrina`, `sopra/sotto/scarpe`,
       `csopra/csotto/cscarpe/cinterno` (hex senza #), `zona=intera|busto|gambe|piedi`, `capi=a,b,c` + `c=hex,hex`.
-- [ ] Prossimi: accessori (borsa, occhiali, cappello, cintura) e fantasie (righe, quadri, pois).
+- [x] ~~Prossimi: accessori (borsa, occhiali, cappello, cintura) e fantasie (righe, quadri, pois).~~ superato: progetto convertito a TeamUp Esports (Fase 13).
 - [x] Nuovi preset (reel "armadio infinito"): `ambienti.js` → `armadio` (ante che si aprono + luce), `corridoioArmadio`
       (capi infiniti nella nebbia, `.volo`), `ristorante` (tavolo apparecchiato, candele, vetrata città, `posti`);
       `oggetti.js` → `calice`, `scintille` (`.burst`), app con `ricerca`/`outfits`/`evidenzia`; modella: posa
@@ -258,8 +259,27 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
 - [x] Resa 2D: preset `preset/grafica2d.js` (sfondo brand con grucce, card, testo parola per parola, numeri, frecce,
       bottone CTA con tocco, 15 icone vettoriali di moda) e scena `schede2d` (layout sopra y≈910: sotto i sottotitoli).
 - [x] Primo video: `richieste/2026-11-13-curiosita-sulla-moda` (taschino dei jeans, tacchi alti, tubino nero + CTA).
-- [ ] Scene 3D dedicate per quiz e curiosità (ricette già scritte in formati.yaml).
+- [x] ~~Scene 3D dedicate per quiz e curiosità (ricette già scritte in formati.yaml).~~ superato: progetto convertito a TeamUp Esports (Fase 13).
+
+## Fase 13 — Conversione a TeamUp Esports (2026-11-20)
+- [x] Target cambiato da Cintre (moda) a **TeamUp Esports** (@teamupesportsofficial): app per trovare team,
+      partecipare ai tornei e seguire gli esports.
+      > nota: rimossi gli asset moda 3D (`modella.js`, `guardaroba.js`, `ambienti.js`, `oggetti.js`, `qualita.js`,
+      > scene `armadio_infinito`, `cintre_storia`, `foglio_modella`, `guardaroba`, `personaggio.js`) e la mascotte 2D
+      > (`cartoon2d.js`, campo `mascotte`): le Fasi 8-10 restano qui solo come storia. Resa unica: `2d`.
+      > `brand.js` riscritto: viola #5b21b6, ciano #22d3ee, scuro #0b0a14, chiaro #f5f3ff, simbolo a doppio chevron
+      > "UP" + logo TeamUp ESPORTS. `grafica2d.js`: tolte le icone di moda, aggiunte controller, cuffie, trofeo,
+      > tastiera, mouse, squadra, bracket, fulmine, mirino, monitor, live, simbolo.
+      > `formati.yaml`, `plan.yaml`, `marca/`, skill `linguaggio-giovani` e `regia-reel` riscritti per gli esports.
+      > Coda e `media/` svuotati; `lezioni.md` tiene solo le regole di formato (i dati di Cintre non valgono più).
+      > La foto Wikimedia sulla prima scheda di quiz/curiosità ora è consigliata, non obbligatoria (solo avviso):
+      > le foto esports PD/CC0 sono poche.
+- [ ] Antonio: account Instagram **@teamupesportsofficial** in modalità Professional e collegato all'app Meta;
+      nuovo `IG_ACCESS_TOKEN` / `IG_USER_ID` in `.env` e nei Secrets GitHub (quelli attuali sono di @cintre_official).
+- [ ] Antonio: confermare palette e simbolo (proposti da Claude) o mandare colori/logo ufficiali di TeamUp.
+- [ ] Antonio: decidere la voce (ora `chirp3-aoede`, femminile, scelta per Cintre) e la pronuncia di "TeamUp"
+      (`voce.pronuncia`, es. `{TeamUp: "Tìm ap"}`).
+- [ ] Dopo i primi reel: chiedere gli Insights e riscrivere `marca/lezioni.md` con i dati di TeamUp.
 
 ## 📥 Richieste nuove
 <!-- Antonio: scrivi qui sotto, una riga per richiesta. Claude le smista nelle fasi. -->
-

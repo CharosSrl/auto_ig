@@ -7,7 +7,7 @@
 
     Tutta la cartella richieste/ resta solo in locale (.gitignore): su GitHub va solo ciò che entra in media/.
 
-    python -m auto_ig.richieste nuova "Nuova collezione" [--formato curiosita --resa 2d]   # cartella + richiesta.yaml
+    python -m auto_ig.richieste nuova "Nuovo torneo" [--formato curiosita --resa 2d]   # cartella + richiesta.yaml
     python -m auto_ig.richieste crea <cartella>              # voce + sottotitoli + video
     python -m auto_ig.richieste coda <cartella> [--quando ISO] [--caption "..."]   # in coda come BOZZA
     python -m auto_ig.richieste lista
@@ -41,11 +41,10 @@ titolo: {titolo}
 stato: da_fare            # da_fare | generato | in_coda | scartato
 richiesta: {richiesta}    # cosa ha chiesto Antonio, parole sue
 
-# Formato (auto_ig/formati.yaml: scaletta, ricetta 3d/2d, CTA). Vuoto = richiesta libera senza CTA automatica.
+# Formato (auto_ig/formati.yaml: scaletta, ricetta 2d, CTA). Vuoto = richiesta libera senza CTA automatica.
 formato: {formato}        # storia | quiz | curiosita
-resa: {resa}              # 3d (modella Cintre e preset) | 2d (grafica a schede)
+resa: {resa}              # 2d (grafica a schede)
 cta: ""                   # vuoto = CTA del formato; viene aggiunta SEMPRE come ultima frase. UNA sola, legata al video
-mascotte: false           # modella Cintre (3D/2D): true SOLO se Antonio la chiede
 
 # Video sotto la voce: scena three.js (testo | oggetto | particelle | schede2d | ...) e colori
 scena: {scena}
@@ -59,11 +58,11 @@ audio: {{musica: false, sfx: false}}   # base musicale e effetti sonori generati
 
 # Voce (locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
-  modello: chirp3-aoede   # la voce di Cintre: Google Chirp 3 HD (GOOGLE_TTS_API_KEY nel .env, gratis fino a 1M car./mese)
+  modello: chirp3-aoede   # la voce del brand: Google Chirp 3 HD (GOOGLE_TTS_API_KEY nel .env, gratis fino a 1M car./mese)
                           # | qwen3-vivian (Qwen3-TTS locale, lenta) | it_IT-paola-medium (Piper, istantanea)
   velocita: 1.0           # 1.0 nei reel: più veloce non si capisce (lezioni n. 13)
   pausa: 0.5              # silenzio tra le frasi (default 0.35)
-  # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole
+  # pronuncia: {{TeamUp: "Tìm ap"}}   # solo audio: come leggere certe parole
 # cornice: oro            # cornice della foto: polaroid | oro | pellicola | nastro (default: quiz oro, curiosità polaroid)
 # censura: true           # parole forti (morte, guerra...) censurate a schermo e in caption (m*rte), intere nella voce;
                           # lista = parole in più da censurare | false = nessuna censura
@@ -93,8 +92,8 @@ def new(title: str, lines: list | None = None, scene: str = "particelle", bg: st
         scene = formati.scena({"formato": formato, "resa": resa}) or scene
         f = formati.formato(formato)
         caption = caption or f"\n\n{f['cta']}\n\n{f['hashtag']}"
-        if (bg, accent) == ("#000000", "#d4af37"):   # colori del brand Cintre
-            bg, accent = "#6d1a36", "#e8c4c0"
+        if (bg, accent) == ("#000000", "#d4af37"):   # colori del brand TeamUp
+            bg, accent = "#5b21b6", "#22d3ee"
     lines = lines or ["Prima frase del copione.", "Seconda frase."]
     folder.mkdir(parents=True)
     (folder / "richiesta.yaml").write_text(TEMPLATE.format(
@@ -129,19 +128,20 @@ def load(folder: Path) -> dict:
     return data
 
 
-FORMATI_CON_FOTO = ("quiz", "curiosita")   # marca/lezioni.md regola 12: foto Wikimedia dal fotogramma 0
+FORMATI_CON_FOTO = ("quiz", "curiosita")   # marca/lezioni.md: foto vera dal fotogramma 0 quando c'è (consigliata)
 
 
 def _regole_foto(data: dict) -> list[str]:
-    """Quiz e curiosità in 2D: la prima scheda deve avere una foto (incorniciata e viva dal fotogramma 0)."""
+    """Quiz e curiosità in 2D: consiglia una foto sulla prima scheda (incorniciata e viva dal fotogramma 0).
+    Non blocca: per gli esports le foto libere (PD/CC0) sono poche, le icone vanno bene."""
     if data.get("formato") not in FORMATI_CON_FOTO or data.get("resa") != "2d":
         return []
     righe = data.get("copione") or []
     prima = righe[0] if righe else None
     scheda = ((prima.get("scheda") if isinstance(prima, dict) else None) or {})
     if not scheda.get("foto"):
-        return ["la prima frase deve avere una foto (scheda.foto): nei quiz e nelle curiosità 2D la foto Wikimedia "
-                "c'è dal fotogramma 0 — cercala con: python -m auto_ig.richieste foto <cartella> \"<ricerca>\""]
+        return ["la prima frase non ha una foto (scheda.foto): se ne esiste una libera e pertinente, cercala con: "
+                "python -m auto_ig.richieste foto <cartella> \"<ricerca>\""]
     return []
 
 
@@ -179,9 +179,7 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     if render_fn is None:
         from .video import render as render_fn
     data = load(folder)
-    if errs := _regole_foto(data):                # lo scheletro può non averla ancora; il video no
-        raise ValueError(f"{folder.name}: " + "; ".join(errs))
-    for a in dict.fromkeys(avvisi_testo(data)):
+    for a in dict.fromkeys(_regole_foto(data) + avvisi_testo(data)):
         log(f"avviso: {a}")
     o = outputs(folder)
     o["wav"].parent.mkdir(exist_ok=True)
@@ -216,12 +214,10 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
                               "formato": data.get("formato") or "",
                               # inizio di ogni frase: le scene a più atti si sincronizzano con la voce
                               "atti": ",".join(f"{x.start:.2f}" for x in sentences),
-                              "fini": ",".join(f"{x.end:.2f}" for x in sentences),   # bocca che parla
+                              "fini": ",".join(f"{x.end:.2f}" for x in sentences),   # fine di ogni frase (attesa del quiz)
                               "battute": audio.battute_param(bt),
                               "pop": audio.pop_param(ev),        # opzione A/B/C che rimbalza sul suo pop
-                              "outfit": str(data.get("outfit") or ""),
-                              "cornice": str(data.get("cornice") or ""),   # preset cornice della foto (foto2d.js)
-                              "mascotte": "1" if data.get("mascotte") is True else "0"},
+                              "cornice": str(data.get("cornice") or "")},   # preset cornice della foto (foto2d.js)
               max(3.0, seconds), o["mp4"].parent, progress=progress, audio=traccia, ass=o["ass"], name="video",
               quality=str(data.get("qualita") or "alta"), log=log)
     from .video import VIDEO_DIR

@@ -1,190 +1,16 @@
-// PRESET — Cartoon 2D ad alto ritmo: la modella Cintre disegnata in 2D piatto (stesso aspetto di modella.js:
-// mora, occhi castani, labbra rosate) + effetti "dopamina" (punch-in, scossa, flash, tendina, raggi, esplosioni,
-// timbri, testo che sbatte). Tutto su canvas 2D 1080x1920 (vedi grafica2d.js → tela2d), deterministico in t.
+// PRESET — Cartoon 2D ad alto ritmo per TeamUp Esports: effetti "dopamina" (punch-in, scossa, flash, tendina,
+// raggi, esplosioni, timbri, testo che sbatte, adesivi). Tutto su canvas 2D 1080x1920 (vedi grafica2d.js → tela2d),
+// deterministico in t.
 //
-//   cintre(ctx, x, y, s, { posa: 'indica', da: 'neutro', k, espr: 'sorpresa', parla, t, outfit })
-//       x, y = base del collo; s = scala (1 → testa ~165 px, figura ~650 px dalla testa ai fianchi)
 //   camera(ctx, { zoom, fx, fy, sx, sy })  ...disegno...  ctx.restore()
 //   raggi, puntini, esplosione, lineeVelocita, tendina, flash, timbro, scritta, adesivo, carteMistero, barra
-//
-// Pose: neutro, presenta, indica, indicaSx, sorpresa, pensa, gioia, saluta, spalle.
-// Espressioni: neutra, felice, sorpresa, furba, wow.
-import { BORDEAUX, CIPRIA, SCURO, CREMA, OUTFITS, gruccia } from './brand.js';
+import { PRIMARIO, ACCENTO, SCURO, CHIARO } from './brand.js';
 import { W, H, FONT, SERIF, INCHIOSTRO, clamp, easeOut, pop, rr, icona } from './grafica2d.js';
 
-export const ASPETTO = { pelle: '#eab894', ombra: '#d99b78', capelli: '#4a2c1d', capelliLuce: '#6b4330', occhi: '#6b4226', labbra: '#b84a5e' };
 const LW = 6;                                   // contorno "disegnato"
 export const hash = (i) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 export const backOut = (x) => { x = clamp(x); const c = 2.2; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
 const lerp = (a, b, k) => a + (b - a) * k;
-
-// --- Pose: dove stanno le mani (coordinate del corpo, origine = base del collo, s = 1) -------------
-// Le braccia si piegano da sole (cinematica inversa a 2 ossa), il gomito va sempre verso l'esterno.
-export const POSE = {
-  neutro:   { sx: [-100, 250], dx: [100, 250] },
-  presenta: { sx: [-100, 250], dx: [235, 110], palmo: 'dx' },
-  indica:   { sx: [-100, 250], dx: [205, -150], dito: 'dx' },
-  indicaSx: { sx: [-205, -150], dx: [100, 250], dito: 'sx' },
-  sorpresa: { sx: [-76, -48], dx: [76, -48] },
-  pensa:    { sx: [-100, 250], dx: [30, -18] },
-  gioia:    { sx: [-195, -175], dx: [195, -175] },
-  saluta:   { sx: [-100, 250], dx: [175, -135], onda: 'dx' },
-  spalle:   { sx: [-185, 60], dx: [185, 60], palmo: 'entrambe' },
-};
-export const ESPRESSIONI = {
-  neutra:   { occhi: 1.0, ciglia: 0, bocca: 'sorriso', guance: 0.15 },
-  felice:   { occhi: 0.9, ciglia: -4, bocca: 'grande', guance: 0.45 },
-  sorpresa: { occhi: 1.28, ciglia: -16, bocca: 'o', guance: 0.2 },
-  furba:    { occhi: 0.85, ciglia: 0, bocca: 'ghigno', guance: 0.3, unSopracciglio: true },
-  wow:      { occhi: 1.35, ciglia: -20, bocca: 'grande', guance: 0.55 },
-};
-
-function ik(S, T, l1, l2, lato) {
-  let dx = T[0] - S[0], dy = T[1] - S[1], d = Math.hypot(dx, dy);
-  d = clamp(d, Math.abs(l1 - l2) + 1, l1 + l2 - 1);
-  const a = Math.atan2(dy, dx), A = Math.acos(clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1));
-  const cand = [a + A, a - A].map((b) => [S[0] + Math.cos(b) * l1, S[1] + Math.sin(b) * l1]);
-  const E = lato > 0 ? (cand[0][0] > cand[1][0] ? cand[0] : cand[1]) : (cand[0][0] < cand[1][0] ? cand[0] : cand[1]);
-  const ang = Math.atan2(T[1] - E[1], T[0] - E[0]);
-  return { E, H: [E[0] + Math.cos(ang) * l2, E[1] + Math.sin(ang) * l2] };
-}
-
-function tubo(ctx, A, B, r, colore) {             // segmento di braccio con contorno
-  ctx.save(); ctx.lineCap = 'round';
-  ctx.strokeStyle = INCHIOSTRO; ctx.lineWidth = r * 2 + LW * 2; ctx.beginPath(); ctx.moveTo(...A); ctx.lineTo(...B); ctx.stroke();
-  ctx.strokeStyle = colore; ctx.lineWidth = r * 2; ctx.beginPath(); ctx.moveTo(...A); ctx.lineTo(...B); ctx.stroke();
-  ctx.restore();
-}
-function forma(ctx, colore, disegna) { ctx.beginPath(); disegna(); ctx.fillStyle = colore; ctx.fill(); ctx.lineWidth = LW; ctx.strokeStyle = INCHIOSTRO; ctx.lineJoin = 'round'; ctx.stroke(); }
-
-const MANICHE_LUNGHE = ['camicia', 'maglione', 'dolcevita', 'blazer', 'cappotto'];
-export function outfitDaNome(nome) { return OUTFITS.find((o) => o.nome.toLowerCase() === String(nome || '').toLowerCase()) || OUTFITS[1]; }
-
-// --- La modella Cintre in 2D --------------------------------------------------------------------
-export function cintre(ctx, x, y, s, { posa = 'neutro', da = null, k = 1, espr = 'neutra', parla = false, t = 0,
-  outfit = OUTFITS[1], inclina = 0, salto = 0 } = {}) {
-  const P1 = POSE[posa] || POSE.neutro, P0 = POSE[da] || P1, kk = backOut(k);
-  const mano = (lato) => [lerp(P0[lato][0], P1[lato][0], kk), lerp(P0[lato][1], P1[lato][1], kk)];
-  const E = ESPRESSIONI[espr] || ESPRESSIONI.neutra;
-  const resp = Math.sin(t * 2.2) * 4, onda = P1.onda ? Math.sin(t * 9) * 26 : 0;
-  const c = outfit.capi || {}, pelle = ASPETTO.pelle;
-  const top = outfit.top, sotto = outfit.tipo === 'abito' ? outfit.top : outfit.bottom;
-  const manica = MANICHE_LUNGHE.includes(c.sopra) ? top : pelle;
-
-  ctx.save(); ctx.translate(x, y - salto); ctx.scale(s, s);
-  // ombra a terra (morbida, dà peso alla figura)
-  // capelli dietro: lunghi e mossi, ondeggiano
-  const sw = Math.sin(t * 1.7) * 6;
-  forma(ctx, ASPETTO.capelli, () => {
-    ctx.moveTo(-96, -150); ctx.quadraticCurveTo(-130, -40, -112 + sw, 60); ctx.quadraticCurveTo(-100 + sw, 140, -60 + sw, 170);
-    ctx.quadraticCurveTo(-30, 120, -40, 40); ctx.lineTo(40, 40); ctx.quadraticCurveTo(30, 120, 60 - sw, 170);
-    ctx.quadraticCurveTo(100 - sw, 140, 112 - sw, 60); ctx.quadraticCurveTo(130, -40, 96, -150); ctx.closePath();
-  });
-  // gambe (sotto la gonna) e parte bassa
-  const tipoSotto = c.sotto || (outfit.tipo === 'pantaloni' ? 'pantaloni' : 'gonna');
-  const pant = ['jeans', 'pantaloni', 'palazzo'].includes(tipoSotto);
-  if (!pant) for (const sx of [-1, 1]) forma(ctx, pelle, () => { rr(ctx, sx * 40 - 22, 330, 44, 200, 20); });
-  // busto
-  forma(ctx, top, () => {
-    ctx.moveTo(-26, -6); ctx.quadraticCurveTo(-84, 0 + resp * 0.3, -88, 40); ctx.quadraticCurveTo(-70, 140, -62, 215);
-    ctx.lineTo(62, 215); ctx.quadraticCurveTo(70, 140, 88, 40); ctx.quadraticCurveTo(84, 0 + resp * 0.3, 26, -6); ctx.closePath();
-  });
-  // collo e scollo
-  forma(ctx, pelle, () => { ctx.moveTo(-20, -30); ctx.lineTo(-22, 4); ctx.quadraticCurveTo(0, 30, 22, 4); ctx.lineTo(20, -30); ctx.closePath(); });
-  if (c.sopra === 'camicia' || c.sopra === 'blazer') {
-    for (const sx of [-1, 1]) forma(ctx, c.sopra === 'blazer' ? top : '#ffffff', () => { ctx.moveTo(sx * 4, 18); ctx.lineTo(sx * 30, -6); ctx.lineTo(sx * 36, 30); ctx.closePath(); });
-  }
-  // parte bassa
-  if (pant) {
-    for (const sx of [-1, 1]) forma(ctx, sotto, () => { ctx.moveTo(sx * 4, 205); ctx.lineTo(sx * 66, 205); ctx.lineTo(sx * (tipoSotto === 'palazzo' ? 86 : 70), 530); ctx.lineTo(sx * 10, 530); ctx.closePath(); });
-  } else {
-    const svasa = 10 * Math.sin(t * 2.5);
-    forma(ctx, sotto, () => { ctx.moveTo(-64, 205); ctx.lineTo(64, 205); ctx.lineTo(118 + svasa, 345); ctx.quadraticCurveTo(0, 370, -118 - svasa, 345); ctx.closePath(); });
-  }
-  forma(ctx, SCURO, () => { rr(ctx, -64, 198, 128, 16, 6); });                  // cintura
-  for (const sx of [-1, 1]) forma(ctx, outfit.scarpe || SCURO, () => { ctx.ellipse(sx * 40 + sx * 6, 530, 34, 17, 0, Math.PI, 0); ctx.lineTo(sx * 40 + sx * 6 - 34, 536); ctx.lineTo(sx * 40 + sx * 6 + 34, 536); ctx.closePath(); });
-  ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.beginPath(); ctx.ellipse(-30, 120, 14, 60, 0.1, 0, 7); ctx.fill(); ctx.restore();
-
-  // braccia
-  for (const [lato, sx] of [['sx', -1], ['dx', 1]]) {
-    let T = mano(lato);
-    if (P1.onda === lato) T = [T[0] + onda, T[1] - Math.abs(onda) * 0.3];
-    const S = [sx * 72, 26 + resp * 0.3];
-    const { E: G, H: M } = ik(S, T, 125, 118, sx);
-    tubo(ctx, S, G, 21, manica === pelle ? top : manica);                       // spalla sempre col colore del top
-    tubo(ctx, G, M, 18, manica);
-    // mano
-    ctx.save(); ctx.translate(...M);
-    forma(ctx, pelle, () => { ctx.arc(0, 0, 22, 0, 7); });
-    if (P1.dito === lato) {
-      const a = Math.atan2(M[1] - G[1], M[0] - G[0]);
-      ctx.rotate(a); forma(ctx, pelle, () => { rr(ctx, 8, -8, 40, 16, 8); });
-    } else if (P1.palmo === lato || P1.palmo === 'entrambe') {
-      forma(ctx, pelle, () => { ctx.ellipse(0, -10, 26, 12, 0, 0, 7); });
-    }
-    ctx.restore();
-  }
-
-  // testa
-  ctx.save(); ctx.translate(0, -40); ctx.rotate(inclina + Math.sin(t * 1.3) * 0.03); ctx.translate(0, -112);
-  forma(ctx, pelle, () => { ctx.ellipse(0, 0, 78, 90, 0, 0, 7); });
-  // guance
-  ctx.save(); ctx.globalAlpha = E.guance; ctx.fillStyle = '#ff7f8a';
-  for (const sx of [-1, 1]) { ctx.beginPath(); ctx.ellipse(sx * 44, 30, 18, 11, 0, 0, 7); ctx.fill(); } ctx.restore();
-  // occhi (battito ogni ~3 s, deterministico)
-  const fase = (t + 0.7) % 3.1, blink = fase < 0.14 ? Math.sin((fase / 0.14) * Math.PI) : 0;
-  for (const sx of [-1, 1]) {
-    ctx.save(); ctx.translate(sx * 31, -2); ctx.scale(E.occhi, E.occhi * (1 - 0.92 * blink));
-    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 0, 19, 23, 0, 0, 7); ctx.fill();
-    ctx.lineWidth = 3; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
-    ctx.fillStyle = ASPETTO.occhi; ctx.beginPath(); ctx.arc(sx * 2, 3, 13, 0, 7); ctx.fill();
-    ctx.fillStyle = '#1b0f0a'; ctx.beginPath(); ctx.arc(sx * 2, 3, 7, 0, 7); ctx.fill();
-    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(sx * 2 - 4, -3, 4, 0, 7); ctx.fill();
-    ctx.restore();
-    // ciglia (linea spessa + due "code" verso l'esterno)
-    ctx.save(); ctx.translate(sx * 31, -2); ctx.strokeStyle = INCHIOSTRO; ctx.lineCap = 'round'; ctx.lineWidth = 6;
-    const hy = -23 * E.occhi * (1 - 0.92 * blink);
-    ctx.beginPath(); ctx.ellipse(0, 0, 21 * E.occhi, -hy + 1, 0, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke();
-    ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(sx * 18 * E.occhi, hy * 0.55); ctx.lineTo(sx * 30 * E.occhi, hy * 0.85); ctx.moveTo(sx * 12 * E.occhi, hy * 0.85); ctx.lineTo(sx * 20 * E.occhi, hy * 1.15); ctx.stroke();
-    ctx.restore();
-    // sopracciglia
-    const alza = E.ciglia + (E.unSopracciglio && sx > 0 ? -14 : 0);
-    ctx.save(); ctx.strokeStyle = ASPETTO.capelli; ctx.lineWidth = 7; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(sx * 14, -42 + alza * 0.6); ctx.quadraticCurveTo(sx * 32, -52 + alza, sx * 50, -44 + alza * 0.8); ctx.stroke(); ctx.restore();
-  }
-  // naso
-  ctx.save(); ctx.strokeStyle = ASPETTO.ombra; ctx.lineWidth = 4; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(-2, 18); ctx.quadraticCurveTo(6, 30, -4, 34); ctx.stroke(); ctx.restore();
-  // bocca: forma dell'espressione, si apre a sillabe mentre parla
-  const ap = parla ? 0.3 + 0.7 * Math.abs(Math.sin(t * 15 + Math.sin(t * 4.3) * 2)) : 0;
-  ctx.save(); ctx.translate(0, 52); ctx.lineWidth = 4; ctx.strokeStyle = INCHIOSTRO;
-  if (E.bocca === 'o' && !parla) {
-    ctx.fillStyle = '#5a1a25'; ctx.beginPath(); ctx.ellipse(0, 2, 13, 17, 0, 0, 7); ctx.fill(); ctx.stroke();
-  } else if (E.bocca === 'grande' || ap > 0) {
-    const h = E.bocca === 'grande' ? 14 + 10 * ap : 4 + 16 * ap, w = E.bocca === 'o' ? 16 : 26;
-    ctx.fillStyle = '#5a1a25'; ctx.beginPath(); ctx.moveTo(-w, -2); ctx.quadraticCurveTo(0, 4, w, -2); ctx.quadraticCurveTo(0, h * 2.1, -w, -2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#ff9aa6'; ctx.beginPath(); ctx.ellipse(0, h * 0.9, w * 0.45, h * 0.35, 0, 0, Math.PI); ctx.fill();
-  } else if (E.bocca === 'ghigno') {
-    ctx.strokeStyle = ASPETTO.labbra; ctx.lineWidth = 7; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-20, 2); ctx.quadraticCurveTo(4, 10, 24, -8); ctx.stroke();
-  } else {
-    ctx.strokeStyle = ASPETTO.labbra; ctx.lineWidth = 7; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-20, -2); ctx.quadraticCurveTo(0, 14, 20, -2); ctx.stroke();
-  }
-  ctx.restore();
-  // capelli davanti: calotta + frangia laterale morbida
-  forma(ctx, ASPETTO.capelli, () => {
-    ctx.moveTo(-84, 10); ctx.quadraticCurveTo(-96, -86, -20, -100); ctx.quadraticCurveTo(70, -108, 88, -20);
-    ctx.quadraticCurveTo(92, 10, 82, 40); ctx.quadraticCurveTo(70, -30, 30, -52);
-    ctx.quadraticCurveTo(-10, -30, -60, -36); ctx.quadraticCurveTo(-74, -10, -84, 10); ctx.closePath();
-  });
-  ctx.save(); ctx.strokeStyle = ASPETTO.capelliLuce; ctx.lineWidth = 6; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(-40, -82); ctx.quadraticCurveTo(10, -92, 50, -70); ctx.stroke(); ctx.restore();
-  // orecchino a gruccia Cintre (dettaglio di brand)
-  ctx.save(); ctx.translate(-80, 30); gruccia(ctx, 0, 14, 26, '#d4af37', 3); ctx.restore();
-  ctx.restore();   // testa
-  ctx.restore();
-}
 
 // --- Camera: punch-in + scossa attorno al punto di interesse --------------------------------------
 export function camera(ctx, { zoom = 1, fx = W / 2, fy = 700, sx = 0, sy = 0, ruota = 0 } = {}) {
@@ -192,7 +18,7 @@ export function camera(ctx, { zoom = 1, fx = W / 2, fy = 700, sx = 0, sy = 0, ru
 }
 
 // --- Sfondi ad alta energia ----------------------------------------------------------------------
-export function sfondoPop(ctx, t, { colore = BORDEAUX, raggi: colRaggi = CIPRIA, cx = W / 2, cy = 640, alfa = 0.1, vel = 0.15 } = {}) {
+export function sfondoPop(ctx, t, { colore = PRIMARIO, raggi: colRaggi = ACCENTO, cx = W / 2, cy = 640, alfa = 0.1, vel = 0.15 } = {}) {
   ctx.save(); ctx.fillStyle = colore; ctx.fillRect(0, 0, W, H);
   raggi(ctx, cx, cy, t * vel, colRaggi, { alfa, n: 18 });
   const g = ctx.createRadialGradient(cx, cy, 80, cx, cy, H * 0.8);
@@ -217,7 +43,7 @@ export function puntini(ctx, t, colore = '#fff', alfa = 0.07) {   // retino a me
 
 // --- Effetti di stacco ---------------------------------------------------------------------------
 // Esplosione di stelline/coriandoli: u = secondi dall'esplosione
-export function esplosione(ctx, cx, cy, u, { colori = [CIPRIA, '#ffd166', '#ffffff'], n = 22, seme = 1, forza = 900 } = {}) {
+export function esplosione(ctx, cx, cy, u, { colori = [ACCENTO, '#ffd166', '#ffffff'], n = 22, seme = 1, forza = 900 } = {}) {
   if (u < 0 || u > 1.1) return;
   ctx.save();
   for (let k = 0; k < n; k++) {
@@ -243,7 +69,7 @@ export function lineeVelocita(ctx, cx, cy, k, { colore = '#ffffff', n = 26 } = {
   ctx.restore();
 }
 // Tendina diagonale che "scopre" la scena nuova: u = secondi dallo stacco (dura 0.3 s)
-export function tendina(ctx, u, { colore = CIPRIA, colore2 = SCURO, dir = 1 } = {}) {
+export function tendina(ctx, u, { colore = ACCENTO, colore2 = SCURO, dir = 1 } = {}) {
   const k = clamp(u / 0.3); if (k >= 1) return;
   const e = easeOut(k), x0 = -400 + e * (W + 1500) * dir, larg = W + 800;
   ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(-0.3 * dir); ctx.translate(-W / 2, -H / 2);
@@ -256,8 +82,8 @@ export function flash(ctx, alfa, colore = '#ffffff') { if (alfa <= 0.01) return;
 // --- Testo "che sbatte" --------------------------------------------------------------------------
 // Parole a comparsa una dopo l'altra (passo = secondi tra le parole; 0 = tutte subito), con rimbalzo.
 // `evidenzia` = parole su pennarello colorato. Contorno spesso + ombra netta (stile adesivo).
-export function scritta(ctx, str, x, y, u, { size = 84, colore = '#ffffff', maxW = 840, evidenzia = '', accento = CIPRIA,
-  passo = 0.09, interlinea = 1.1, peso = 900, pennarello = BORDEAUX, bordo = INCHIOSTRO } = {}) {
+export function scritta(ctx, str, x, y, u, { size = 84, colore = '#ffffff', maxW = 840, evidenzia = '', accento = ACCENTO,
+  passo = 0.09, interlinea = 1.1, peso = 900, pennarello = PRIMARIO, bordo = INCHIOSTRO } = {}) {
   ctx.save(); ctx.font = FONT(size, peso); ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
   const words = String(str).split(/\s+/).filter(Boolean);
   const hl = new Set(String(evidenzia).toLowerCase().split(/\s+/).filter(Boolean).map((w) => w.replace(/[^\p{L}\p{N}]/gu, '')));
@@ -275,7 +101,7 @@ export function scritta(ctx, str, x, y, u, { size = 84, colore = '#ffffff', maxW
         ctx.rotate((on ? -0.05 : 0) + (passo > 0 ? (1 - k) * (n % 2 ? 0.2 : -0.2) : 0)); ctx.globalAlpha *= clamp(k * 3);
         if (on) { ctx.fillStyle = accento; ctx.save(); ctx.rotate(-0.02); rr(ctx, -ww / 2 - 16, -size * 0.52, ww + 32, size * 1.04, 14); ctx.fill(); ctx.restore(); }
         ctx.lineJoin = 'round'; ctx.lineWidth = size * 0.16; ctx.strokeStyle = bordo;
-        ctx.fillStyle = 'rgba(20,4,10,0.55)'; ctx.fillText(w, 5, 8);                                   // ombra netta
+        ctx.fillStyle = 'rgba(8,4,20,0.55)'; ctx.fillText(w, 5, 8);                                   // ombra netta
         if (!on) ctx.strokeText(w, 0, 0);
         ctx.fillStyle = on ? pennarello : colore; ctx.fillText(w, 0, 0);
         ctx.restore();
@@ -293,32 +119,32 @@ export function timbro(ctx, str, cx, cy, u, { size = 64, fondo = '#ffd166', colo
   const k = clamp(u / 0.18), sc = lerp(2.6, 1, backOut(k));
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(ruota + Math.sin(u * 10) * 0.02 * clamp(1 - u)); ctx.scale(sc, sc); ctx.globalAlpha *= clamp(k * 2);
   ctx.font = FONT(size, 900); const w = ctx.measureText(str).width + size * 0.9, h = size * 1.5;
-  ctx.fillStyle = 'rgba(20,4,10,0.5)'; rr(ctx, -w / 2 + 8, -h / 2 + 10, w, h, 18); ctx.fill();
+  ctx.fillStyle = 'rgba(8,4,20,0.5)'; rr(ctx, -w / 2 + 8, -h / 2 + 10, w, h, 18); ctx.fill();
   ctx.fillStyle = fondo; rr(ctx, -w / 2, -h / 2, w, h, 18); ctx.fill(); ctx.lineWidth = LW; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
   ctx.fillStyle = colore; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(str, 0, size * 0.04);
   ctx.restore();
 }
 
 // Adesivo: card con contorno e ombra netta che contiene un'icona (entra cadendo e rimbalza)
-export function adesivo(ctx, nome, cx, cy, s, u, { t = 0, ruota = 0, fondo = CREMA, accento = CIPRIA, dall = 'alto' } = {}) {
+export function adesivo(ctx, nome, cx, cy, s, u, { t = 0, ruota = 0, fondo = CHIARO, accento = ACCENTO, dall = 'alto' } = {}) {
   const k = clamp(u / 0.35); if (k <= 0) return;
   const dy = dall === 'alto' ? (1 - backOut(k)) * -500 : 0, sc = dall === 'pop' ? backOut(k) : 1;
   ctx.save(); ctx.translate(cx, cy + dy); ctx.rotate(ruota + Math.sin(t * 2 + cx) * 0.03); ctx.scale(sc, sc);
-  ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, -s / 2 + 14, -s / 2 + 18, s, s, s * 0.14); ctx.fill();
+  ctx.fillStyle = 'rgba(8,4,20,0.45)'; rr(ctx, -s / 2 + 14, -s / 2 + 18, s, s, s * 0.14); ctx.fill();
   ctx.fillStyle = fondo; rr(ctx, -s / 2, -s / 2, s, s, s * 0.14); ctx.fill(); ctx.lineWidth = LW + 2; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
   icona(ctx, nome, 0, 0, s * 0.78, { t, accento });
   ctx.restore();
 }
 
 // Carte mistero: fila di carte, quelle già scoperte mostrano l'icona, le altre "?" che tremano (open loop)
-export function carteMistero(ctx, icone, scoperte, cx, cy, s, t, { attiva = -1, accento = CIPRIA, gap = 1.18 } = {}) {
+export function carteMistero(ctx, icone, scoperte, cx, cy, s, t, { attiva = -1, accento = ACCENTO, gap = 1.18 } = {}) {
   const n = icone.length;
   icone.forEach((nome, k) => {
     const x = cx + (k - (n - 1) / 2) * s * gap, su = k < scoperte, att = k === attiva;
     ctx.save(); ctx.translate(x, cy + (att ? -12 + Math.sin(t * 8) * 6 : 0)); ctx.rotate((su ? 0 : Math.sin(t * 6 + k * 2) * 0.07) + (k - 1) * 0.05);
     const sc = att ? 1.12 : 1; ctx.scale(sc, sc);
-    ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, -s / 2 + 8, -s * 0.62 + 10, s, s * 1.24, 18); ctx.fill();
-    ctx.fillStyle = su ? CREMA : BORDEAUX; rr(ctx, -s / 2, -s * 0.62, s, s * 1.24, 18); ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = su ? INCHIOSTRO : accento; ctx.stroke();
+    ctx.fillStyle = 'rgba(8,4,20,0.45)'; rr(ctx, -s / 2 + 8, -s * 0.62 + 10, s, s * 1.24, 18); ctx.fill();
+    ctx.fillStyle = su ? CHIARO : PRIMARIO; rr(ctx, -s / 2, -s * 0.62, s, s * 1.24, 18); ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = su ? INCHIOSTRO : accento; ctx.stroke();
     if (su) icona(ctx, nome, 0, 0, s * 0.8, { t, accento });
     else { ctx.fillStyle = accento; ctx.font = SERIF(s * 0.8, '700'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', 0, s * 0.05); }
     ctx.restore();
@@ -326,22 +152,22 @@ export function carteMistero(ctx, icone, scoperte, cx, cy, s, t, { attiva = -1, 
 }
 
 // Barra di avanzamento in alto (k 0..1) e contatore "1/3"
-export function barra(ctx, k, { colore = CIPRIA } = {}) {
+export function barra(ctx, k, { colore = ACCENTO } = {}) {
   ctx.save(); ctx.fillStyle = 'rgba(255,255,255,0.18)'; rr(ctx, 60, 70, W - 120, 14, 7); ctx.fill();
   ctx.fillStyle = colore; rr(ctx, 60, 70, Math.max(14, (W - 120) * clamp(k)), 14, 7); ctx.fill(); ctx.restore();
 }
-export function contatore(ctx, n, tot, cx, cy, u, { accento = CIPRIA } = {}) {
+export function contatore(ctx, n, tot, cx, cy, u, { accento = ACCENTO } = {}) {
   const k = clamp(u / 0.3), sc = lerp(1.8, 1, backOut(k));
   ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.rotate(0.06);
-  ctx.fillStyle = 'rgba(20,4,10,0.5)'; rr(ctx, -84 + 6, -46 + 8, 168, 92, 46); ctx.fill();
+  ctx.fillStyle = 'rgba(8,4,20,0.5)'; rr(ctx, -84 + 6, -46 + 8, 168, 92, 46); ctx.fill();
   ctx.fillStyle = accento; rr(ctx, -84, -46, 168, 92, 46); ctx.fill(); ctx.lineWidth = LW; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
-  ctx.fillStyle = BORDEAUX; ctx.font = FONT(56, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${n}/${tot}`, 0, 3);
+  ctx.fillStyle = PRIMARIO; ctx.font = FONT(56, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`${n}/${tot}`, 0, 3);
   ctx.restore();
 }
 
 // Fumetto (commenti): rettangolo arrotondato con punta verso (px, py)
-export function fumetto(ctx, x, y, w, h, px, py, { fondo = CREMA } = {}) {
-  ctx.save(); ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, x + 10, y + 12, w, h, 50); ctx.fill();
+export function fumetto(ctx, x, y, w, h, px, py, { fondo = CHIARO } = {}) {
+  ctx.save(); ctx.fillStyle = 'rgba(8,4,20,0.45)'; rr(ctx, x + 10, y + 12, w, h, 50); ctx.fill();
   ctx.beginPath(); rr(ctx, x, y, w, h, 50); ctx.moveTo(px - 40, y + h - 2); ctx.lineTo(px, py); ctx.lineTo(px + 40, y + h - 2);
   ctx.fillStyle = fondo; ctx.fill(); ctx.lineWidth = LW; ctx.strokeStyle = INCHIOSTRO; ctx.lineJoin = 'round';
   ctx.beginPath(); rr(ctx, x, y, w, h, 50); ctx.stroke(); ctx.beginPath(); ctx.moveTo(px - 40, y + h); ctx.lineTo(px, py); ctx.lineTo(px + 40, y + h); ctx.stroke();

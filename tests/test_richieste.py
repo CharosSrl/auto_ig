@@ -31,7 +31,7 @@ class Base(unittest.TestCase):
         return f"{name}.mp4", f"{name}.jpg"
 
     def make(self, **kw):
-        return richieste.new("Nuova collezione!", ["Il tuo armadio parla di te.", "Questo è Cintre."],
+        return richieste.new("Nuovo torneo!", ["Il tuo team ti aspetta.", "Questo è TeamUp."],
                              base=self.base, day=date(2026, 11, 20), request="reel oro su nero", **kw)
 
 
@@ -85,7 +85,7 @@ class TestToni(unittest.TestCase):
 class TestPronuncia(unittest.TestCase):
     def test_tts_text(self):
         self.assertEqual(voce.tts_text("Non sapevo MAI cosa mettermi!"), "Non sapevo mai cosa mettermi!")
-        self.assertEqual(voce.tts_text("Cintre. Ciao Cintrella", {"Cintre": "Sèntr"}), "Sèntr. Ciao Cintrella")
+        self.assertEqual(voce.tts_text("TeamUp. Ciao TeamUpper", {"TeamUp": "Tìm ap"}), "Tìm ap. Ciao TeamUpper")
         heard = []
         voce.speak(["Basta COSÌ"], Path(tempfile.mkdtemp()) / "v.wav",
                    synth=lambda text, tone: (heard.append(text) or (b"\x00\x00" * 2205, 22050, 2, 1)))
@@ -95,7 +95,7 @@ class TestPronuncia(unittest.TestCase):
 class TestRichieste(Base):
     def test_new_build_enqueue(self):
         f = self.make()
-        self.assertEqual(f.name, "2026-11-20-nuova-collezione")
+        self.assertEqual(f.name, "2026-11-20-nuovo-torneo")
         d = richieste.load(f)
         self.assertEqual((d["stato"], d["scena"], d["richiesta"]), ("da_fare", "particelle", "reel oro su nero"))
         self.assertIn("# Richiesta di contenuto", (f / "richiesta.yaml").read_text())
@@ -113,8 +113,8 @@ class TestRichieste(Base):
         with self.assertRaises(ValueError):                    # manca la data
             richieste.enqueue(f, media_dir=self.md, queue_path=self.qf)
         post = richieste.enqueue(f, "2026-11-21T18:00+01:00", "Cap", media_dir=self.md, queue_path=self.qf)
-        self.assertEqual((post.status, post.type, post.media), ("draft", "reel", ["reel-2026-11-20-nuova-collezione.mp4"]))
-        self.assertTrue((self.md / "reel-2026-11-20-nuova-collezione.jpg").exists())
+        self.assertEqual((post.status, post.type, post.media), ("draft", "reel", ["reel-2026-11-20-nuovo-torneo.mp4"]))
+        self.assertTrue((self.md / "reel-2026-11-20-nuovo-torneo.jpg").exists())
         self.assertEqual(richieste.load(f)["stato"], "in_coda")
 
     def test_invalid_request(self):
@@ -131,7 +131,7 @@ class TestRichieste(Base):
         app.testing = True
         c = app.test_client()
         page = c.get("/video").data.decode()
-        self.assertIn("Nuova collezione!", page)
+        self.assertIn("Nuovo torneo!", page)
         self.assertEqual(c.get(f"/richieste/{f.name}/video.mp4").status_code, 200)
         self.assertEqual(c.get(f"/richieste/{f.name}/richiesta.yaml").status_code, 404)
         self.assertEqual(c.get("/richieste/..%2F..%2Fetc/video.mp4").status_code, 404)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
 
 class TestFoto(Base):
-    YAML = ("titolo: x\nstato: da_fare\nscena: cartoon2d\ncolori: {sfondo: '#6d1a36', accento: '#e8c4c0'}\n"
+    YAML = ("titolo: x\nstato: da_fare\nscena: cartoon2d\ncolori: {sfondo: '#5b21b6', accento: '#22d3ee'}\n"
             "copione:\n  - testo: Eccola, del 1916.\n    scheda: {tipo: foto, titolo: Keds, foto: keds.jpg}\n")
 
     def test_foto_mancante_poi_copiata_per_il_render(self):

@@ -1,4 +1,4 @@
-"""Formati dei contenuti (storia, quiz, curiosità) e rese (3d, 2d): catalogo in formati.yaml.
+"""Formati dei contenuti (storia, quiz, curiosità) e rese (2d): catalogo in formati.yaml.
 
 Una richiesta con `formato` viene controllata contro il catalogo e riceve SEMPRE la call to action
 come ultima frase (scheda `cta` nella resa 2d). Senza `formato` tutto resta come prima.
@@ -16,9 +16,9 @@ from pathlib import Path
 import yaml
 
 CATALOGO = Path(__file__).with_name("formati.yaml")
-RESE = ("3d", "2d")
+RESE = ("2d",)          # resa a schede 2D (scene schede2d e cartoon2d)
 # Azione della call to action (formati.yaml → cta_azione): decide il cartello finale e il suo bottone.
-AZIONI_CTA = {"salva_condividi": "Salva e invia", "segui": "Segui @cintre_official",
+AZIONI_CTA = {"salva_condividi": "Salva e invia", "segui": "Segui @teamupesportsofficial",
               "commenta": "Scrivilo nei commenti", "app": "Link in bio"}
 MAX_PAROLE_HOOK = 14     # regola: ~12 parole; oltre 14 è un errore (formati.yaml → hook_e_cta)
 
@@ -82,8 +82,6 @@ def valida(data: dict) -> list[str]:
         prima = _scheda((data.get("copione") or [None])[0]) or {}
         if prima and prima.get("tipo") != "gancio":
             errs.append("la prima scheda deve essere il gancio")
-    if data.get("mascotte") not in (None, True, False):
-        errs.append("mascotte: true | false (la mascotte si mette solo se Antonio la chiede)")
     gancio = (data.get("copione") or [None])[0]
     testo = gancio.get("testo", "") if isinstance(gancio, dict) else str(gancio or "")
     if len(testo.split()) > MAX_PAROLE_HOOK and not testo.startswith("["):     # "[gancio] ..." = segnaposto
