@@ -308,3 +308,55 @@ posts:
   published_at: '2026-11-19T18:44:06+00:00'
   extra:
     cover: reel-2026-11-20-curiosita-jeans-acqua.jpg
+- id: '14'
+  when: 2026-11-20T08:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-21-curiosita-jeans-miniera.mp4
+  caption: 'Jeans vecchi e strappati, venduti a 76.000 dollari 💸👖
+
+
+    📌 La storia: un paio di Levi''s degli anni 1880 è stato trovato in una miniera
+    abbandonata nel West americano. Il 1° ottobre 2022 è finito all''asta in New Mexico
+    ed è stato venduto per 76.000 dollari (87.400 con la commissione). Di jeans di
+    quell''epoca ne restano meno di 10 paia in mano ai privati.
+
+
+    Mandalo a chi butta i jeans vecchi 👇
+
+    Segui @cintre_official: ogni giorno una curiosità di moda.
+
+
+    #cintre #curiosità #jeans #levis #vintage'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-21-curiosita-jeans-miniera.jpg
+- id: '15'
+  when: 2026-11-20T18:00+01:00
+  type: reel
+  media:
+  - reel-2026-11-21-curiosita-tacchi-uomini.mp4
+  caption: 'I tacchi alti? Li hanno inventati per gli uomini 👠
+
+
+    📌 La storia: i primi tacchi servivano ai cavalieri persiani, per tenere il piede
+    fermo nella staffa. A fine Cinquecento arrivano in Europa con i diplomatici persiani
+    e diventano di moda tra i nobili. In Francia Luigi XIV li vuole rossi e solo per
+    la sua corte. Nell''Ottocento gli uomini li abbandonano e restano alle donne.
+
+
+    Mandalo a chi ha i tacchi nell''armadio 👇
+
+    Segui @cintre_official: ogni giorno una curiosità di moda.
+
+
+    #cintre #curiosità #tacchi #storiadellamoda #moda'
+  status: pending
+  ig_media_id: null
+  error: null
+  published_at: null
+  extra:
+    cover: reel-2026-11-21-curiosita-tacchi-uomini.jpg
