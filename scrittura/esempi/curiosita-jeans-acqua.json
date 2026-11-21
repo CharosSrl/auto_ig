@@ -1,0 +1,179 @@
+{
+  "_nota": "REEL ANDATO MOLTO BENE (gancio contatore: 'alla gente piacciono un sacco i numeroni che crescono'). Con le regole di oggi: manca il rehook, e l'ultima frase è un consiglio, non una risposta tenuta in sospeso.",
+  "_controllo_di_oggi": [
+    "manca il 'rehook' a metà video (01-struttura)"
+  ],
+  "idea": "Curiosità: quanta acqua si beve un paio di jeans",
+  "formato": "curiosita",
+  "richiesta_antonio": "Se devi testare, genera due video nuovi di curiosità.",
+  "fatti": [
+    {
+      "fatto": "un paio di Levi's 501 consuma 3.781 litri d'acqua in tutto il ciclo di vita; ~68% coltivazione del cotone, ~23% lavaggi a casa",
+      "fonte": "Levi Strauss & Co., analisi del ciclo di vita del 501 (2015)"
+    },
+    {
+      "fatto": "Levi's invita a lavare i jeans meno spesso",
+      "fonte": "Levi's, Care Tag for the Planet"
+    }
+  ],
+  "strutture_valutate": [
+    {
+      "schema": "numerone che sale: litri → dove vanno → cosa puoi fare tu",
+      "scelta": true,
+      "perche": "il numero che sale è suspense dal fotogramma 0"
+    },
+    {
+      "schema": "quiz: quanta acqua per un paio di jeans? A/B/C",
+      "scelta": false,
+      "perche": "gli ultimi erano quiz"
+    },
+    {
+      "schema": "prima e dopo: campo di cotone → lavatrice",
+      "scelta": false,
+      "perche": "senza il numero il gancio è debole"
+    }
+  ],
+  "ganci_valutati": [
+    {
+      "testo": "Per fare un paio di jeans servono quasi quattromila litri d'acqua.",
+      "scelto": true,
+      "perche": "numero specifico enorme su una cosa che hai addosso, si vede"
+    },
+    {
+      "testo": "Quanta acqua hai addosso?",
+      "scelto": false,
+      "perche": "vago"
+    },
+    {
+      "testo": "Un paio di jeans vale una piscina?",
+      "scelto": false,
+      "perche": "confronto non verificato"
+    }
+  ],
+  "parola_forte": {
+    "parola": null,
+    "perche": "il gancio è il numerone, non serve una parola forte"
+  },
+  "battute": [
+    {
+      "ruolo": "gancio",
+      "voce": "Per fare un paio di jeans servono quasi quattromila litri d'acqua.",
+      "schermo": "I tuoi jeans hanno bevuto…",
+      "evidenzia": "bevuto",
+      "fatto": 0,
+      "scheda": {
+        "grafica": {
+          "tipo": "contatore",
+          "da": 0,
+          "a": 3781,
+          "unita": "litri d'acqua",
+          "durata": 2.6
+        }
+      }
+    },
+    {
+      "ruolo": "attesa",
+      "voce": "Quasi tutta se la beve il cotone, mentre cresce nei campi.",
+      "schermo": "Il cotone ha sete",
+      "evidenzia": "sete",
+      "fatto": 0,
+      "scheda": {
+        "tipo": "scena2d",
+        "sfondo": "campo",
+        "timbro": "68%",
+        "oggetti": [
+          {
+            "cosa": "cotone",
+            "x": 600,
+            "y": 1170,
+            "s": 0.9
+          },
+          {
+            "cosa": "gocce",
+            "x": 600,
+            "y": 980
+          }
+        ],
+        "attori": [
+          {
+            "azione": "raccoglie",
+            "x": 200,
+            "maglia": "#3f9a52",
+            "pantaloni": "#2f5d9a",
+            "cappello": "paglia",
+            "pelle": 1
+          }
+        ]
+      }
+    },
+    {
+      "ruolo": "attesa",
+      "voce": "Ma un'altra bella fetta la usi tu, ogni volta che li metti in lavatrice.",
+      "schermo": "Il resto? Lo usi tu",
+      "evidenzia": "tu",
+      "fatto": 0,
+      "scheda": {
+        "tipo": "scena2d",
+        "sfondo": "casa",
+        "timbro": "23%",
+        "oggetti": [
+          {
+            "cosa": "lavatrice",
+            "x": 760,
+            "y": 1170,
+            "s": 1.1
+          }
+        ],
+        "attori": [
+          {
+            "azione": "indica",
+            "x": 330,
+            "maglia": "#ff7a59",
+            "pantaloni": "#2f5d9a",
+            "pelle": 3
+          }
+        ]
+      }
+    },
+    {
+      "ruolo": "risposta",
+      "voce": "Per questo Levi's consiglia di lavarli molto meno. E durano anche di più.",
+      "schermo": "Lavali meno!",
+      "evidenzia": "meno",
+      "fatto": 1,
+      "scheda": {
+        "tipo": "scena2d",
+        "sfondo": "casa",
+        "oggetti": [
+          {
+            "cosa": "icona",
+            "x": 780,
+            "y": 760,
+            "s": 1,
+            "icona": "jeans"
+          }
+        ],
+        "attori": [
+          {
+            "azione": "saluta",
+            "x": 330,
+            "maglia": "#ff7a59",
+            "pantaloni": "#2f5d9a",
+            "pelle": 3,
+            "dice": "Ok!",
+            "quando": 0.6
+          }
+        ]
+      }
+    }
+  ],
+  "cta": "Mandalo a chi li lava ogni volta!",
+  "caption": "I tuoi jeans hanno bevuto quasi 4.000 litri d'acqua 💧👖\n\n📌 Il bigino: secondo l'analisi di Levi's sul 501, per un paio di jeans servono 3.781 litri d'acqua. Circa il 68% la beve il cotone mentre cresce, circa il 23% la usiamo noi lavandoli a casa. Per questo Levi's consiglia di lavarli meno spesso: durano anche di più.\n\nMandalo a chi li lava ogni volta 👇\nSegui @cintre_official: ogni giorno una curiosità di moda.\n\n#cintre #curiosità #jeans #levis #moda",
+  "pronuncia": {
+    "Levi's": "Lìvais"
+  },
+  "autocontrollo": {
+    "letto_ad_alta_voce": true,
+    "lo_racconterei_a_un_amico": "sì (reel andato bene)"
+  }
+}

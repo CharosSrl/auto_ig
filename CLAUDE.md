@@ -4,6 +4,10 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 
 ## Prima di OGNI video (obbligatorio, in quest'ordine)
 
+0. **Leggi TUTTA la cartella `scrittura/`** partendo da `scrittura/LEGGIMI.md` (Antonio, 2026-11-21: "focus assoluto
+   sullo scripting… una cartella dedicata con tutte le regole che dovrai leggere ogni volta"). Il copione si scrive
+   in `richieste/<cartella>/copione.json` (schema: `scrittura/copione.schema.json`), si controlla con
+   `python -m auto_ig.copione controlla richieste/<cartella>` e il build si ferma se non rispetta le regole.
 1. Leggi `marca/lezioni.md`: sono le regole ricavate dai dati, vincono su tutto.
 2. Carica le skill `regia-reel` (suoni, formati, curva di retention, ganci a modello) e `linguaggio-giovani`.
    Se il reel ha personaggi o oggetti animati, carica anche `animazione-personaggi-2d` e `motion-design`
@@ -11,7 +15,7 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 3. Fai il formato che Antonio ha chiesto. "Curiosità" vuol dire curiosità, "quiz" vuol dire quiz. Se una lezione
    suggerisce altro, chiediglielo prima.
 4. In ogni gruppo di video alterna i formati: quiz, "N cose", storia con suspense, gancio "Se sei…".
-5. Scrivi il copione con le regole di scrittura qui sotto, poi rileggilo ad alta voce prima del render.
+5. Scrivi il copione in `copione.json` con le regole di `scrittura/`, poi rileggilo ad alta voce prima del render.
 6. `richieste crea` controlla da solo:
    - formato;
    - parola forte, che è facoltativa: se c'è va anche a schermo, se manca arriva un avviso da girare ad Antonio con
@@ -23,29 +27,13 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
    Nel resoconto ad Antonio riporta la riga "regole: …" che stampa.
 7. Usa solo fatti verificati, con la fonte annotata nella richiesta. Le foto vengono da Wikimedia e devono essere PD o CC0.
 
-## Scrivere un copione che intrattiene (Antonio, 2026-11-19: "italiano stentato, cose sconnesse, gancio forzato")
+## Scrivere il copione (regole in `scrittura/`, fonte unica)
 
-- **È una storia, non un elenco.** Ogni frase nasce dalla precedente, con un perché, un ma o un così. Se togli una
-  frase e il senso regge lo stesso, quella frase era scollegata.
-- **Parla come un ragazzo di 20 anni a un amico.** Italiano naturale e completo. Niente frasi telegrafiche, niente
-  termini che nessuno usa (le "ali" delle tasche), niente parole ripetute ("il taschino serviva per l'orologio da
-  taschino").
-- **Il gancio nasce dal fatto più sorprendente.** La parola forte si usa solo se è il cuore vero della storia, mai
-  attaccata dopo. Varia le parole: non sempre "guerra".
-- **Una persona, un problema, una svolta.** "I minatori strappavano le tasche → un sarto inventa i rivetti → non ha
-  i soldi per il brevetto → scrive a Levi Strauss". Questo intrattiene, la lista di fatti no.
-- **Prova finale:** se il copione, letto ad alta voce, non lo racconteresti a un amico, va riscritto.
-
-## Struttura a domanda aperta (studio di Antonio, 2026-11-21: skill `regia-reel` §12-14)
-
-La gente se ne va appena ha la risposta. Ogni reel segue quindi questo schema:
-**gancio** (apre la domanda) → **attesa** (la rende più grande) → **rehook** a metà (scheda `rehook`) → **attesa**
-(la storia si complica) → **risposta per ultima**. Dopo c'è solo la CTA, ≤ 7 parole. Il build avvisa se manca il
-rehook o se la CTA è lunga.
-- Prima di scrivere, pensa 3 strutture possibili e annota nella richiesta perché hai scelto quella.
-- Dentro la frase, un oggetto nuovo per ogni nome concreto detto dalla voce (ogni 0,5-1,5 s). Transizioni disegnate,
-  mai dissolvenze.
-- Il ritmo cambia almeno una volta. Prima della risposta c'è un attimo di silenzio, poi il suono più forte del reel.
+Tutte le regole di scrittura stanno in `scrittura/`: struttura a domanda aperta (gancio → attesa → rehook → attesa
+→ risposta per ultima, CTA ≤ 7 parole), gancio, lingua da ragazzo di 20 anni, fatti con fonte, ritmo e durata, CTA e
+caption, varietà, e il diario delle correzioni di Antonio (`regole/08-errori-di-antonio.md`). Le soglie misurabili
+sono in `scrittura/regole.json` e le controlla `auto_ig/copione.py`. Ogni nuova correzione di Antonio sul copione va
+subito nel diario (e, se si misura, in `regole.json`). Esempi veri: `scrittura/esempi/`.
 
 ## Gancio vivo dal fotogramma 0 (obbligatorio; Antonio, 2026-11-20: il reel jeans/acqua "è andato bene")
 

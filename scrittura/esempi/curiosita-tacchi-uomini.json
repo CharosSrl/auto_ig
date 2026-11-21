@@ -1,0 +1,180 @@
+{
+  "_nota": "REEL ANDATO MOLTO BENE (gancio scena2d buffo, ribaltamento di genere). Con le regole di oggi: manca il rehook; il finale ('li hanno lasciati alle donne') è la risposta giusta per ultima.",
+  "_controllo_di_oggi": [
+    "manca il 'rehook' a metà video (01-struttura)"
+  ],
+  "idea": "Curiosità: i tacchi alti li hanno inventati per gli uomini",
+  "formato": "curiosita",
+  "richiesta_antonio": "Creiamo altri due video curiosità per domani, sempre con questo impatto iniziale dinamico.",
+  "fatti": [
+    {
+      "fatto": "il tacco nasce per i cavalieri persiani, per tenere il piede fermo nella staffa",
+      "fonte": "Bata Shoe Museum / Google Arts & Culture 'The High-Life: A History of Men in Heels'"
+    },
+    {
+      "fatto": "Luigi XIV riserva i tacchi rossi alla sua corte",
+      "fonte": "Bata Shoe Museum; BBC su E. Semmelhack"
+    },
+    {
+      "fatto": "nell'Ottocento gli uomini abbandonano i tacchi",
+      "fonte": "Bata Shoe Museum"
+    }
+  ],
+  "strutture_valutate": [
+    {
+      "schema": "ribaltamento + storia: cavaliere → re → addio",
+      "scelta": true,
+      "perche": "rovescia un'idea che tutti hanno, con personaggi"
+    },
+    {
+      "schema": "quiz: per chi erano i primi tacchi?",
+      "scelta": false,
+      "perche": "Antonio aveva chiesto curiosità"
+    },
+    {
+      "schema": "Louboutin e la suola rossa",
+      "scelta": false,
+      "perche": "marca, fatto diverso"
+    }
+  ],
+  "ganci_valutati": [
+    {
+      "testo": "I tacchi alti? Li hanno inventati per gli uomini.",
+      "scelto": true,
+      "perche": "smentita secca + immagine assurda (uomo coi baffi sui tacchi)"
+    },
+    {
+      "testo": "Perché i tacchi sono rossi da Louboutin?",
+      "scelto": false,
+      "perche": "marca, fatto diverso"
+    },
+    {
+      "testo": "Un re li voleva solo per sé.",
+      "scelto": false,
+      "perche": "senza contesto non si capisce"
+    }
+  ],
+  "parola_forte": {
+    "parola": null,
+    "perche": "il ribaltamento basta, nessuna parola forte vera"
+  },
+  "battute": [
+    {
+      "ruolo": "gancio",
+      "voce": "I tacchi alti? Li hanno inventati per gli uomini.",
+      "schermo": "I tacchi? Erano da uomini",
+      "evidenzia": "uomini",
+      "fatto": 0,
+      "scheda": {
+        "grafica": {
+          "tipo": "scena2d",
+          "sfondo": "studio",
+          "attori": [
+            {
+              "azione": "cammina",
+              "da": 200,
+              "a": 880,
+              "durata": 3.4,
+              "s": 1.3,
+              "y": 1230,
+              "maglia": "#ffd166",
+              "pantaloni": "#1b1b1b",
+              "tacchi": "#e8435a",
+              "baffi": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ruolo": "attesa",
+      "voce": "All'inizio servivano ai cavalieri persiani, per tenere il piede fermo nella staffa.",
+      "schermo": "Cavalieri persiani",
+      "evidenzia": "persiani",
+      "fatto": 0,
+      "scheda": {
+        "tipo": "scena2d",
+        "sfondo": "studio",
+        "oggetti": [
+          {
+            "cosa": "icona",
+            "x": 790,
+            "y": 760,
+            "s": 1,
+            "icona": "staffa"
+          }
+        ],
+        "attori": [
+          {
+            "azione": "indica",
+            "x": 320,
+            "cappello": "turbante",
+            "maglia": "#3f9a52",
+            "pantaloni": "#8a5a3c",
+            "tacchi": "#8a5a3c",
+            "baffi": true,
+            "pelle": 1
+          }
+        ]
+      }
+    },
+    {
+      "ruolo": "attesa",
+      "voce": "Poi in Francia il re Luigi XIV li volle rossi, e solo per la sua corte.",
+      "schermo": "Luigi XIV: solo rossi",
+      "evidenzia": "rossi",
+      "fatto": 1,
+      "scheda": {
+        "tipo": "scena2d",
+        "sfondo": "studio",
+        "oggetti": [
+          {
+            "cosa": "icona",
+            "x": 800,
+            "y": 760,
+            "s": 1,
+            "icona": "tacco"
+          }
+        ],
+        "attori": [
+          {
+            "azione": "indica",
+            "x": 320,
+            "cappello": "corona",
+            "maglia": "#2f5d9a",
+            "pantaloni": "#f2f2f2",
+            "tacchi": "#e8435a",
+            "capelli": "#6b4330"
+          }
+        ]
+      }
+    },
+    {
+      "ruolo": "risposta",
+      "voce": "Solo nell'Ottocento gli uomini li hanno lasciati, per sempre, alle donne.",
+      "schermo": "Ottocento: addio tacchi",
+      "evidenzia": "addio",
+      "fatto": 2,
+      "scheda": {
+        "tipo": "confronto",
+        "prima": {
+          "icona": "tacco",
+          "etichetta": "uomini"
+        },
+        "dopo": {
+          "icona": "tacco",
+          "etichetta": "donne"
+        }
+      }
+    }
+  ],
+  "cta": "Mandalo a chi ha i tacchi nell'armadio!",
+  "caption": "I tacchi alti? Li hanno inventati per gli uomini 👠\n\n📌 La storia: i primi tacchi servivano ai cavalieri persiani, per tenere il piede fermo nella staffa. A fine Cinquecento arrivano in Europa con i diplomatici persiani e diventano di moda tra i nobili. In Francia Luigi XIV li vuole rossi e solo per la sua corte. Nell'Ottocento gli uomini li abbandonano e restano alle donne.\n\nMandalo a chi ha i tacchi nell'armadio 👇\nSegui @cintre_official: ogni giorno una curiosità di moda.\n\n#cintre #curiosità #tacchi #storiadellamoda #moda",
+  "pronuncia": {
+    "XIV": "quattordicesimo"
+  },
+  "autocontrollo": {
+    "letto_ad_alta_voce": true,
+    "lo_racconterei_a_un_amico": "sì (reel andato bene)"
+  }
+}

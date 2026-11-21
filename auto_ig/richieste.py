@@ -29,7 +29,7 @@ from typing import Callable
 
 import yaml
 
-from . import audio, censura, formati, labiale, queue, regole, voce
+from . import audio, censura, copione, formati, labiale, queue, regole, voce
 from .config import MEDIA_DIR, ROOT
 from .images import slugify
 
@@ -108,6 +108,15 @@ def new(title: str, lines: list | None = None, scene: str = "particelle", bg: st
 def load(folder: Path) -> dict:
     data = yaml.safe_load((folder / "richiesta.yaml").read_text()) or {}
     errs = []
+    if (folder / copione.NOME).is_file():         # parole nel copione.json (regole: scrittura/LEGGIMI.md)
+        try:
+            c = copione.carica(folder)
+        except ValueError as e:                   # JSON non valido
+            raise ValueError(f"{folder.name}: copione.json illeggibile: {e}") from e
+        c_err, c_av = copione.controlla(c)
+        errs += [f"copione: {e}" for e in c_err]
+        data = copione.in_richiesta(c, data)
+        data["_avvisi_copione"] = c_av
     try:
         if not voce.normalize_lines(data.get("copione")):
             errs.append("copione vuoto")
@@ -188,7 +197,8 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     data = load(folder)
     if errs := _regole_foto(data) + regole.errori(data):   # regole di Antonio: obbligatorie, non promemoria
         raise ValueError(f"{folder.name}: " + "; ".join(errs))
-    for a in dict.fromkeys(avvisi_testo(data) + regole.avvisi(data, folder)):
+    for a in dict.fromkeys([f"copione: {x}" for x in data.get("_avvisi_copione") or []]
+                           + avvisi_testo(data) + regole.avvisi(data, folder)):
         log(f"avviso: {a}")
     o = outputs(folder)
     o["wav"].parent.mkdir(exist_ok=True)

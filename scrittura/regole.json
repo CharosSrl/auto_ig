@@ -1,0 +1,26 @@
+{
+  "_nota": "Soglie del copione controllate da auto_ig/copione.py. Il perché di ognuna è in scrittura/regole/.",
+  "ruoli": ["gancio", "attesa", "rehook", "svolta", "domanda", "conto", "risposta"],
+  "ruoli_senza_fatto": ["rehook", "conto", "domanda"],
+  "battute": {"min": 4, "max": 7},
+  "parole": {
+    "gancio_max": 14,
+    "battuta_min": 4,
+    "battuta_max": 18,
+    "schermo_max": 7,
+    "cta_max": 7,
+    "totale_max": 58
+  },
+  "secondi": {"parole_al_secondo": 2.6, "pausa": 0.4, "coda": 1.0, "max": 25.0},
+  "strutture_valutate": 3,
+  "ganci_valutati_min": 3,
+  "vietate": [
+    "oggi parliamo", "oggi scopriamo", "lo sapevi che", "ciao a tutti", "ciao ragazzi", "ragazzi",
+    "devi assolutamente", "devi", "ascolta", "incredibile", "pazzesco",
+    "bestie", "slay", "rizz", "aura", "bro", "fra", "pov", "periodt", "skibidi", "boomer",
+    "segui e metti like", "fammi sapere"
+  ],
+  "parole_vuote_ripetizione": ["di", "a", "da", "in", "con", "su", "per", "tra", "fra", "il", "lo", "la", "i", "gli", "le",
+    "un", "uno", "una", "e", "è", "ma", "che", "non", "si", "ci", "del", "della", "dei", "delle", "al", "alla", "ai",
+    "nel", "nella", "sua", "suo", "sue", "suoi", "tuo", "tua", "poi", "così", "come", "anche"]
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Copione di un reel Cintre",
+  "description": "Le parole del reel e il ragionamento dietro. Sta in richieste/<cartella>/copione.json; grafica, voce e colori restano in richiesta.yaml. Regole: scrittura/LEGGIMI.md.",
+  "type": "object",
+  "required": ["idea", "formato", "fatti", "strutture_valutate", "ganci_valutati", "parola_forte", "battute", "cta", "caption", "autocontrollo"],
+  "properties": {
+    "idea": {"type": "string", "description": "la storia in una riga: perché fa dire 'ma dai!'"},
+    "formato": {"enum": ["curiosita", "quiz", "storia"]},
+    "richiesta_antonio": {"type": "string", "description": "le parole di Antonio"},
+    "fatti": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["fatto", "fonte"],
+      "properties": {"fatto": {"type": "string"}, "fonte": {"type": "string"}, "url": {"type": "string"}}}},
+    "strutture_valutate": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "object",
+      "required": ["schema", "scelta", "perche"], "properties": {"schema": {"type": "string"}, "scelta": {"type": "boolean"}, "perche": {"type": "string"}}}},
+    "ganci_valutati": {"type": "array", "minItems": 3, "items": {"type": "object",
+      "required": ["testo", "scelto", "perche"], "properties": {"testo": {"type": "string"}, "scelto": {"type": "boolean"}, "perche": {"type": "string"}}}},
+    "parola_forte": {"type": "object", "required": ["parola", "perche"],
+      "properties": {"parola": {"type": ["string", "null"]}, "perche": {"type": "string"}}},
+    "battute": {"type": "array", "minItems": 4, "items": {"type": "object", "required": ["ruolo", "voce"],
+      "properties": {
+        "ruolo": {"enum": ["gancio", "attesa", "rehook", "svolta", "domanda", "conto", "risposta"]},
+        "voce": {"type": "string", "description": "la frase detta"},
+        "schermo": {"type": "string", "description": "titolo a schermo, ≤ 7 parole (diventa scheda.titolo)"},
+        "evidenzia": {"type": "string", "description": "parola del titolo in colore accento"},
+        "fatto": {"type": "integer", "description": "indice in fatti[] su cui si basa"},
+        "ritmo": {"type": "number"},
+        "tono": {"type": "string"},
+        "scheda": {"type": "object", "description": "come oggi in richiesta.yaml (tipo, grafica, foto, opzioni…); tipo dedotto dal ruolo se manca"}}}},
+    "cta": {"type": "string", "description": "≤ 7 parole"},
+    "caption": {"type": "string"},
+    "pronuncia": {"type": "object", "additionalProperties": {"type": "string"}},
+    "censura": {"type": "array", "items": {"type": "string"}},
+    "autocontrollo": {"type": "object", "required": ["letto_ad_alta_voce", "lo_racconterei_a_un_amico"],
+      "properties": {"letto_ad_alta_voce": {"const": true}, "lo_racconterei_a_un_amico": {"type": "string"}}}
+  }
+}

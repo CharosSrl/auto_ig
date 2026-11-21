@@ -1,0 +1,191 @@
+{
+  "idea": "Il fondatore di Prada vietava le donne in azienda, e Prada l'ha resa famosa proprio sua nipote, con il tessuto dei suoi bauli.",
+  "formato": "curiosita",
+  "richiesta_antonio": "fai un video \"Lo sapevi?\" su Prada",
+  "fatti": [
+    {
+      "fatto": "Mario Prada fonda Prada a Milano nel 1913 (pelletteria, bauli) e impedisce alle donne della famiglia di entrare in azienda",
+      "fonte": "Wikipedia en 'Prada' (Founding)",
+      "url": "https://en.wikipedia.org/wiki/Prada"
+    },
+    {
+      "fatto": "Il figlio di Mario non ha interesse per l'azienda; gli succede la figlia Luisa, per quasi vent'anni",
+      "fonte": "Wikipedia en 'Prada' (Founding)",
+      "url": "https://en.wikipedia.org/wiki/Prada"
+    },
+    {
+      "fatto": "Miuccia, figlia di Luisa e nipote di Mario, prende il comando nel 1978",
+      "fonte": "Wikipedia en 'Prada' e 'Miuccia Prada'",
+      "url": "https://en.wikipedia.org/wiki/Miuccia_Prada"
+    },
+    {
+      "fatto": "I primi zaini e borse di Miuccia sono nel nylon nero militare che il nonno usava per coprire i bauli (anno discordante 1979/1985: non si dice)",
+      "fonte": "Wikipedia en 'Prada' (Development)",
+      "url": "https://en.wikipedia.org/wiki/Prada"
+    }
+  ],
+  "strutture_valutate": [
+    {
+      "schema": "storia con svolta: divieto → figlio che non vuole → rehook → figlia e nipote → il nylon del nonno",
+      "scelta": true,
+      "perche": "una persona, un problema, una svolta ironica; la risposta (il nylon del nonno) arriva per ultima"
+    },
+    {
+      "schema": "N cose su Prada (fondazione, logo, zaino, Marfa)",
+      "scelta": false,
+      "perche": "è un elenco: i 'Lo sapevi?' a elenco crollano a 10 s (lezione 4)"
+    },
+    {
+      "schema": "solo lo zaino di nylon: da tessuto militare a borsa di lusso",
+      "scelta": false,
+      "perche": "manca la persona e la svolta; il confronto da solo non tiene 20 s"
+    }
+  ],
+  "ganci_valutati": [
+    {
+      "testo": "Il fondatore di Prada aveva vietato alle donne di lavorare nella sua azienda.",
+      "scelto": true,
+      "perche": "divieto vero e assurdo oggi, parola forte vera (vietato), apre la domanda 'e allora?'"
+    },
+    {
+      "testo": "Prada esiste grazie a un figlio che non voleva lavorare.",
+      "scelto": false,
+      "perche": "vago, e svela metà della svolta"
+    },
+    {
+      "testo": "La tua borsa Prada è fatta con la copertina di un baule.",
+      "scelto": false,
+      "perche": "bello ma è la risposta: la direbbe al secondo 1"
+    }
+  ],
+  "parola_forte": {
+    "parola": "vietato",
+    "perche": "è il cuore vero della storia: Mario impediva alle donne di entrare in azienda"
+  },
+  "battute": [
+    {
+      "ruolo": "gancio",
+      "voce": "Il fondatore di Prada aveva vietato alle donne di lavorare nella sua azienda.",
+      "schermo": "Donne in Prada? Vietato",
+      "evidenzia": "vietato",
+      "fatto": 0,
+      "scheda": {
+        "grafica": {
+          "tipo": "chat",
+          "nome": "Giulia",
+          "messaggi": [
+            {
+              "da": "a",
+              "testo": "Chi ha fondato Prada?"
+            },
+            {
+              "da": "b",
+              "testo": "Mario Prada, nel 1913"
+            },
+            {
+              "da": "b",
+              "testo": "E alle donne aveva vietato di lavorarci 😳"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ruolo": "attesa",
+      "voce": "Voleva lasciarla al figlio maschio, ma a lui non interessava.",
+      "schermo": "Il figlio? Non gli interessa",
+      "evidenzia": "figlio",
+      "fatto": 1,
+      "scheda": {
+        "tipo": "scena2d",
+        "sfondo": "studio",
+        "oggetti": [
+          {
+            "cosa": "icona",
+            "x": 300,
+            "y": 1150,
+            "s": 0.8,
+            "icona": "borsa"
+          }
+        ],
+        "attori": [
+          {
+            "azione": "cammina",
+            "da": 420,
+            "a": 900,
+            "durata": 3.0,
+            "maglia": "#e8435a",
+            "pantaloni": "#2b2f45",
+            "capelli": "#3b2a1a"
+          }
+        ]
+      }
+    },
+    {
+      "ruolo": "rehook",
+      "voce": "Così, indovina a chi tocca?",
+      "schermo": "Indovina a chi tocca…"
+    },
+    {
+      "ruolo": "svolta",
+      "voce": "Prima alla figlia Luisa, poi alla nipote Miuccia.",
+      "schermo": "Luisa, poi Miuccia",
+      "evidenzia": "Miuccia",
+      "fatto": 2,
+      "scheda": {
+        "tipo": "scena2d",
+        "sfondo": "casa",
+        "timbro": "1978",
+        "attori": [
+          {
+            "azione": "saluta",
+            "x": 300,
+            "verso": 1,
+            "maglia": "#7a4bb0",
+            "pantaloni": "#2b2f45",
+            "capelli": "#6b4330",
+            "tacchi": "#2b2f45"
+          },
+          {
+            "azione": "saluta",
+            "x": 760,
+            "verso": -1,
+            "maglia": "#a8e0b8",
+            "pantaloni": "#2b2f45",
+            "capelli": "#3b2a1a",
+            "tacchi": "#c0392b",
+            "quando": 1.4
+          }
+        ]
+      }
+    },
+    {
+      "ruolo": "risposta",
+      "voce": "E Miuccia sfonda con il nylon che il nonno usava per coprire i bauli.",
+      "schermo": "Il nylon del nonno",
+      "evidenzia": "nylon",
+      "fatto": 3,
+      "scheda": {
+        "tipo": "confronto",
+        "prima": {
+          "icona": "baule",
+          "etichetta": "bauli"
+        },
+        "dopo": {
+          "icona": "borsa",
+          "etichetta": "borse"
+        }
+      }
+    }
+  ],
+  "cta": "Tu lo sapevi? Scrivilo sotto!",
+  "caption": "Il fondatore di Prada aveva vietato alle donne di lavorare nella sua azienda 👜\n\n📌 La storia: Mario Prada, che aprì il suo negozio di pelletteria a Milano nel 1913, non voleva donne in azienda. Ma suo figlio non aveva nessun interesse per gli affari, così a guidare Prada fu la figlia Luisa, per quasi vent'anni. Dal 1978 toccò alla nipote, Miuccia, che rese Prada famosa con zaini e borse in nylon nero: lo stesso tessuto resistente che il nonno usava per coprire i bauli.\n\nTu lo sapevi? Scrivilo nei commenti 👇\nSalvalo e segui @cintre_official: ogni giorno una curiosità di moda.\n\n#cintre #curiosità #prada #storiadellamoda #moda",
+  "autocontrollo": {
+    "letto_ad_alta_voce": true,
+    "lo_racconterei_a_un_amico": "sì: 'sai che il fondatore di Prada non voleva donne? e alla fine l'ha fatta esplodere la nipote' è una cosa che racconti"
+  },
+  "pronuncia": {
+    "Miuccia": "Miùccia"
+  },
+  "_nota": "Esempio di curiosità 'Lo sapevi?' con struttura a domanda aperta (2026-11-22, 23,9 s). Funziona perché: divieto assurdo nel gancio, rehook secco a metà, ironia finale (la nipote, col tessuto del nonno) tenuta per ultima. Esito Insights: da segnare."
+}
