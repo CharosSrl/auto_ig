@@ -91,6 +91,21 @@ Volumi: la voce resta sempre davanti. Gli effetti si sentono ma non coprono le p
 Per far rimbalzare le opzioni, la domanda dopo il gancio va detta come "A, B, o C?": i pop si agganciano alle
 lettere pronunciate. Se le lettere non ci sono, i pop cadono nel primo secondo della frase.
 
+### Musica di sottofondo per tipo di video (@viewcci DdXP2FTOhfj, 2026-11-21: 15,8K like, 11,2K invii)
+
+Reel "i suoni più usati in 4 tipi di video": ogni tipo ha la sua atmosfera, mostrata con copertina, titolo e onda
+sonora. Catalogo completo in `auto_ig/musica/catalogo.yaml`, scelto da solo da `richieste crea` in base al formato
+(quiz → sfida, curiosità → informativo, storia → profondo).
+- **Informativo:** New Computers (Girlfriends), Not Like Us (Kendrick Lamar), Blade Runner 2049 (synthwave).
+- **Sfida/quiz:** Summer di Vivaldi, As Time Flies (Ty's Music), Feeling Blue (Caleb A.).
+- **Motivazione:** Flashing Lights (Kanye West), I Wanna Be Yours (Arctic Monkeys), Experience (Einaudi).
+- **Profondo:** comet (Frank Saint), Ylang Ylang (FKJ), Dimensions (Arcade Fire).
+
+Nel file del reel va **solo musica libera** (oggi: Vivaldi, *L'estate* III. Presto, Musopen, pubblico dominio,
+`auto_ig/musica/`). Le canzoni protette non si scaricano: Instagram silenzierebbe il reel. Il build le stampa
+come suggerimento, e Antonio può aggiungerle dall'app quando pubblica. Il meccanismo da copiare: il reel stesso
+"fa quello che dice" (copertina + onda a schermo mentre suona) e la CTA "Commenta SONGS" (3.034 commenti).
+
 ## 3. Struttura dichiarata dal fotogramma 0
 
 - **Quiz** (il nostro formato vincente): domanda e opzioni A/B/C a schermo dal fotogramma 0, come dice la lezione 3.

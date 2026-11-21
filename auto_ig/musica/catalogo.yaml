@@ -1,0 +1,41 @@
+# Musica di sottofondo dei reel (Antonio, 2026-11-21: "scaricami le canzoni che metterai sempre in bg, ricordalo
+# pure nel codice"). Fonte: reel @viewcci DdXP2FTOhfj (15,8K like, 11,2K invii): "i suoni più usati in quattro tipi
+# di video". La base si sceglie dal TIPO di video (formato → tipo qui sotto); `richieste crea` la usa da sola.
+#
+# REGOLA LICENZE: nel video si mette SOLO un file nostro e libero (pubblico dominio / CC0), in questa cartella.
+# Le canzoni protette (`licenza: protetta`) NON si scaricano e NON si mettono nel file: Instagram silenzia o blocca
+# il reel. Si possono usare solo aggiungendole dall'app di Instagram al momento della pubblicazione (le fa Antonio):
+# il build le stampa come suggerimento. Se un tipo non ha un file libero, resta la base generata a codice.
+formati:            # formato del reel → tipo di video
+  quiz: sfida
+  curiosita: informativo
+  storia: profondo
+
+tipi:
+  informativo:      # spiegare un fatto
+    file: null       # nessuna versione libera trovata (da cercare: synthwave CC0)
+    tendenza:
+      - {titolo: "New Computers", autore: "Girlfriends", licenza: protetta}
+      - {titolo: "Not Like Us", autore: "Kendrick Lamar", licenza: protetta}
+      - {titolo: "Blade Runner 2049 (synthwave)", autore: "Synthwave Goose", licenza: protetta}
+  sfida:            # quiz, "indovina", conto alla rovescia
+    file: vivaldi_estate_presto.ogg
+    tendenza:
+      - {titolo: "Summer (L'estate, III. Presto)", autore: "Antonio Vivaldi", licenza: libera,
+         file: vivaldi_estate_presto.ogg,
+         fonte: "The Modena Chamber Orchestra (Musopen), Wikimedia Commons, Public Domain Mark",
+         url: "https://commons.wikimedia.org/wiki/File:The_Modena_Chamber_Orchestra_-_Vivaldi%27s_Summer,_RV_315_-_III._Presto.ogg"}
+      - {titolo: "As Time Flies", autore: "Ty's Music", licenza: protetta}
+      - {titolo: "Feeling Blue", autore: "Caleb A.", licenza: protetta}
+  motivazione:
+    file: null
+    tendenza:
+      - {titolo: "Flashing Lights", autore: "Kanye West", licenza: protetta}
+      - {titolo: "I Wanna Be Yours", autore: "Arctic Monkeys", licenza: protetta}
+      - {titolo: "Experience", autore: "Ludovico Einaudi", licenza: protetta}
+  profondo:         # storie, riflessioni
+    file: null
+    tendenza:
+      - {titolo: "comet", autore: "Frank Saint", licenza: protetta}
+      - {titolo: "Ylang Ylang", autore: "FKJ", licenza: protetta}
+      - {titolo: "Dimensions", autore: "Arcade Fire", licenza: protetta}

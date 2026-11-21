@@ -67,6 +67,14 @@ Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO,
   ora e spunte blu, barra "Messaggio". È già così in `infografica2d.js` (`chat`): non tornare a uno stile "nostro",
   e mai logo o nome dell'app.
 
+## Musica di sottofondo (Antonio, 2026-11-21: "le canzoni che metterai sempre in bg, ricordalo pure nel codice")
+
+`richieste crea` sceglie da solo il brano dal formato, da `auto_ig/musica/catalogo.yaml` (studio del reel @viewcci
+sui suoni per tipo di video): il quiz va con *L'estate* di Vivaldi (pubblico dominio); dove non c'è un file libero
+resta la base a codice. Stampa anche le canzoni di tendenza protette: si dicono ad Antonio come suggerimento da
+aggiungere dall'app, **mai scaricate né messe nel file** (Instagram silenzia il reel). `audio: {musica: <file>}`
+forza un brano della cartella.
+
 ## Il narratore: la gruccia di Cintre (Antonio, 2026-11-21)
 
 È la mascotte: una gruccia di legno con occhioni e labbra bordeaux. Mima la voce con labiale ed espressioni, in

@@ -220,8 +220,13 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     au = data.get("audio") or {}
     traccia = o["wav"]
     if au.get("musica") or au.get("sfx"):
+        fm, tendenza = audio.scegli_brano(data) if au.get("musica") else (None, [])   # catalogo in auto_ig/musica
+        if au.get("musica"):
+            log(f"musica: {fm.name if fm else 'base generata a codice'}"
+                + (" · da aggiungere dall'app (protette, mai nel file): " + ", ".join(
+                    f"{x['titolo']} - {x['autore']}" for x in tendenza if x.get("licenza") == "protetta") if tendenza else ""))
         traccia = audio.mix(o["wav"], bt, max(3.0, seconds), o["mix"], musica=bool(au.get("musica")), sfx=bool(au.get("sfx")),
-                           eventi=ev)
+                           eventi=ev, file_musica=fm)
     narra = ""
     if formati.narratore(data):                    # gruccia narratrice: labiale ed espressioni dall'audio vero
         narra = labiale.param(labiale.traccia(o["wav"], sentences, righe, bt, v.get("pronuncia"),

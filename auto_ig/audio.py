@@ -395,6 +395,39 @@ def base(durata: float, bpm: int = BPM) -> np.ndarray:
     return out[: int(durata * SR)]
 
 
+# --- Brani veri (auto_ig/musica) -----------------------------------------------------------------
+MUSICA = Path(__file__).parent / "musica"
+
+
+def catalogo() -> dict:
+    import yaml
+    return yaml.safe_load((MUSICA / "catalogo.yaml").read_text()) or {}
+
+
+def scegli_brano(data: dict) -> tuple[Path | None, list[dict]]:
+    """(file libero da mettere sotto, canzoni di tendenza del tipo di video). `audio.musica` può essere il nome di
+    un file in auto_ig/musica; se è true, il brano si sceglie dal formato (catalogo.yaml). Mai file protetti."""
+    cat = catalogo()
+    scelta = (data.get("audio") or {}).get("musica")
+    tipo = (cat.get("formati") or {}).get(str(data.get("formato") or ""), "informativo")
+    info = (cat.get("tipi") or {}).get(tipo) or {}
+    nome = scelta if isinstance(scelta, str) else info.get("file")
+    f = MUSICA / nome if nome else None
+    return (f if f and f.exists() else None), list(info.get("tendenza") or [])
+
+
+def brano(path: Path, durata: float, inizio: float = 0.0) -> np.ndarray:
+    """Un brano vero (ogg/mp3/wav) -> mono float a 48 kHz, `durata` secondi da `inizio`, con attacco morbido."""
+    import subprocess
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{inizio:.2f}", "-t", f"{durata + 0.5:.2f}", "-i", str(path),
+                          "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
+    x = np.frombuffer(raw, dtype=np.float32).astype(float)
+    n = int(durata * SR)
+    x = np.pad(x, (0, max(0, n - len(x))))[:n]
+    x[: int(0.05 * SR)] *= np.linspace(0, 1, int(0.05 * SR))
+    return x
+
+
 # --- Mix ---------------------------------------------------------------------------------------
 def leggi_wav(path: Path) -> np.ndarray:
     """Wav PCM 16 bit (mono o stereo, qualsiasi frequenza) -> mono float a 48 kHz."""
@@ -425,7 +458,7 @@ def inviluppo(x: np.ndarray, finestra: float = 0.12) -> np.ndarray:
 
 
 def mix(voce_wav: Path, bt: list[tuple[float, str]], durata: float, out: Path,
-        musica: bool = True, sfx: bool = True, eventi: list | None = None) -> Path:
+        musica: bool = True, sfx: bool = True, eventi: list | None = None, file_musica: Path | None = None) -> Path:
     """Voce + base abbassata sotto la voce + effetti sonori. Normalizzato, senza clipping.
     `eventi` = suoni(...) (un suono per evento a schermo); se manca, si ricavano dalle battute."""
     n = int(durata * SR)
@@ -435,7 +468,7 @@ def mix(voce_wav: Path, bt: list[tuple[float, str]], durata: float, out: Path,
         v = v / np.abs(v).max() * 0.9
     tot = v.copy()
     if musica:
-        m = base(durata)
+        m = brano(file_musica, durata) if file_musica else base(durata)      # brano libero, o base a codice
         m = m / (np.abs(m).max() + 1e-9) * LIV_BASE
         coda = np.clip((durata - np.arange(n) / SR) / 1.2, 0, 1)        # dissolvenza finale
         tot += m * (1 - DUCK * inviluppo(v)) * coda
