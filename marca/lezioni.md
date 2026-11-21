@@ -117,3 +117,33 @@ formato arriva un avviso, e va proposto un formato diverso.
 Le regole qui sopra vengono dai nostri dati. Le ispirazioni da reel di altri creator stanno nella skill
 `.claude/skills/regia-reel/SKILL.md`: suono per ogni evento a schermo, formato "N cose", caption-bigino da salvare e
 mandare, finale che riparte, copertina, seguiti dei reel che vanno bene. Si usano solo dopo averle verificate con i nostri Insights.
+
+## I due reel che sono andati molto bene (Antonio, 2026-11-21; Insights ancora da leggere)
+
+| Reel | Gancio al fotogramma 0 | Ipotesi |
+|---|---|---|
+| Jeans e acqua (`2026-11-20-curiosita-jeans-acqua`) | `contatore`: il numero sale fino a 3.781 litri mentre la vasca si riempie | **Antonio: "alla gente piacciono un sacco i numeroni che crescono".** Il numero che sale è una mini-suspense: resti per vedere dove si ferma. Ed è un numero enorme ma concreto, su una cosa che hai addosso. |
+| Uomini sui tacchi (`2026-11-21-curiosita-tacchi-uomini`) | `scena2d`: un uomo coi baffi cammina sui tacchi rossi | Ipotesi mie, da verificare: (1) immagine **strana e buffa** che si capisce in 1 s anche senza audio; (2) **ribalta un'idea che tutti hanno** ("i tacchi sono da donne"), quindi la risposta è conosciuta a metà (lezione 5) e invita a commentare e mandare; (3) storia con personaggi (cavaliere persiano → re → addio) invece di un elenco. |
+
+Cosa hanno in comune:
+- un **oggetto quotidiano** che chi guarda ha o conosce (jeans, tacchi);
+- **un fatto che ribalta come lo vedi**, detto in una frase sola;
+- un **gancio vivo e chiaro senza audio**, già in movimento al fotogramma 0.
+
+Da fare:
+- chiedere ad Antonio gli Insights dei due reel (views, % a 3 e 6 s, invii, commenti) e confrontarli con bikini e
+  jeans-miniera, per capire quale ipotesi regge;
+- **i numeroni** si possono usare anche senza liquidi: prezzi, anni, chilometri, pezzi venduti, con un `contatore`
+  che non sia la vasca;
+- **il ribaltamento** si prova su altri capi "di un genere" o "di una classe" che erano dell'altro (es. il rosa,
+  la gonna, il trucco, verificando i fatti), sempre senza toccare corpo e insicurezze.
+Nelle richieste il risultato si segna nel campo `esito:`.
+
+**Antonio, 2026-11-21: "i numeri sono incredibili; le storie devono essere proprio, ma proprio strane per funzionare,
+magari un argomento woke".**
+- Il numero deve essere **incredibile**, non solo grande.
+- La storia deve essere **stranissima**: se non fa dire "ma dai!", non va.
+- Si cercano temi che ribaltano le norme di genere o di classe, come i tacchi.
+
+Li raccontiamo come fatti storici verificati e curiosi, non come una presa di posizione politica e senza
+attaccare nessuno. Il pubblico ha anche il 25% di minori: niente corpo, sesso o polemiche.
