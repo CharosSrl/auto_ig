@@ -11,6 +11,7 @@ esplicitamente; per cambiarla si cambia il codice e glielo si dice.
 - voce: Aoede (chirp3-aoede) a velocità 1.0;
 - durata: sotto i 25 s (controllata dopo la voce, prima del render).
 La varietà dei formati è un avviso: se gli ultimi reel hanno tutti lo stesso formato, va proposto altro.
+Anche la struttura è un avviso (studio del 2026-11-21): rehook a metà video, risposta per ultima, CTA ≤ 7 parole.
 """
 from __future__ import annotations
 
@@ -115,6 +116,24 @@ def avvisi(data: dict, folder: Path) -> list[str]:
     ripetuti = sorted(argomenti(data) & set().union(*(argomenti(x) for x in prima))) if prima else []
     if ripetuti:
         out.append(f"argomento già visto negli ultimi 3 reel ({', '.join(ripetuti)}): cambia tema")
+    return out + avvisi_struttura(data)
+
+
+def avvisi_struttura(data: dict) -> list[str]:
+    """Struttura a domanda aperta (studio del 2026-11-21, regia-reel §12): gancio → attesa → rehook → attesa →
+    risposta per ultima, poi solo una CTA breve. La gente se ne va appena ha la risposta."""
+    righe = [r for r in (data.get("copione") or []) if isinstance(r, dict)]
+    out = []
+    if len(righe) >= 4:
+        tipi = [str((r.get("scheda") or {}).get("tipo") or "") for r in righe]
+        pos = [i for i, t in enumerate(tipi) if t == "rehook"]
+        if not pos:
+            out.append("struttura: manca il rehook a metà video (scheda rehook tra gancio e risposta, regia-reel §12)")
+        elif pos[0] in (0, len(righe) - 1):
+            out.append("struttura: il rehook va a metà video, non in testa o in coda (regia-reel §12)")
+    cta = str(data.get("cta") or "")
+    if len(cta.split()) > 7:
+        out.append(f"CTA di {len(cta.split())} parole: dopo la risposta il video si chiude subito, tienila ≤ 7 parole")
     return out
 
 

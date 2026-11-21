@@ -36,6 +36,17 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
   i soldi per il brevetto → scrive a Levi Strauss". Questo intrattiene, la lista di fatti no.
 - **Prova finale:** se il copione, letto ad alta voce, non lo racconteresti a un amico, va riscritto.
 
+## Struttura a domanda aperta (studio di Antonio, 2026-11-21: skill `regia-reel` §12-14)
+
+La gente se ne va appena ha la risposta. Ogni reel segue quindi questo schema:
+**gancio** (apre la domanda) → **attesa** (la rende più grande) → **rehook** a metà (scheda `rehook`) → **attesa**
+(la storia si complica) → **risposta per ultima**. Dopo c'è solo la CTA, ≤ 7 parole. Il build avvisa se manca il
+rehook o se la CTA è lunga.
+- Prima di scrivere, pensa 3 strutture possibili e annota nella richiesta perché hai scelto quella.
+- Dentro la frase, un oggetto nuovo per ogni nome concreto detto dalla voce (ogni 0,5-1,5 s). Transizioni disegnate,
+  mai dissolvenze.
+- Il ritmo cambia almeno una volta. Prima della risposta c'è un attimo di silenzio, poi il suono più forte del reel.
+
 ## Gancio vivo dal fotogramma 0 (obbligatorio; Antonio, 2026-11-20: il reel jeans/acqua "è andato bene")
 
 Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO, con titolo grande e senza intestazione.
@@ -51,6 +62,10 @@ Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO,
   contenuti"). Ogni reel cambia tipo di gancio (`contatore`, `radar`, `scena2d`, `chat`, `lente`, `confronto`…),
   argomento e formato rispetto agli ultimi. Il build avvisa quando si ripetono: l'avviso va preso sul serio,
   non ignorato. La vasca che si riempie è già usata: non riproporla.
+- **Una chat è sempre IDENTICA a WhatsApp** (Antonio, 2026-11-21: "se ci sta una chat rendila quanto più uguale a
+  whatsapp"): intestazione verde, "sta scrivendo…", sfondo beige coi disegnini, fumetti verdi e bianchi con codina,
+  ora e spunte blu, barra "Messaggio". È già così in `infografica2d.js` (`chat`): non tornare a uno stile "nostro",
+  e mai logo o nome dell'app.
 
 ## Il narratore: la gruccia di Cintre (Antonio, 2026-11-21)
 

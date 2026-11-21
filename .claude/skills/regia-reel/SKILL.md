@@ -33,6 +33,17 @@ Seconda tornata (studiati il 2026-11-19):
 Sono due account piccoli, eppure entrambi i reel sono arrivati quasi solo a chi non li seguiva. È la stessa cosa che
 vediamo noi (lezione 2).
 
+Terza tornata ("momento studio" di Antonio, 2026-11-21). Fotogrammi presi ogni 0,5 s nel suo Chrome, senza audio:
+
+| Reel | Account | Numeri | Perché è utile |
+|---|---|---|---|
+| [DeXnbhxurWk](https://www.instagram.com/reel/DeXnbhxurWk/) | @viewcci (consigli per creator) | 21,6 s · 5.167 like · 99 commenti · **2.693 invii (52% dei like)** | La struttura che tiene fino alla fine: gancio → attesa → rehook → attesa → risposta, e il video finisce lì (§12). |
+| [DfjbbgmglrE](https://www.instagram.com/reel/DfjbbgmglrE/) | @ilprof.ai (contenuti IA) | 40 s · 453 like · **911 commenti** · 361 invii | Explainer animato a codice come i nostri, con un personaggio fisso in basso a destra: un oggetto nuovo per ogni parola chiave (§13). Il "Commenta video" ha dato il doppio dei commenti rispetto ai like. |
+
+Il secondo cita la repo [lemomo-ai/lemo-opuscar](https://github.com/lemomo-ai/lemo-opuscar): 99 stili di film fatti a
+codice da Claude. La sua guida di regia (`DIRECTOR.md`) è riassunta con parole nostre in §14. Non l'abbiamo installata:
+la licenza non è dichiarata e il formato base è 16:9.
+
 ## 1. Il video fa quello che dice
 
 Nei due reel nessun suono viene solo nominato: lo senti e lo vedi applicato nello stesso istante. Lo zoom secco
@@ -213,6 +224,91 @@ già al fotogramma 0 ed è andato bene. Da allora ogni reel apre con `grafica:` 
 
 La grafica è già in movimento (`anticipo`), con titolo grande e senza intestazione.
 
+## 12. Struttura a domanda aperta (da @viewcci, 2026-11-21)
+
+La tesi del reel, mostrata sulla curva di retention degli Insights: **la gente se ne va appena ha avuto quello per cui
+è venuta.** Il problema raramente è il gancio: è quello che viene subito dopo. Se la seconda frase risponde, la curva
+crolla lì.
+
+Lo schema è una barra a 5 blocchi colorati, mostrata a schermo:
+
+| Blocco | Cosa fa | Esempio Cintre (porpora di Nerone) |
+|---|---|---|
+| **Gancio** | apre la domanda (promessa) | "Per colorare di viola solo il bordo di un vestito servivano 12.000 lumache." |
+| **Attesa 1** | rende la domanda più grande, senza rispondere | "Per questo la porpora costava una fortuna." |
+| **Rehook** | rilancia con una domanda nuova | "Così Nerone ebbe un'idea assurda." |
+| **Attesa 2** | la storia si complica, il perché manca ancora | "La vietò a tutti, e poi mandò un uomo a venderla di nascosto." |
+| **Risposta (payoff)** | chiude la domanda, **per ultima** | "Era una trappola: fece chiudere tutti i negozi." |
+
+**Regole per noi:**
+- Ogni frase prima della risposta deve **aumentare** la voglia di sapere, non soddisfarla. Se una frase risponde a
+  metà video, va spostata alla fine o tolta.
+- Il **rehook c'è sempre**: scheda `rehook`, a circa metà del video (tra la seconda e la penultima frase). Il build
+  avvisa se manca.
+- **Dopo la risposta si chiude subito.** Da noi la CTA la aggiunge il sistema: va tenuta a 2 s o meno (≤ 7 parole) e
+  la risposta deve restare il momento più forte. Una coda lunga dopo il payoff è il calo "di finale" di §9.
+- Nel quiz è la stessa cosa: domanda (gancio) → "Quasi tutti sbagliano" (rehook) → 3-2-1 → risposta per ultima.
+
+**Altri trucchi visti** (da provare, non ancora regole):
+- la prova a schermo: il grafico vero della retention, ingrandito sul punto del calo con un pallino rosso. Per noi la
+  prova sono la foto vera o il numero vero;
+- l'apertura con due copie di lui affiancate che si parlano: è un dialogo nel primo secondo, come il nostro gancio
+  `chat`;
+- una o due parole chiave in corsivo grazie ("completely", "wrong"), diverse dal resto dei sottotitoli.
+
+## 13. Explainer animato con personaggio fisso (da @ilprof.ai, 2026-11-21)
+
+È il formato più vicino al nostro: tutto disegnato a codice e un prof con la bacchetta fisso in basso a destra, come la
+nostra gruccia. Cosa fa meglio di noi:
+
+1. **Un oggetto nuovo per ogni parola chiave, non per ogni frase.** Gli oggetti cambiano ogni 0,5-1,5 s. "Scrive la
+   storia" è una macchina da scrivere, "genera la voce" un microfono, "gli effetti sonori" un mixer con l'esplosione,
+   "fotogramma per fotogramma" una pellicola con il contatore 001 → 006, "in codice" una finestra di codice. Noi
+   cambiamo una scheda per frase, ogni 3-5 s.
+   **Per Cintre:** dentro una frase ogni nome concreto detto dalla voce fa entrare il suo oggetto. Nelle `scena2d`
+   si fa con `oggetti` e `dopo:`, al secondo in cui la parola viene detta. Una frase lunga da sola, ferma, è un buco.
+2. **Il fondo cambia colore per capitolo**: blu (cos'è), bianco (come funziona), blu (personalizza), bianco (firma
+   finale). Chi guarda sente che la storia va avanti. Per noi va fatto sullo stacco del rehook e della risposta, non
+   su ogni frase.
+3. **Transizioni fatte con il disegno**: un cerchio pieno che si allarga e diventa il fondo nuovo; cose che cadono in
+   un imbuto e diventano "tuo". Niente dissolvenze.
+4. **Metafore che si vedono**: "gratis" è un cartello appeso con il portafoglio, "66 stili" sono scaffali di barattoli
+   di colore con il numero che sale. Il numero che sale con gli oggetti che si accumulano è la nostra `pila`.
+5. **Sottotitoli che si costruiscono parola per parola**, in alto a sinistra e piccoli, con la parola chiave colorata.
+   Noi teniamo il blocco in basso (scelta di Antonio per la chiarezza), ma il colore sulla parola chiave conferma
+   `evidenzia`.
+6. **Il personaggio punta alla grafica** con la bacchetta e apre la bocca sulle parole. È la conferma del narratore
+   fisso. Idea: la gruccia che si piega verso la grafica nuova quando entra.
+7. **CTA mostrata e non solo detta**: fumetto "Commenta" con la parola che si scrive da sola ("video"), poi un telefono
+   con il DM. Il reel ha 911 commenti contro 453 like: la parola chiave nei commenti spinge (vedi §8, decide Antonio).
+8. **Firma finale fissa**: lavagna con "Fidati del prof!" e i suoi oggetti. Un saluto riconoscibile a ogni reel.
+   Proposta per Antonio: una firma di Cintre di 1 s, gruccia più frase fissa, solo se non allunga il reel oltre i 25 s.
+
+## 14. Metodo da regista (da lemo-opuscar `DIRECTOR.md`, riassunto con parole nostre)
+
+- **Prima la struttura, poi il disegno.** Prima di scrivere le schede si pensano **3 strutture possibili** (viaggio
+  unico, prima/dopo, conto alla rovescia, elenco che si ribalta…) e si annota nella richiesta perché si è scelta
+  quella. La prima idea che viene è spesso il cliché.
+- **Un soggetto, un obiettivo, una svolta**: qualcuno vuole qualcosa, qualcosa cambia, e la fine è diversa
+  dall'inizio. È la regola di CLAUDE.md ("una persona, un problema, una svolta").
+- **Una mossa che solo questo mezzo può fare**, messa sul momento più forte: un oggetto che diventa la transizione,
+  il numero che si trasforma nell'oggetto.
+- **Il suono è metà del video**: fondo, effetti legati alle azioni (con il materiale giusto: carta, legno, metallo e
+  vetro suonano diversi) e musica. **Almeno un silenzio vero** subito prima della svolta: il primo suono dopo il
+  silenzio deve essere uno dei più importanti. Il suono può fare da transizione, se quello della scena dopo entra un
+  attimo prima.
+- **Ritmo che varia**: veloce e lento alternati, un'accelerazione chiara e un respiro. Un video tutto alla stessa
+  velocità ha fallito. Un'azione, un suono, uno stacco, ma non uno stacco su ogni battito.
+- **Tempi di lettura**: ogni scritta resta almeno 1,8 s, e mai meno di quanto la voce ci mette a dirla più 0,6 s. Per
+  andare veloci si mettono meno parole a schermo, non si toglie la scritta prima che la si legga.
+- **Anche il 2D ha una camera**: spinta, allontanamento, parallasse, una cornice dentro l'altra. Almeno 4 movimenti
+  diversi in un reel, e un'inquadratura firma che resti in mente.
+- **Gli errori più comuni**: soggetto troppo piccolo o schiacciato sul bordo (nei momenti chiave deve occupare
+  almeno 1/3 dell'altezza); colore su colore simile; sottotitoli sopra il soggetto; gag troppo veloce per capirla;
+  fotogrammi vuoti nelle transizioni.
+- **Controllo prima della consegna**: fogli di fotogrammi, strisce a 0,2 s sulle azioni chiave e una visione intera a
+  velocità vera con l'audio. Poi un solo giro di correzioni, fatto tutto insieme.
+
 ## Da non fare
 
 - Effetti a raffica che coprono la voce, o un suono diverso per ogni parola.
@@ -223,9 +319,13 @@ La grafica è già in movimento (`anticipo`), con titolo grande e senza intestaz
 
 ## Checklist prima del render
 
-1. Ogni frase della voce ha qualcosa da far *vedere*?
+0. La struttura è gancio → attesa → rehook → attesa → risposta per ultima (§12)? Nessuna frase risponde prima del tempo?
+1. Ogni frase della voce ha qualcosa da far *vedere*? E ogni nome concreto ha il suo oggetto che entra quando viene
+   detto (§13)?
 2. Ogni evento a schermo ha il suo suono, e ogni suono ha il suo evento?
 3. La struttura (quiz A/B/C o "N cose") si capisce dal fotogramma 0?
 4. Il finale richiama l'inizio?
 5. La caption è un bigino con una sola CTA utile (salva o manda) più i crediti delle foto?
 6. La copertina ha il titolo grande nello stile di sempre?
+7. C'è almeno un silenzio prima della svolta, il ritmo cambia almeno una volta e ogni scritta resta leggibile per
+   almeno 1,8 s (§14)?

@@ -28,7 +28,7 @@ regole_comuni:
 # Icone vettoriali della resa 2d (preset/grafica2d.js → ICONE). Per un'icona nuova: disegnala lì e aggiungila qui.
 icone_2d: [taschino, orologio, tacco, staffa, tubino, auto, lampadina, domanda, commento, cuore, stella, gruccia, telefono, armadio, outfit,
            trench, elmetto, cardigan, medaglia, bikini, atomo, cravatta, sciabole, sneaker, pugnale, silenzio,
-           jeans, sposa, corona, maglia, mutande, zeppa, sughero, borsa, bambu, aereo, polso, baule, lucchetto, lente]
+           jeans, sposa, corona, maglia, mutande, zeppa, sughero, borsa, bambu, aereo, polso, baule, lucchetto, lente, paglietta, pagliettaRotta, lumaca]
 
 # Tipi di scheda della resa 2d (scena schede2d) e campi usati.
 schede_2d:
@@ -47,10 +47,10 @@ schede_2d:
   rehook:    "a metà video: titolo enorme che trema ('Aspetta l'ultima...') + carta mistero della prossima curiosità (solo cartoon2d)"
   timeline:  "(solo cartoon2d) INFOGRAFICA a codice (preset infografica2d.js): titolo + tappe verticali che si disegnano (tappe: [{quando: '1871', testo: 'Tasche strappate', icona: jeans}], attiva: indice della tappa di questa frase). Più schede timeline CONSECUTIVE con le stesse tappe = una sola timeline che cresce, le tappe dopo restano nascoste. Testi delle tappe ≤ 4 parole. Usala per storie con date o passaggi in sequenza, soprattutto senza foto adatta"
   mappa:     "(solo cartoon2d) INFOGRAFICA a codice: sagoma del paese (regione: usa) con un percorso tratteggiato, puntini che si accendono uno alla volta mentre la voce parla e un'icona che viaggia (icona: auto). Puntini illustrativi, mai presentati come dati. Usala per viaggi, diffusione, 'in tutta l'America'"
-  contatore: "(solo cartoon2d) GRAFICA VIVA: numero enorme che sale (da, a, unita: 'litri', durata: secondi) mentre una vasca si riempie; tic che rallentano e conferma all'arrivo. Per i numeri sorprendenti"
+  contatore: "(solo cartoon2d) GRAFICA VIVA: numero enorme che sale (da, a, unita: 'litri', durata: secondi) mentre una vasca si riempie; tic che rallentano e conferma all'arrivo. Per i numeri sorprendenti. forma: pila (+ icona: lumaca) = niente vasca, le icone cadono e si ammucchiano in una piramide mentre il numero sale (la vasca è già usata: preferire pila)"
   radar:     "(solo cartoon2d) GRAFICA VIVA: un punto nel mare visto dall'alto (atollo), cerchi radar che pulsano con un ping, mirino, etichetta del posto (etichetta: 'BIKINI · 1946'); esplode: secondi → lampo. Per luoghi lontani"
   scena2d:   "(solo cartoon2d) SCENA ANIMATA con personaggi (comparse, NON la mascotte): sfondo studio|campo|mare|casa|miniera, attori: [{azione: cammina|indica|sorpresa|disegna|legge|versa|lancia|raccoglie|saluta, x, verso: 1|-1, maglia, pantaloni, capelli, pelle: 0-3, cappello: basco|paglia|corona|casco|turbante, baffi, tacchi: '#colore', lanterna: true, quando, dice: 'BIKINI!'}], oggetti: [{cosa: tavolo|giornale|lavatrice|cotone|gocce|eiffel|jeansVecchi|icona, x, y, s, testo, icona}]"
-  chat:      "(solo cartoon2d) GRAFICA VIVA: telefono con i messaggi di due amici INVENTATI (mai profili veri): messaggi: [{da: a|b, testo: '...'}] (≤ 4, corti), nome: 'Giulia'. Prima i tre puntini, poi il fumetto con un ding. Per domande che si fanno tra amici ('ma perché…?')"
+  chat:      "(solo cartoon2d) GRAFICA VIVA: chat IDENTICA a WhatsApp (regola di Antonio, 2026-11-21: intestazione verde con avatar, 'online' → 'sta scrivendo…', sfondo beige coi disegnini, fumetti verdi/bianchi con codina, ora e spunte blu, barra 'Messaggio' col microfono verde; niente logo) tra due amici INVENTATI (mai profili veri): messaggi: [{da: a|b, testo: '...'}] (≤ 4, corti; a = io a destra, b = l'amico), nome: 'Giulia', ora: '21:14'. I miei si scrivono lettera per lettera nella barra, i suoi coi tre puntini; ogni fumetto arriva con un ding. Per domande che si fanno tra amici ('ma perché…?')"
   lente:     "(solo cartoon2d) GRAFICA VIVA: oggetto disegnato (icona) e lente d'ingrandimento che lo scorre e si ferma su un dettaglio (punto: [dx, dy] da -1 a 1), cerchiato di rosso con etichetta. Per 'guarda bene i tuoi…'"
   confronto: "(solo cartoon2d) GRAFICA VIVA: schermo diviso PRIMA | DOPO con tendina che scorre: prima: {icona, etichetta}, dopo: {icona, etichetta}. Per cambi d'uso, 'era per… ora è per…'"
   # GANCIO VIVO (Antonio, 2026-11-19: "serve qualcosa di dinamico fin dall'inizio"): il gancio può avere
@@ -75,6 +75,8 @@ hook_e_cta:
     - "La stessa CTA va nel video (voce + cartello animato) e nella caption."
   attenzione:
     - "Promessa aperta nei primi 3 s, ripagata per ultima; rehook al 40-60% del video; ogni frase deve agganciare, insegnare o preparare il payoff, sennò si taglia."
+    - "Struttura a domanda aperta (regia-reel §12): gancio → attesa → rehook → attesa → risposta. Nessuna frase risponde prima della fine; dopo la risposta solo la CTA, ≤ 2 s."
+    - "Prima di scrivere: 3 strutture possibili (storia unica, prima/dopo, conto alla rovescia, elenco che si ribalta), scegline una e annota il perché nella richiesta (regia-reel §14)."
 
 # RITMO ALTO (resa 2d con scena cartoon2d). Sintesi della ricerca del 2026-11-14 (skill .claude/skills/viral-hooks e
 # short-form-video; skip rate di Instagram = chi esce entro 3 s). I numeri dei blog sono indicativi, le regole no.
@@ -83,6 +85,8 @@ ritmo_alto:
   - "Gancio = una sola promessa aperta (open loop): numero preciso + contrasto ('3 capi nati in guerra. L'ultimo è esplosivo')."
   - "Svela l'ultima curiosità per ultima; a metà (~12-15 s) un rehook ('Ma aspetta l'ultima...') con scheda rehook."
   - "Un cambio visivo ogni 1,5-3 s, irregolare: le battute le calcola auto_ig/audio.py e valgono anche per gli effetti sonori."
+  - "Dentro la frase, un oggetto per ogni parola chiave (0,5-1,5 s, regia-reel §13); ogni scritta leggibile almeno 1,8 s; transizioni disegnate, mai dissolvenze."
+  - "Ritmo che cambia: almeno un'accelerazione e un respiro, un silenzio breve prima del payoff, il cui suono è il più forte del reel (regia-reel §14)."
   - "Sottotitoli a blocco (default: 2 righe ferme, parola detta evidenziata), voce velocita 1.0 + pausa 0.4-0.5, frasi intere e chiare (marca/lezioni.md n. 13); titoli schede di max 4-7 parole."
   - "Durata 20-25 s (dati reali: il reel da 24 s ha battuto quelli da 27-35 s); frasi brevi, niente pause morte; audio: {musica: true, sfx: true}."
   - "Hook: due varianti di categorie diverse (stop-scroll: negazione/numero/domanda + ritenzione: storia/emozione), scegli la più forte."
@@ -154,11 +158,15 @@ formati:
     nome: Curiosità
     scopo: "\"Lo sapevi?\" di moda: fatti storici o pratici veri e sorprendenti, in serie numerata."
     durata: [20, 40]
+    # STRUTTURA A DOMANDA APERTA (studio del 2026-11-21, @viewcci, skill regia-reel §12): la gente se ne va appena
+    # ha la risposta, quindi la risposta arriva PER ULTIMA e dopo c'è solo la CTA breve. Vale anche per la serie
+    # numerata ("N cose"): gancio → (fatto → dettaglio) × N, con il rehook prima dell'ultima e la più assurda in fondo.
     struttura:
-      - {ruolo: gancio,    guida: "Il fatto più forte e vero con contrasto e loop aperto, ≤ 12 parole (hook_e_cta): \"Il tuo trench è nato in trincea. E il bikini? Ancora peggio.\""}
-      - {ruolo: fatto,     guida: "Per ogni curiosità: frase titolo (\"Uno: il taschino dei jeans\")."}
-      - {ruolo: dettaglio, guida: "...e la frase che sorprende (il perché), con un fatto verificabile."}
-      - {ruolo: rehook,    guida: "Prima dell'ultima curiosità (40-60% del video): \"Ma aspetta, la terza è la più assurda.\""}
+      - {ruolo: gancio,    guida: "APRE la domanda: il fatto più forte e vero, con un numero o un contrasto, ≤ 12 parole (hook_e_cta). Non risponde: \"Per colorare di viola un bordo servivano 12.000 lumache.\""}
+      - {ruolo: sviluppo,  guida: "ATTESA 1: rende la domanda più grande senza rispondere (posta in gioco, contesto): \"Per questo la porpora costava una fortuna.\""}
+      - {ruolo: rehook,    guida: "RILANCIA a metà video (scheda rehook, obbligatoria: il build avvisa se manca): \"Così Nerone ebbe un'idea assurda.\""}
+      - {ruolo: sviluppo,  guida: "ATTESA 2: la storia si complica, il perché manca ancora: \"La vietò, e mandò un uomo a venderla di nascosto.\""}
+      - {ruolo: payoff,    guida: "RISPOSTA, per ultima e più forte (timbro, boom): \"Era una trappola: fece chiudere tutti i negozi.\" Dopo c'è solo la CTA, ≤ 7 parole."}
     cta: "Salvalo e mandalo a chi ama la moda!"   # meglio una CTA mirata per video nel campo cta della richiesta
     cta_azione: salva_condividi
     hashtag: "#cintre #curiosità #moda #storiadellamoda #lo_sapevi #stile"
@@ -173,7 +181,8 @@ formati:
         scene: [cartoon2d, schede2d]
         ricetta:
           - "Scena predefinita cartoon2d (motion graphics a ritmo alto, vedi ritmo_alto; modella Cintre 2D solo con mascotte: true); schede2d per una versione calma."
-          - "Schede: gancio → (fatto → dettaglio) × 3 con un rehook prima dell'ultimo fatto. Poi cta (UNA richiesta: niente scheda commenta prima, sarebbe una seconda CTA)."
+          - "Schede: gancio → attesa → rehook → attesa → payoff (storia), oppure gancio → (fatto → dettaglio) × 3 con un rehook prima dell'ultimo fatto (serie). Poi cta (UNA richiesta: niente scheda commenta prima, sarebbe una seconda CTA)."
+          - "Dentro ogni frase: un oggetto nuovo per ogni nome concreto detto dalla voce (scena2d → oggetti con dopo:), così il centro cambia ogni 0,5-1,5 s (regia-reel §13)."
           - "Nel dettaglio 'evidenzia' (o 'timbro') diventa il timbro che sbatte sullo schermo: una parola forte (TRINCEE, ATOMICA)."
           - "Ogni fatto ha un'icona del capo (taschino, tacco, tubino...) e il dettaglio un'icona della spiegazione (orologio, staffa, auto...)."
           - "Titoli delle schede brevi (max 5 parole): il testo completo lo danno voce e sottotitoli."

@@ -65,6 +65,27 @@ Regole:
 - Ogni cosa che compare ha il suo suono (skill `regia-reel` §2) nello stesso istante.
 - **Varietà**: la vasca che si riempie (contatore con liquido) è già stata usata. Antonio la trova "scontata".
   Per ogni reel scegli un tipo di grafica diverso dagli ultimi (il build lo segnala).
+- **Un oggetto per parola chiave** (studio del 2026-11-21, @ilprof.ai, skill `regia-reel` §13): dentro una frase
+  ogni nome concreto detto dalla voce fa entrare il suo oggetto, con `dopo:` al secondo in cui viene detto. Il centro
+  dello schermo cambia ogni 0,5-1,5 s, ma un oggetto solo alla volta è protagonista (staging).
+- **Transizioni fatte con il disegno**, mai la dissolvenza: un cerchio che si allarga e diventa il fondo nuovo, un
+  oggetto che si trasforma nel successivo, cose che cadono in un imbuto. Nessun fotogramma vuoto nel mezzo.
+- **Chat = WhatsApp** (Antonio, 2026-11-21): la grafica `chat` deve sembrare in tutto e per tutto WhatsApp (colori
+  #008069 / #efeae2 / #d9fdd3, codina sul primo fumetto del gruppo, ora e doppia spunta blu, "sta scrivendo…",
+  messaggio mio scritto lettera per lettera nella barra e poi inviato). Senza logo né nome. Ogni interfaccia di app
+  che disegniamo va copiata dal vero il più fedelmente possibile: chi guarda la riconosce al volo.
+- **Nei momenti chiave il soggetto occupa almeno 1/3 dell'altezza** dello spazio grafico. Niente colore su colore
+  simile (rosso su bordeaux).
+
+## Da lemo-opuscar `DIRECTOR.md` (riassunto con parole nostre, 2026-11-21)
+
+- Fra una posa e l'altra si passa sempre con keyframe ed easing. Mai cambiare posa di colpo dentro un `if`, salvo un
+  pop comico voluto di un fotogramma.
+- Un oggetto tenuto in mano sta fra i palmi. Un oggetto che rotola gira di `distanza / raggio`.
+- Le espressioni si controllano alla dimensione finale, guardando le sopracciglia: "preoccupato" e "arrabbiato"
+  differiscono solo per il loro verso.
+- Le azioni nuove si provano su un foglio grande (allungarsi, alzare, correre, inginocchiarsi) prima di metterle in
+  un reel.
 
 ## Il narratore: la gruccia di Cintre (Antonio, 2026-11-21)
 

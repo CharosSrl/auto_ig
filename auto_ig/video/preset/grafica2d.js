@@ -569,6 +569,50 @@ export const ICONE = {
     ctx.save(); ctx.globalAlpha = 0.7; ctx.strokeStyle = '#fff'; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(-16, -16, 40, Math.PI * 1.1, Math.PI * 1.5); ctx.stroke(); ctx.restore();
     ctx.restore();
   },
+  // Paglietta (cappello di paglia rigido anni '20) con nastro e trama a righe
+  paglietta(ctx, { t = 0, accento = '#e8435a' }) {
+    ctx.save(); ctx.rotate(Math.sin(t * 2) * 0.03);
+    ctx.beginPath(); ctx.ellipse(0, 40, 104, 30, 0, 0, 7); fs(ctx, '#e6c46a');                       // tesa
+    ctx.beginPath(); ctx.moveTo(-62, 36); ctx.lineTo(-58, -46); ctx.quadraticCurveTo(0, -62, 58, -46); ctx.lineTo(62, 36);
+    ctx.quadraticCurveTo(0, 50, -62, 36); fs(ctx, '#f0d27e');                                          // cupola
+    ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(150,110,30,0.55)'; ctx.lineWidth = 4;
+    for (let y = -40; y < 40; y += 12) { ctx.beginPath(); ctx.moveTo(-70, y); ctx.lineTo(70, y + 3); ctx.stroke(); }
+    ctx.restore(); stileIcona(ctx);
+    ctx.beginPath(); ctx.moveTo(-61, 4); ctx.quadraticCurveTo(0, 16, 61, 4); ctx.lineTo(62, 30); ctx.quadraticCurveTo(0, 42, -62, 30); ctx.closePath(); fs(ctx, accento);  // nastro
+    ctx.beginPath(); ctx.ellipse(0, -50, 58, 12, 0, 0, 7); fs(ctx, '#f6dc94');                       // cima piatta
+    ctx.restore();
+  },
+  // Paglietta schiacciata e strappata (calpestata)
+  pagliettaRotta(ctx, { accento = '#e8435a' }) {
+    ctx.save(); ctx.rotate(-0.12);
+    ctx.beginPath(); ctx.moveTo(-108, 52); ctx.lineTo(-70, 30); ctx.lineTo(-84, 14); ctx.lineTo(-30, 22); ctx.lineTo(-10, 2); ctx.lineTo(18, 20);
+    ctx.lineTo(60, 8); ctx.lineTo(54, 30); ctx.lineTo(104, 44); ctx.lineTo(40, 70); ctx.lineTo(-20, 62); ctx.lineTo(-60, 74); ctx.closePath(); fs(ctx, '#e6c46a');
+    ctx.beginPath(); ctx.moveTo(-60, 30); ctx.lineTo(-56, -6); ctx.lineTo(-20, -14); ctx.lineTo(4, -2); ctx.lineTo(34, -16); ctx.lineTo(58, 0); ctx.lineTo(60, 30);
+    ctx.quadraticCurveTo(0, 44, -60, 30); fs(ctx, '#f0d27e');
+    ctx.beginPath(); ctx.moveTo(-59, 18); ctx.quadraticCurveTo(0, 30, 59, 18); ctx.lineTo(60, 32); ctx.quadraticCurveTo(0, 44, -60, 32); ctx.closePath(); fs(ctx, accento);
+    // impronta della scarpa e pagliuzze volate via
+    ctx.save(); ctx.globalAlpha = 0.55; ctx.fillStyle = INCHIOSTRO;
+    ctx.beginPath(); ctx.ellipse(-8, 4, 20, 9, 0.2, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(26, 8, 11, 7, 0.2, 0, 7); ctx.fill(); ctx.restore();
+    ctx.strokeStyle = '#e6c46a'; ctx.lineWidth = 6;
+    for (const [x, y, a] of [[-90, -30, 0.6], [80, -36, -0.5], [-30, -60, 0.2], [96, -6, 1.1]]) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * 30, y + Math.sin(a) * 30); ctx.stroke(); }
+    ctx.restore();
+  },
+  // Lumaca di mare (murice): conchiglia a spirale con le spine, da cui si ricavava la porpora
+  lumaca(ctx, { t = 0, accento = '#8e3fb0' }) {
+    ctx.save(); ctx.rotate(Math.sin(t * 3) * 0.04);
+    ctx.beginPath(); ctx.moveTo(-90, 40); ctx.quadraticCurveTo(-40, 72, 40, 62); ctx.quadraticCurveTo(84, 56, 96, 40); ctx.lineTo(60, 40); fs(ctx, accento);  // corpo
+    ctx.beginPath(); ctx.moveTo(-100, 0); ctx.quadraticCurveTo(-60, -20, -30, -10); ctx.lineTo(-30, 30); ctx.quadraticCurveTo(-70, 40, -100, 0); fs(ctx, '#e9d6c0');   // canale
+    for (let j = 0; j < 5; j++) {                                                              // spine
+      const a = -2.6 + j * 0.55; ctx.beginPath(); ctx.moveTo(10 + Math.cos(a) * 58, -6 + Math.sin(a) * 58);
+      ctx.lineTo(10 + Math.cos(a + 0.12) * 92, -6 + Math.sin(a + 0.12) * 92); ctx.lineTo(10 + Math.cos(a + 0.26) * 58, -6 + Math.sin(a + 0.26) * 58); fs(ctx, '#d9c1a6');
+    }
+    ctx.beginPath(); ctx.arc(10, -6, 62, 0, 7); fs(ctx, '#f0dcc4');
+    ctx.beginPath(); ctx.arc(14, -8, 40, 0, 7); fs(ctx, '#e3c8aa');
+    ctx.beginPath(); ctx.arc(18, -10, 20, 0, 7); fs(ctx, '#d4b18f');
+    ctx.save(); ctx.globalAlpha = 0.9; ctx.fillStyle = accento;                                    // goccia di porpora
+    const g = (t * 0.8) % 1; ctx.beginPath(); ctx.arc(-96, 12 + g * 40, 9 * (1 - g * 0.5), 0, 7); ctx.fill(); ctx.restore();
+    ctx.restore();
+  },
 };
 export const NOMI_ICONE = Object.keys(ICONE);
 

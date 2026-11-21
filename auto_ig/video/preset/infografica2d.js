@@ -127,9 +127,10 @@ export function tempiPuntini(durata) {
 // Numero enorme che sale (da → a) mentre una vasca si riempie di liquido che ondeggia. u: secondi dalla frase
 // (nel gancio parte già avanti, così al fotogramma 0 si muove). durata: secondi per arrivare al numero finale.
 export const fmtNum = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-export function contatore(ctx, { da = 0, a = 100, unita = '', durata = 2.2, colore = '#4fb3ff' } = {}, u, t,
+export function contatore(ctx, { da = 0, a = 100, unita = '', durata = 2.2, colore = '#4fb3ff', forma = 'vasca', icona: ic = 'lumaca' } = {}, u, t,
   { accento = '#ffd166', box = { x: 240, y: 690, w: 600, h: 500 } } = {}) {
   const k = easeOut(clamp(u / durata) * 1.0), v = da + (a - da) * k, fine = u >= durata;
+  if (forma === 'pila') return contatorePila(ctx, { v, k, u, t, fine, durata, unita, colore, ic, accento });
   const { x, y, w, h } = box;
   ctx.save();
   // vasca: ombra, vetro crema trasparente, contorno a inchiostro
@@ -164,6 +165,39 @@ export function contatore(ctx, { da = 0, a = 100, unita = '', durata = 2.2, colo
   ctx.lineWidth = 26; ctx.strokeStyle = INCHIOSTRO; const str = fmtNum(v);
   ctx.strokeText(str, 0, 0); ctx.fillStyle = fine ? accento : '#fff'; ctx.fillText(str, 0, 0);
   if (unita) { ctx.font = FONT(70, 900); ctx.lineWidth = 16; ctx.strokeText(unita, 0, 140); ctx.fillStyle = '#fff'; ctx.fillText(unita, 0, 140); }
+  ctx.restore();
+  ctx.restore();
+}
+// Contatore senza vasca (forma: 'pila'): mentre il numero sale, le icone (icona: lumaca…) cadono dall'alto e si
+// ammucchiano in una piramide; ognuna atterra con uno schiacciamento. Stesso easing e stessi tic del contatore.
+const PILA_FILE = [7, 6, 5, 4, 3, 2, 1];                 // icone per fila, dal basso
+const PILA_N = PILA_FILE.reduce((a, b) => a + b, 0);
+function contatorePila(ctx, { v, k, u, t, fine, durata, unita, colore, ic, accento }) {
+  const S = 128, PASSO = 112, RIGA = 72, BASE = 1200;
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,4,10,0.35)'; ctx.beginPath(); ctx.ellipse(W / 2, BASE + 62, 430, 34, 0, 0, 7); ctx.fill();   // ombra a terra
+  let j = 0;
+  PILA_FILE.forEach((n, r) => {
+    for (let c = 0; c < n; c++, j++) {
+      const soglia = (j + 1) / (PILA_N + 1);
+      if (k < soglia) continue;
+      const nasce = durata * (1 - Math.cbrt(1 - soglia)), eta = u - nasce;       // inversa di easeOut (cubica)
+      const cade = clamp(eta / 0.22), yd = (1 - cade * cade) * -260;             // caduta con accelerazione
+      const atterra = clamp((eta - 0.22) / 0.18), sq = eta > 0.22 ? Math.sin(atterra * Math.PI) * 0.22 : 0;
+      const x = W / 2 + (c - (n - 1) / 2) * PASSO + Math.sin(j * 2.3) * 8;
+      const y = BASE - r * RIGA + yd + (fine ? Math.sin(t * 2 + j) * 2 : 0);
+      ctx.save(); ctx.translate(x, y + S * 0.3); ctx.scale(1 + sq * 0.6, 1 - sq); ctx.translate(0, -S * 0.3);
+      icona(ctx, ic, 0, 0, S, { t: t + j * 0.3, accento: colore, ruota: Math.sin(j * 1.7) * 0.25 });
+      ctx.restore();
+    }
+  });
+  // numero enorme sopra la pila: scuote mentre sale, pop all'arrivo
+  const arr = fine ? pop(clamp((u - durata) / 0.3)) : 1, sh = fine ? 0 : Math.sin(t * 50) * 4;
+  ctx.save(); ctx.translate(W / 2 + sh, 560); ctx.scale(arr, arr); ctx.rotate(fine ? -0.04 : 0);
+  ctx.font = FONT(200, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 26; ctx.strokeStyle = INCHIOSTRO; const str = fmtNum(v);
+  ctx.strokeText(str, 0, 0); ctx.fillStyle = fine ? accento : '#fff'; ctx.fillText(str, 0, 0);
+  if (unita) { ctx.font = FONT(70, 900); ctx.lineWidth = 16; ctx.strokeText(unita, 0, 115); ctx.fillStyle = '#fff'; ctx.fillText(unita, 0, 115); }
   ctx.restore();
   ctx.restore();
 }
@@ -234,49 +268,185 @@ export function radar(ctx, { etichetta = '', esplode = -1 } = {}, u, t, { accent
 }
 
 // ---- CHAT --------------------------------------------------------------------------------------------------------
-// Telefono con i messaggi di due amici INVENTATI (mai profili veri): prima i tre puntini che scrivono, poi il
-// fumetto che arriva con un "ding" (audio.suoni_grafica, stessi tempi: CHAT_INIZIO + j·CHAT_PASSO).
-// messaggi: [{da: 'a'|'b', testo}], 'a' = a destra (colore accento), 'b' = a sinistra (grigio).
+// REGOLA DI ANTONIO (2026-11-21): "se ci sta una chat rendila quanto più uguale a WhatsApp". Quindi: barra di stato,
+// intestazione verde (#008069) con freccia, avatar grigio con la sagoma, nome e "online" → "sta scrivendo…", icone
+// videochiamata/telefono/menu; sfondo beige (#efeae2) con i disegnini; fumetti verde chiaro (#d9fdd3, i miei, a destra)
+// e bianchi (l'amico, a sinistra) con la codina sul primo di ogni gruppo, ora in grigio e spunte blu sui miei; barra in
+// basso con faccina, "Messaggio", fotocamera e cerchio verde (#00a884) col microfono, che diventa "invia" mentre
+// scrivo (il mio messaggio compare lettera per lettera nella barra). Niente logo né nome dell'app: solo l'aspetto.
+// Amici INVENTATI (mai profili veri). Tempi: CHAT_INIZIO + j·CHAT_PASSO, uguali al "ding" di audio.suoni_grafica.
+// messaggi: [{da: 'a'|'b', testo}], 'a' = io (a destra), 'b' = l'amico (`nome`, a sinistra); ora: '21:14'.
 export const CHAT_INIZIO = 0.45, CHAT_PASSO = 1.0;
-export function chat(ctx, { messaggi = [], nome = 'Giulia' } = {}, u, t, { accento = '#ffd166' } = {}) {
-  const x = 230, y = 450, w = 620, h = 760;
+const WA = { verde: '#008069', verdeScuro: '#017561', fondo: '#efeae2', mio: '#d9fdd3', suo: '#ffffff', testo: '#111b21',
+             grigio: '#667781', icone: '#8696a0', spunte: '#53bdeb', tasto: '#00a884' };
+const WAFONT = (px, w = 400) => `${w} ${px}px Roboto, "Helvetica Neue", Arial, "Noto Color Emoji", sans-serif`;
+
+function waSfondo(ctx, x, y, w, h) {                                 // carta da parati con i disegnini, appena visibili
+  ctx.fillStyle = WA.fondo; ctx.fillRect(x, y, w, h);
+  ctx.save(); ctx.strokeStyle = 'rgba(84,101,111,0.13)'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  let n = 0;
+  for (let yy = y + 30; yy < y + h; yy += 92) for (let xx = x + 30 + ((yy - y) / 92 % 2) * 46; xx < x + w; xx += 92, n++) {
+    ctx.beginPath();
+    switch (n % 5) {
+      case 0: ctx.arc(xx, yy, 14, 0, 7); break;                                                    // bolla
+      case 1: ctx.moveTo(xx - 14, yy - 4); ctx.quadraticCurveTo(xx - 14, yy - 18, xx, yy - 8);       // cuoricino
+              ctx.quadraticCurveTo(xx + 14, yy - 18, xx + 14, yy - 4); ctx.lineTo(xx, yy + 14); ctx.closePath(); break;
+      case 2: for (let q = 0; q < 5; q++) { const a = -Math.PI / 2 + q * 4 * Math.PI / 5; ctx[q ? 'lineTo' : 'moveTo'](xx + 15 * Math.cos(a), yy + 15 * Math.sin(a)); } ctx.closePath(); break;
+      case 3: ctx.moveTo(xx - 16, yy + 6); ctx.quadraticCurveTo(xx - 8, yy - 12, xx, yy + 6); ctx.quadraticCurveTo(xx + 8, yy + 22, xx + 16, yy + 4); break; // onda
+      default: ctx.rect(xx - 12, yy - 9, 24, 18); ctx.moveTo(xx - 12, yy - 9); ctx.lineTo(xx, yy + 2); ctx.lineTo(xx + 12, yy - 9); // busta
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function waSpunte(ctx, x, y, col) {                                  // doppia spunta (letto)
+  ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const dx of [0, 9]) { ctx.beginPath(); ctx.moveTo(x + dx, y); ctx.lineTo(x + dx + 6, y + 6); ctx.lineTo(x + dx + 18, y - 7); ctx.stroke(); }
+  ctx.restore();
+}
+
+function waAvatar(ctx, cx, cy, r) {                                  // avatar predefinito: cerchio grigio con la sagoma
+  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fillStyle = '#dfe5e7'; ctx.fill(); ctx.clip();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(cx, cy - r * 0.18, r * 0.36, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx, cy + r * 0.78, r * 0.66, r * 0.5, 0, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+function waIntestazione(ctx, x, y, w, nome, stato, ora) {
+  ctx.fillStyle = WA.verdeScuro; ctx.fillRect(x, y, w, 44);                                    // barra di stato
+  ctx.fillStyle = '#ffffff'; ctx.font = WAFONT(26, 500); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(ora, x + 28, y + 23);
+  ctx.fillRect(x + w - 70, y + 14, 36, 18); ctx.fillRect(x + w - 34, y + 19, 4, 8);            // batteria
+  for (let q = 0; q < 4; q++) ctx.fillRect(x + w - 128 + q * 10, y + 30 - q * 5, 6, 4 + q * 5); // tacche del segnale
+  const hy = y + 44, hh = 108;
+  ctx.fillStyle = WA.verde; ctx.fillRect(x, hy, w, hh);
+  ctx.save(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const my = hy + hh / 2;
+  ctx.beginPath(); ctx.moveTo(x + 52, my); ctx.lineTo(x + 24, my); ctx.moveTo(x + 36, my - 13); ctx.lineTo(x + 24, my); ctx.lineTo(x + 36, my + 13); ctx.stroke(); // freccia
+  waAvatar(ctx, x + 100, my, 36);
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.font = WAFONT(36, 500); ctx.fillText(nome, x + 152, my - 16);
+  ctx.font = WAFONT(25, 400); ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillText(stato, x + 152, my + 22);
+  // icone a destra: videocamera, telefono, menu
+  const ix = x + w - 190;
+  ctx.fillStyle = '#ffffff';
+  rr(ctx, ix, my - 13, 32, 26, 6); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(ix + 34, my - 2); ctx.lineTo(ix + 46, my - 11); ctx.lineTo(ix + 46, my + 11); ctx.lineTo(ix + 34, my + 2); ctx.fill();
+  ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(ix + 96, my - 2, 14, Math.PI * 0.55, Math.PI * 1.25); ctx.stroke(); // cornetta
+  ctx.beginPath(); ctx.arc(ix + 87, my + 12, 5, 0, 7); ctx.arc(ix + 86, my - 16, 5, 0, 7); ctx.fill();
+  for (let q = -1; q <= 1; q++) { ctx.beginPath(); ctx.arc(x + w - 36, my + q * 12, 4, 0, 7); ctx.fill(); }
+  ctx.restore();
+  return hy + hh;
+}
+
+function waBarra(ctx, x, yb, w, scritto) {                           // barra in basso: "Messaggio" + tasto verde
+  const bh = 78, bw = w - 130, by = yb - bh - 14, bx = x + 14;
+  ctx.fillStyle = 'rgba(0,0,0,0.08)'; rr(ctx, bx, by + 3, bw, bh, bh / 2); ctx.fill();
+  ctx.fillStyle = '#ffffff'; rr(ctx, bx, by, bw, bh, bh / 2); ctx.fill();
+  ctx.save(); ctx.strokeStyle = WA.icone; ctx.fillStyle = WA.icone; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+  const fy = by + bh / 2;
+  ctx.beginPath(); ctx.arc(bx + 42, fy, 17, 0, 7); ctx.stroke();                                   // faccina
+  ctx.beginPath(); ctx.arc(bx + 36, fy - 5, 2.6, 0, 7); ctx.arc(bx + 48, fy - 5, 2.6, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx + 42, fy + 1, 9, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+  if (!scritto) {                                                                                   // fotocamera
+    rr(ctx, bx + bw - 56, fy - 13, 36, 28, 6); ctx.stroke(); ctx.beginPath(); ctx.arc(bx + bw - 38, fy + 1, 7, 0, 7); ctx.stroke();
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.save(); ctx.beginPath(); ctx.rect(bx + 74, by, bw - 150, bh); ctx.clip();
+  if (scritto) {
+    ctx.font = WAFONT(32, 400); ctx.fillStyle = WA.testo;
+    const tw = ctx.measureText(scritto).width, ox = Math.min(0, bw - 160 - tw);                  // scorre se è lungo
+    ctx.fillText(scritto, bx + 74 + ox, fy);
+    ctx.fillStyle = WA.tasto; ctx.fillRect(bx + 76 + ox + tw, fy - 18, 3, 36);                       // cursore
+  } else { ctx.font = WAFONT(32, 400); ctx.fillStyle = WA.icone; ctx.fillText('Messaggio', bx + 74, fy); }
+  ctx.restore();
+  // tasto verde: microfono, oppure "invia" mentre scrivo
+  const cx = x + w - 60, r = 42;
+  ctx.fillStyle = WA.tasto; ctx.beginPath(); ctx.arc(cx, fy, r, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#ffffff';
+  if (scritto) { ctx.beginPath(); ctx.moveTo(cx - 14, fy - 16); ctx.lineTo(cx + 18, fy); ctx.lineTo(cx - 14, fy + 16); ctx.lineTo(cx - 9, fy); ctx.closePath(); ctx.fill(); }
+  else {
+    rr(ctx, cx - 8, fy - 20, 16, 26, 8); ctx.fill();
+    ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(cx, fy - 4, 13, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, fy + 9); ctx.lineTo(cx, fy + 18); ctx.stroke();
+  }
+  ctx.restore();
+  return by;
+}
+
+export function chat(ctx, { messaggi = [], nome = 'Giulia', ora = '21:14' } = {}, u, t, { accento = '#ffd166' } = {}) {
+  const x = 180, y = 400, w = 720, h = 860, bordo = 16;               // telefono; schermo = dentro il bordo
+  const sx = x + bordo, sy = y + bordo, sw = w - 2 * bordo, sh = h - 2 * bordo;
   ctx.save();
-  ctx.translate(0, Math.sin(t * 1.6) * 6);                          // il telefono "respira" in mano
-  ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, x + 14, y + 18, w, h, 64); ctx.fill();
-  ctx.fillStyle = '#16161a'; rr(ctx, x, y, w, h, 64); ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
-  ctx.fillStyle = '#f4f1ec'; rr(ctx, x + 22, y + 22, w - 44, h - 44, 46); ctx.fill();
-  // intestazione: avatar e nome
-  ctx.fillStyle = '#ffffff'; rr(ctx, x + 22, y + 22, w - 44, 110, 46); ctx.fill();
-  ctx.fillStyle = accento; ctx.beginPath(); ctx.arc(x + 90, y + 78, 32, 0, 7); ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
-  ctx.fillStyle = INCHIOSTRO; ctx.font = FONT(40, 900); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(nome, x + 140, y + 70);
-  ctx.font = FONT(26, 700); ctx.fillStyle = '#2e9e5b'; ctx.fillText('online', x + 140, y + 104);
-  // messaggi: ognuno entra dal basso con un piccolo rimbalzo, i vecchi scorrono su
-  ctx.save(); rr(ctx, x + 22, y + 132, w - 44, h - 154, 30); ctx.clip();
-  const arrivati = messaggi.map((m, j) => ({ ...m, k: clamp((u - CHAT_INIZIO - j * CHAT_PASSO) / 0.3) })).filter((m) => m.k > 0);
-  let yy = y + h - 60;
+  ctx.translate(0, Math.sin(t * 1.6) * 6);                            // il telefono "respira" in mano
+  ctx.fillStyle = 'rgba(20,4,10,0.45)'; rr(ctx, x + 14, y + 18, w, h, 60); ctx.fill();
+  ctx.fillStyle = '#16161a'; rr(ctx, x, y, w, h, 60); ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();
+  ctx.save(); rr(ctx, sx, sy, sw, sh, 46); ctx.clip();
+
+  const arrivati = messaggi.map((m, j) => ({ ...m, k: clamp((u - CHAT_INIZIO - j * CHAT_PASSO) / 0.25) })).filter((m) => m.k > 0);
   const prossimo = messaggi.length > arrivati.length ? messaggi[arrivati.length] : null;
-  const scrive = prossimo && u > CHAT_INIZIO + arrivati.length * CHAT_PASSO - 0.55;
-  if (scrive) {                                                       // tre puntini che scrivono
-    const dx = prossimo.da === 'a' ? x + w - 170 : x + 50;
-    ctx.fillStyle = prossimo.da === 'a' ? accento : '#ffffff'; rr(ctx, dx, yy - 70, 120, 64, 32); ctx.fill();
-    for (let q = 0; q < 3; q++) { ctx.fillStyle = '#7a7a7a'; ctx.beginPath(); ctx.arc(dx + 32 + q * 28, yy - 38 - Math.max(0, Math.sin(t * 10 - q)) * 8, 9, 0, 7); ctx.fill(); }
-    yy -= 90;
+  const tArrivo = CHAT_INIZIO + arrivati.length * CHAT_PASSO;
+  const scrive = prossimo && u > tArrivo - 0.75;
+  const loScrivoIo = scrive && prossimo.da === 'a';
+  const luiScrive = scrive && prossimo.da !== 'a';
+  let scritto = '';
+  if (loScrivoIo) { const s = String(prossimo.testo || ''); scritto = s.slice(0, Math.ceil(s.length * clamp((u - (tArrivo - 0.75)) / 0.6))); }
+
+  waSfondo(ctx, sx, sy, sw, sh);
+  const top = waIntestazione(ctx, sx, sy, sw, nome, luiScrive ? 'sta scrivendo…' : 'online', ora);
+  const fondo = waBarra(ctx, sx, sy + sh, sw, scritto);
+
+  // chip della data in alto
+  ctx.font = WAFONT(24, 500); const dw = ctx.measureText('OGGI').width + 36;
+  ctx.fillStyle = '#ffffff'; rr(ctx, sx + sw / 2 - dw / 2, top + 22, dw, 44, 12); ctx.fill();
+  ctx.fillStyle = WA.grigio; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('OGGI', sx + sw / 2, top + 45);
+
+  ctx.save(); ctx.beginPath(); ctx.rect(sx, top + 80, sw, fondo - top - 80); ctx.clip();
+  let yy = fondo - 16;
+  if (luiScrive) {                                                     // fumetto bianco con i tre puntini
+    const bx = sx + 34, bw = 120, bh = 66, by = yy - bh;
+    ctx.fillStyle = 'rgba(0,0,0,0.1)'; rr(ctx, bx, by + 3, bw, bh, 18); ctx.fill();
+    ctx.fillStyle = WA.suo; rr(ctx, bx, by, bw, bh, 18); ctx.fill();
+    for (let q = 0; q < 3; q++) { ctx.fillStyle = WA.icone; ctx.beginPath(); ctx.arc(bx + 34 + q * 26, by + bh / 2 - Math.max(0, Math.sin(t * 10 - q)) * 7, 8, 0, 7); ctx.fill(); }
+    yy = by - 14;
   }
-  ctx.font = FONT(44, 800);
-  for (let j = arrivati.length - 1; j >= 0 && yy > y + 140; j--) {
-    const m = arrivati[j], righe = [], parole = String(m.testo || '').split(' ');
-    let r = '';
-    for (const p of parole) { const prova = r ? r + ' ' + p : p; if (ctx.measureText(prova).width > w - 200 && r) { righe.push(r); r = p; } else r = prova; }
+  const L = 54, PAD = 24, MAXW = sw * 0.76;
+  for (let j = arrivati.length - 1; j >= 0 && yy > top + 80; j--) {
+    const m = arrivati[j], mio = m.da === 'a';
+    const primo = j === 0 || messaggi[j - 1].da !== m.da;             // la codina solo sul primo del gruppo
+    ctx.font = WAFONT(43, 400);
+    const righe = []; let r = '';
+    for (const p of String(m.testo || '').split(' ')) { const prova = r ? r + ' ' + p : p; if (ctx.measureText(prova).width > MAXW - 2 * PAD && r) { righe.push(r); r = p; } else r = prova; }
     righe.push(r);
-    const bw = Math.max(...righe.map((q) => ctx.measureText(q).width)) + 48, bh = righe.length * 52 + 28;
-    const bx = m.da === 'a' ? x + w - 50 - bw : x + 50, by = yy - bh;
-    ctx.save(); ctx.translate(bx + (m.da === 'a' ? bw : 0), by + bh); ctx.scale(pop(m.k), pop(m.k)); ctx.translate(-(bx + (m.da === 'a' ? bw : 0)), -(by + bh));
-    ctx.fillStyle = m.da === 'a' ? accento : '#ffffff'; rr(ctx, bx, by, bw, bh, 28); ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(42,15,25,0.25)'; ctx.stroke();
-    ctx.fillStyle = INCHIOSTRO; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    righe.forEach((q, n) => ctx.fillText(q, bx + 24, by + 40 + n * 52));
+    ctx.font = WAFONT(22, 400); const meta = ctx.measureText(ora).width + (mio ? 36 : 0) + 18;
+    ctx.font = WAFONT(43, 400);
+    const larghe = righe.map((q) => ctx.measureText(q).width);
+    const ultimaCi = larghe[larghe.length - 1] + meta <= MAXW - 2 * PAD;
+    const bw = Math.max(...larghe, ultimaCi ? larghe[larghe.length - 1] + meta : meta) + 2 * PAD;
+    const bh = righe.length * L + (ultimaCi ? 0 : 32) + 28;
+    const bx = mio ? sx + sw - 34 - bw : sx + 34, by = yy - bh;
+    const e = easeOut(m.k);
+    ctx.save(); ctx.globalAlpha = e; ctx.translate(0, (1 - e) * 40);  // sale dal basso come su WhatsApp
+    ctx.fillStyle = 'rgba(0,0,0,0.12)'; rr(ctx, bx, by + 3, bw, bh, 18); ctx.fill();
+    ctx.fillStyle = mio ? WA.mio : WA.suo; rr(ctx, bx, by, bw, bh, 18); ctx.fill();
+    if (primo) {                                                        // codina in alto, verso l'esterno
+      ctx.beginPath();
+      if (mio) { ctx.moveTo(bx + bw - 24, by); ctx.lineTo(bx + bw + 16, by); ctx.quadraticCurveTo(bx + bw + 4, by + 10, bx + bw, by + 26); }
+      else { ctx.moveTo(bx + 24, by); ctx.lineTo(bx - 16, by); ctx.quadraticCurveTo(bx - 4, by + 10, bx, by + 26); }
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle = WA.testo; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    righe.forEach((q, n) => ctx.fillText(q, bx + PAD, by + 13 + L / 2 + n * L));
+    const my = by + bh - 20;
+    ctx.font = WAFONT(22, 400); ctx.fillStyle = WA.grigio; ctx.textAlign = 'right';
+    ctx.fillText(ora, bx + bw - PAD - (mio ? 34 : 0), my);
+    if (mio) waSpunte(ctx, bx + bw - PAD - 27, my, WA.spunte);
     ctx.restore();
-    yy = by - 22;
+    yy = by - (j > 0 && messaggi[j - 1].da === m.da ? 6 : 16);
   }
+  ctx.restore();
   ctx.restore();
   ctx.restore();
 }

@@ -73,6 +73,19 @@ class RegoleTest(unittest.TestCase):
         diverso["copione"][0]["scheda"]["grafica"] = {"tipo": "chat"}
         self.assertFalse([x for x in regole.avvisi(diverso, base / "2026-11-21-b") if "gancio" in x or "argomento" in x])
 
+    def test_avviso_struttura_rehook_e_cta(self):
+        """Studio del 2026-11-21 (@viewcci): gancio → attesa → rehook → attesa → risposta per ultima, CTA breve."""
+        riga = lambda tipo: {"testo": "x", "scheda": {"tipo": tipo, "titolo": "x"}}
+        senza = reel(copione=[riga("gancio"), riga("scena2d"), riga("scena2d"), riga("confronto")])
+        self.assertTrue(any("manca il rehook" in x for x in regole.avvisi_struttura(senza)))
+        in_coda = reel(copione=[riga("gancio"), riga("scena2d"), riga("scena2d"), riga("rehook")])
+        self.assertTrue(any("a metà video" in x for x in regole.avvisi_struttura(in_coda)))
+        giusta = reel(copione=[riga("gancio"), riga("scena2d"), riga("rehook"), riga("scena2d"), riga("confronto")],
+                      cta="Mandalo a chi si veste di viola!")
+        self.assertEqual(regole.avvisi_struttura(giusta), [])
+        lunga = reel(cta="Salvalo e mandalo subito a tutti quelli che amano la moda!")
+        self.assertTrue(any("CTA di" in x for x in regole.avvisi_struttura(lunga)))
+
 
 if __name__ == "__main__":
     unittest.main()
