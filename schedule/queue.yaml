@@ -388,7 +388,7 @@ posts:
   published_at: '2026-11-21T13:46:10+00:00'
   extra:
     cover: reel-2026-11-22-curiosita-porpora-nerone.jpg
-- id: '17'
+- id: '18'
   when: 2026-11-22T18:00+01:00
   type: reel
   media:
@@ -410,9 +410,9 @@ posts:
 
 
     #cintre #curiosità #prada #storiadellamoda #moda'
-  status: published
-  ig_media_id: '18251294986312673'
+  status: pending
+  ig_media_id: null
   error: null
-  published_at: '2026-11-21T17:35:31+00:00'
+  published_at: null
   extra:
     cover: reel-2026-11-22-curiosita-prada-nonno.jpg
