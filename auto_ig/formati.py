@@ -84,6 +84,10 @@ def valida(data: dict) -> list[str]:
             errs.append("la prima scheda deve essere il gancio")
     if data.get("mascotte") not in (None, True, False):
         errs.append("mascotte: true | false (la mascotte si mette solo se Antonio la chiede)")
+    nar = data.get("narratore")
+    if not (nar in (None, True, False) or (isinstance(nar, dict) and set(nar) <= {"lato", "s"}
+                                            and nar.get("lato", "destra") in ("destra", "sinistra"))):
+        errs.append("narratore: true | false | {lato: destra|sinistra, s: scala} (la gruccia narratrice)")
     gancio = (data.get("copione") or [None])[0]
     testo = gancio.get("testo", "") if isinstance(gancio, dict) else str(gancio or "")
     if len(testo.split()) > MAX_PAROLE_HOOK and not testo.startswith("["):     # "[gancio] ..." = segnaposto
@@ -93,6 +97,14 @@ def valida(data: dict) -> list[str]:
     except ValueError as e:
         errs.append(str(e))
     return errs
+
+
+SCENE_NARRATORE = ("cartoon2d", "schede2d")
+
+
+def narratore(data: dict) -> bool:
+    """La gruccia narratrice (Antonio, 2026-11-21): in tutti i reel 2D, salvo `narratore: false`."""
+    return data.get("narratore") is not False and data.get("resa") == "2d" and scena(data) in SCENE_NARRATORE
 
 
 def cta(data: dict) -> str:

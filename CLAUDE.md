@@ -52,6 +52,17 @@ Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO,
   argomento e formato rispetto agli ultimi. Il build avvisa quando si ripetono: l'avviso va preso sul serio,
   non ignorato. La vasca che si riempie è già usata: non riproporla.
 
+## Il narratore: la gruccia di Cintre (Antonio, 2026-11-21)
+
+È la mascotte: una gruccia di legno con occhioni e labbra bordeaux. Mima la voce con labiale ed espressioni, in
+basso a destra.
+- **C'è in tutti i reel 2D di default** (`narratore: true`): labiale ed espressioni li calcola da solo `richieste
+  crea`, dall'audio vero (`auto_ig/labiale.py`).
+- Si toglie solo con `narratore: false`. `narratore: {lato: sinistra}` la sposta a sinistra quando l'angolo destro
+  serve alla grafica.
+- La modella Cintre è un'altra cosa e resta solo su richiesta (`mascotte: true`).
+- Come è fatta e come si controlla: skill `animazione-personaggi-2d`, sezione "Il narratore".
+
 ## Grafica fatta a codice (spunto di Antonio, 2026-11-19)
 
 Schemi, tabelle, timeline, mappe, grafici e confronti animati si possono disegnare direttamente nella scena

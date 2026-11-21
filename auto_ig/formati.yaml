@@ -7,6 +7,8 @@
 #
 # In richiesta.yaml:   formato: curiosita   resa: 2d   cta: ""  (vuoto = CTA predefinita del formato)   mascotte: false
 # MASCOTTE (modella Cintre 3D/2D): SOLO se la chiede Antonio (al massimo proporla nelle domande). Vedi hook_e_cta.
+# NARRATORE (la gruccia di Cintre, Antonio 2026-11-21): in TUTTI i reel 2D (cartoon2d, schede2d), in basso a destra,
+#   con labiale ed espressioni calcolati dall'audio (auto_ig/labiale.py). narratore: false | {lato: sinistra, s: 0.9}.
 # La CTA viene AGGIUNTA SEMPRE come ultima frase dal sistema: non va scritta nel copione.
 # Con resa 2d ogni frase del copione ha una `scheda` (cosa si vede mentre la voce parla):
 #   - {testo: "...", scheda: {tipo: fatto, numero: 1, titolo: "Il taschino dei jeans", icona: taschino}}

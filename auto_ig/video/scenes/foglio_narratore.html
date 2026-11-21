@@ -1,0 +1,39 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>foglio_narratore</title>
+<style>html,body{margin:0;background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh}</style>
+</head><body>
+<script type="module">
+// Foglio modello del narratore (la gruccia di Cintre): le 9 bocche e le 6 espressioni affiancate, per controllare
+// la qualità a colpo d'occhio. Parametro narratore (facoltativo): con una traccia vera, in basso parla davvero.
+import { start } from './common.js';
+import { BORDEAUX } from '../preset/brand.js';
+import * as G from '../preset/grafica2d.js';
+import { narratore, statoNarratore, caricaTraccia, VISEMI, ESPRESSIONI } from '../preset/narratore.js';
+
+start({ narratore: '', durata: '4' }, (THREE, p, renderer) => {
+  const tela = G.tela2d(THREE, renderer), ctx = tela.ctx;
+  const vuota = caricaTraccia({ b: [[0, 'X']], x: [[0, 'neutra']], e: '' });
+  const TR = caricaTraccia(p.narratore) || vuota;
+  // posa ferma: stessa logica del video (bocca a riposo dell'espressione), senza movimento né battiti
+  const fermo = (bocca, espr) => {
+    const st = statoNarratore(caricaTraccia({ b: [[0, bocca]], x: [[0, espr]], e: '' }), 2.0);
+    return { ...st, y: 0, rot: 0, ganc: 0, sx: 1, sy: 1, ciglio: 0, sguardo: [0, 0], espr: { ...ESPRESSIONI[espr] } };
+  };
+  const etich = (s, x, y) => { ctx.font = G.FONT(30, 800); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(s, x, y); };
+  return { scene: tela.scene, camera: tela.camera, update(t) {
+    tela.inizia();
+    ctx.fillStyle = BORDEAUX; ctx.fillRect(0, 0, G.W, G.H);
+    Object.keys(VISEMI).forEach((v, k) => {
+      const x = 180 + (k % 3) * 360, y = 190 + Math.floor(k / 3) * 300;
+      narratore(ctx, x, y, 0.72, fermo(v, 'neutra')); etich(v, x, y + 150);
+    });
+    Object.keys(ESPRESSIONI).forEach((n, k) => {
+      const x = 180 + (k % 3) * 360, y = 1110 + Math.floor(k / 3) * 300;
+      narratore(ctx, x, y, 0.72, fermo('X', n)); etich(n, x, y + 150);
+    });
+    narratore(ctx, 540, 1730, 0.7, statoNarratore(TR, t));
+    tela.fine();
+  } };
+});
+</script>
+</body></html>

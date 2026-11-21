@@ -12,6 +12,7 @@ import { tempiAtti, mix } from '../preset/regia.js';
 import { BORDEAUX, CIPRIA, SCURO } from '../preset/brand.js';
 import * as G from '../preset/grafica2d.js';
 import { caricaFoto, cornice } from '../preset/foto2d.js';
+import { narratore, statoNarratore, caricaTraccia, posNarratore } from '../preset/narratore.js';
 
 const ESEMPIO = [   // anteprima senza parametri
   { tipo: 'gancio', titolo: '3 curiosità sulla moda', evidenzia: 'moda', icona: 'lampadina' },
@@ -26,7 +27,8 @@ const ETICHETTA = { curiosita: 'Lo sapevi?', quiz: 'Quiz di moda', storia: 'Stor
 const CARD = { x: 90, y: 290, w: 900, h: 620 };     // tutto sopra y ~910: sotto ci sono i sottotitoli (fino a 4 righe)
 const QUIZ = ['domanda', 'risposta'];
 
-start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '17' }, (THREE, p, renderer) => {
+start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', durata: '17', narratore: '' }, (THREE, p, renderer) => {
+  const NARRA = caricaTraccia(p.narratore), POSN = NARRA && posNarratore(NARRA);   // gruccia narratrice
   const S = p.schede ? JSON.parse(p.schede) : ESEMPIO;
   const FOTO = caricaFoto(S);
   const atti = tempiAtti(p, S.length);
@@ -131,6 +133,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     G.sfondo(ctx, t, { colore: p.colore, accento: acc });
     if (s.tipo !== 'cta') G.intestazione(ctx, etichetta, { passi: fatti.length, attuale: fatti.filter((k) => k <= i).length - 1, accento: acc });
     (DISEGNA[s.tipo] || DISEGNA.scena)(s, u, t, i);
+    if (NARRA) narratore(ctx, ...POSN, statoNarratore(NARRA, t));
     // dissolvenza d'ingresso e d'uscita del video
     const v = Math.max(1 - t / 0.35, (t - (atti.fine - 0.3)) / 0.3);
     if (v > 0) { ctx.fillStyle = `rgba(26,7,16,${Math.min(1, v)})`; ctx.fillRect(0, 0, G.W, G.H); }

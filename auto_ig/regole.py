@@ -145,4 +145,5 @@ def riepilogo(data: dict, secondi: float) -> str:
     pf = f"{detta} → {schermo}" if detta else f"NO ({data.get('parola_forte_motivo', '')})"
     v = data.get("voce") or {}
     return (f"regole: formato {data.get('formato')} · parola forte {pf} · suoni sì · "
-            f"voce {v.get('modello')} {float(v.get('velocita', 1.0)):.1f} · durata {secondi:.1f} s")
+            f"voce {v.get('modello')} {float(v.get('velocita', 1.0)):.1f} · "
+            f"narratore {'sì' if data.get('narratore') is not False else 'no'} · durata {secondi:.1f} s")

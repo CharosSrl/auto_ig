@@ -66,6 +66,49 @@ Regole:
 - **Varietà**: la vasca che si riempie (contatore con liquido) è già stata usata. Antonio la trova "scontata".
   Per ogni reel scegli un tipo di grafica diverso dagli ultimi (il build lo segnala).
 
+## Il narratore: la gruccia di Cintre (Antonio, 2026-11-21)
+
+La mascotte è una gruccia di legno con gancio dorato, occhioni e labbra bordeaux. Parla in basso a destra in tutti
+i reel 2D.
+- Codice: `preset/narratore.js` (disegno e animazione) e `auto_ig/labiale.py` (traccia dall'audio).
+- Foglio modello: `scenes/foglio_narratore.html`.
+
+**Labiale**
+- Ci sono 9 bocche:
+  - `X` riposo;
+  - `M` m/b/p, chiusa (si deve SEMPRE vedere);
+  - `F` f/v;
+  - `A`, `E` (anche per la i), `O`, `U`;
+  - `L` l/t/d/n/r, con la lingua;
+  - `S` s/z/c/g/k, con i denti.
+- Il testo diventa fonemi con regole italiane. Le parole di `pronuncia` vengono lette come le dice la voce e i
+  numeri in lettere.
+- I fonemi si spalmano solo sul tempo in cui la voce si sente davvero: l'energia del wav si misura ogni 10 ms.
+  Così le pause chiudono la bocca.
+- In ogni fotogramma vince la M, poi la vocale più lunga. La bocca anticipa di 40 ms e passa da una forma
+  all'altra in 75 ms.
+- L'apertura è modulata dall'energia.
+
+**Espressioni**: gancio → sorpresa, `?` → curiosa, `!` o parola forte → wow, rehook → furba, CTA → felice (con
+un inchino). Le altre frasi alternano neutra e felice. Sui colpi (boom/rivela) fa anticipazione, salto e
+schiacciamento all'atterraggio.
+
+**Vita**:
+- respiro e battito di ciglia ogni 2-5 s, più uno a inizio frase;
+- saccadi dello sguardo verso titolo e grafica;
+- schiacciamento e allungamento sugli accenti della voce;
+- il gancio dorato oscilla in ritardo (follow-through).
+
+**Posizione**: centro circa (815, 1598), scala 0.8. Sta sotto i sottotitoli, a sinistra delle icone di Instagram e
+sopra la caption.
+- `narratore: {lato: sinistra}` lo sposta a sinistra.
+- `narratore: false` lo toglie.
+
+**Controllo**:
+- striscia di 8 fotogrammi ravvicinati sulla bocca: le forme devono cambiare e chiudersi nelle pause;
+- frame 0 già vivo;
+- nessuna sovrapposizione.
+
 ## Checklist prima del render
 
 1. Strip di 8 fotogrammi ravvicinati, a 0.1 s di distanza, di ogni azione nuova. Si controlla che:
@@ -74,5 +117,6 @@ Regole:
    - il personaggio guardi dove va;
    - i piedi non scivolino.
 2. Al fotogramma 0 il personaggio è già a metà azione (gancio vivo).
-3. Niente sovrapposizioni con titolo, timbro e sottotitoli (fascia 1500-1700 px).
+3. Niente sovrapposizioni con titolo, timbro e sottotitoli (blocco ASS: fascia ~1290-1480 px; sotto, 1500-1700, c'è
+   il narratore a destra).
 4. Ogni azione visibile ha il suo suono.

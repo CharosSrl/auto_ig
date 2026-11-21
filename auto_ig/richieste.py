@@ -29,7 +29,7 @@ from typing import Callable
 
 import yaml
 
-from . import audio, censura, formati, queue, regole, voce
+from . import audio, censura, formati, labiale, queue, regole, voce
 from .config import MEDIA_DIR, ROOT
 from .images import slugify
 
@@ -46,6 +46,7 @@ formato: {formato}        # storia | quiz | curiosita
 resa: {resa}              # 3d (modella Cintre e preset) | 2d (grafica a schede)
 cta: ""                   # vuoto = CTA del formato; viene aggiunta SEMPRE come ultima frase. UNA sola, legata al video
 mascotte: false           # modella Cintre (3D/2D): true SOLO se Antonio la chiede
+narratore: true           # la gruccia narratrice in basso a destra, con labiale (reel 2D) | false | {{lato: sinistra}}
 
 # Video sotto la voce: scena three.js (testo | oggetto | particelle | schede2d | ...) e colori
 scena: {scena}
@@ -221,6 +222,10 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     if au.get("musica") or au.get("sfx"):
         traccia = audio.mix(o["wav"], bt, max(3.0, seconds), o["mix"], musica=bool(au.get("musica")), sfx=bool(au.get("sfx")),
                            eventi=ev)
+    narra = ""
+    if formati.narratore(data):                    # gruccia narratrice: labiale ed espressioni dall'audio vero
+        narra = labiale.param(labiale.traccia(o["wav"], sentences, righe, bt, v.get("pronuncia"),
+                                              data.get("narratore")))
     render_fn(formati.scena(data), {"testo": scene_text, "colore": colors["sfondo"], "accento": colors["accento"],
                               "voce": "1", "fine": f"{seconds:.2f}", "schede": formati.schede(righe, cz),
                               "formato": data.get("formato") or "",
@@ -231,7 +236,8 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
                               "pop": audio.pop_param(ev),        # opzione A/B/C che rimbalza sul suo pop
                               "outfit": str(data.get("outfit") or ""),
                               "cornice": str(data.get("cornice") or ""),   # preset cornice della foto (foto2d.js)
-                              "mascotte": "1" if data.get("mascotte") is True else "0"},
+                              "mascotte": "1" if data.get("mascotte") is True else "0",
+                              "narratore": narra},
               max(3.0, seconds), o["mp4"].parent, progress=progress, audio=traccia, ass=o["ass"], name="video",
               quality=str(data.get("qualita") or "alta"), log=log)
     from .video import VIDEO_DIR
