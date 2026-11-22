@@ -6,7 +6,7 @@ suoni e animazione restano nelle skill `regia-reel`, `animazione-personaggi-2d` 
 
 ## Ordine di lettura (ogni volta, tutto)
 1. `regole/08-errori-di-antonio.md`: le correzioni di Antonio, per non ripetere gli errori.
-2. `regole/01-struttura.md` → `07-varieta.md`, in ordine.
+2. `regole/01-struttura.md` → `07-varieta.md` e `09-attenzione.md`, in ordine.
 3. `../marca/lezioni.md`: i dati degli Insights. Se una lezione nuova contraddice una regola qui, vince la lezione
    e si aggiorna la regola.
 4. Un esempio in `esempi/` dello stesso formato.
@@ -30,6 +30,7 @@ suoni e animazione restano nelle skill `regia-reel`, `animazione-personaggi-2d` 
 - `regole.json`: le soglie controllate a macchina da `auto_ig/copione.py`.
 - `regole/`: le regole con il perché e gli esempi prima → dopo.
 - `esempi/`: copioni veri, con la nota sul perché funzionano o no.
+- `studi/`: gli studi da cui nascono le regole (reel analizzati fotogramma per fotogramma, paper, fonti).
 
 **Quando Antonio corregge un copione** si aggiunge subito una riga a `regole/08-errori-di-antonio.md`, e se la
 correzione si può misurare anche una soglia in `regole.json`.

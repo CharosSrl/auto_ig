@@ -20,6 +20,17 @@
     "bestie", "slay", "rizz", "aura", "bro", "fra", "pov", "periodt", "skibidi", "boomer",
     "segui e metti like", "fammi sapere"
   ],
+  "_aperture": "09-attenzione: la prima parola del gancio è già contenuto (studio 2026-11-22: i flop aprivano così)",
+  "aperture_vietate": ["ci hai mai fatto caso", "hai mai fatto caso", "hai mai notato", "ti sei mai chiesto",
+    "vi siete mai chiesti", "sai perché", "sapete perché", "ragazze", "ragazzi", "ladies", "allora", "dunque",
+    "ecco a voi", "questa cosa"],
+  "_concreti": "09-attenzione: un gancio senza numero, nome proprio né uno di questi oggetti riceve un avviso",
+  "oggetti_concreti": ["jeans", "tacchi", "scarpe", "scarpa", "sneakers", "converse", "borsa", "borse", "camicia",
+    "camicie", "felpa", "giacca", "cappotto", "maglietta", "t-shirt", "cappello", "occhiali", "cravatta", "bottoni",
+    "tasca", "tasche", "zip", "lacci", "gonna", "vestito", "vestiti", "abito", "bikini", "pigiama", "calze", "stivali",
+    "anello", "orologio", "profumo", "rossetto", "parrucca", "corsetto", "mutande", "tuta", "divisa", "uniforme"],
+  "numeri_in_lettere": ["due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci", "dodici", "venti",
+    "trenta", "cento", "mille", "mila", "milioni", "milione", "miliardi", "metà", "doppio"],
   "parole_vuote_ripetizione": ["di", "a", "da", "in", "con", "su", "per", "tra", "fra", "il", "lo", "la", "i", "gli", "le",
     "un", "uno", "una", "e", "è", "ma", "che", "non", "si", "ci", "del", "della", "dei", "delle", "al", "alla", "ai",
     "nel", "nella", "sua", "suo", "sue", "suoi", "tuo", "tua", "poi", "così", "come", "anche"]

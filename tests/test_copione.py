@@ -47,6 +47,18 @@ class CopioneTest(unittest.TestCase):
         c["cta"] = "Salvalo e mandalo subito a tutti quelli che amano Prada"
         self.assertIn("CTA di", self.errori(c))
 
+    def test_attenzione(self):
+        """Studio 2026-11-22 (scrittura/regole/09-attenzione.md): niente aperture vaghe, gancio concreto."""
+        c = buono()
+        c["battute"][0]["voce"] = "Ci hai mai fatto caso a questa punta?"
+        self.assertIn("apre con 'ci hai mai fatto caso'", self.errori(c))
+        c["battute"][0]["voce"] = "Ladies, guardate la vostra camicia."
+        self.assertIn("ladies", self.errori(c))
+        c = buono()
+        c["battute"][0]["voce"] = "questa storia è davvero strana. Nessuno la conosce, eppure è vera."
+        self.assertTrue(any("appiglio concreto" in a for a in copione.controlla(c)[1]))
+        self.assertFalse(any("appiglio concreto" in a for a in copione.controlla(buono())[1]))
+
     def test_fatti_e_ragionamento(self):
         c = buono()
         c["fatti"][0]["fonte"] = ""

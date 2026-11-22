@@ -95,6 +95,17 @@ def controlla(c: dict) -> tuple[list[str], list[str]]:
     g = bt[0]
     if len(g["voce"].split()) > P["gancio_max"]:
         errs.append(f"gancio di {len(g['voce'].split())} parole (max {P['gancio_max']}): si deve dire in 3 s (02-gancio)")
+    # attenzione (09-attenzione, studio 2026-11-22): prima parola = contenuto; scena concreta (numero, nome, anno)
+    inizio = re.sub(r"^[\W_]+", "", g["voce"].lower())
+    for a in r.get("aperture_vietate", []):
+        if re.match(rf"{re.escape(a)}(?![\w'])", inizio):
+            errs.append(f"il gancio apre con '{a}': troppo vago, la prima parola deve essere già contenuto (09-attenzione)")
+    concrete = set(r.get("oggetti_concreti", [])) | set(r.get("numeri_in_lettere", []))
+    nome_proprio = re.search(r"(?<![.?!:])\s[A-ZÀ-Ý][\w'’-]+", g["voce"])   # maiuscola non a inizio frase
+    if not (re.search(r"\d", g["voce"]) or nome_proprio or any(w in concrete or w.endswith("mila")
+                                                                for w in parole(g["voce"]))):
+        av.append("gancio senza appiglio concreto (numero, anno, nome, marchio, luogo, capo da indossare): concreto "
+                  "sulla scena, muto sull'esito (09-attenzione)")
     scelti = [x for x in c["ganci_valutati"] if x.get("scelto")]
     if len(c["ganci_valutati"]) < r["ganci_valutati_min"]:
         errs.append(f"ganci_valutati: almeno {r['ganci_valutati_min']}, con il perché (02-gancio)")
