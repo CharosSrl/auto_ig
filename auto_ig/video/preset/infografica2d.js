@@ -502,8 +502,9 @@ export function confronto(ctx, { prima = {}, dopo = {} } = {}, u, t, { accento =
   const pannello = (lato, x0, x1) => {
     ctx.save(); ctx.beginPath(); ctx.rect(x0, y, x1 - x0, h); ctx.clip();
     ctx.fillStyle = lato === prima ? '#3a3a44' : accento; ctx.fillRect(x0, y, x1 - x0, h);
-    ctx.save(); if (lato === prima) ctx.filter = 'grayscale(1)';
-    icona(ctx, lato.icona || 'stella', lato === prima ? W * 0.27 : W * 0.73, y + h * 0.48, 380, { t, accento: lato === prima ? '#bbbbbb' : '#ffffff' });
+    // il "prima" è spento (grigio) salvo `colore: true`, quando il suo colore È il fatto (es. scarpe rosse e nere)
+    ctx.save(); if (lato === prima && !lato.colore) ctx.filter = 'grayscale(1)';
+    icona(ctx, lato.icona || 'stella', lato === prima ? W * 0.27 : W * 0.73, y + h * 0.48, 380, { t, accento: lato === prima ? (lato.colore ? accento : '#bbbbbb') : '#ffffff' });
     ctx.restore();
     ctx.font = FONT(58, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
     const lx = lato === prima ? W * 0.27 : W * 0.73;

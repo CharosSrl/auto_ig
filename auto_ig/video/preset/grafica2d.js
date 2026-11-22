@@ -412,6 +412,18 @@ export const ICONE = {
     ctx.save(); ctx.lineWidth = 4; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(-26 + k * 14, -16 + k * 6); ctx.lineTo(-14 + k * 14, -28 + k * 6); ctx.stroke(); } ctx.restore();
     ctx.beginPath(); ctx.moveTo(30, 6); ctx.quadraticCurveTo(50, 14, 70, 14); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
   },
+  // Sneaker da basket alta nera con pannelli del colore accento (colori Bulls nel reel Jordan, 2026-11-23).
+  // Nessun logo: mai marchi disegnati.
+  jordan(ctx, { accento = CIPRIA }) {
+    ctx.beginPath(); ctx.moveTo(-92, 40); ctx.lineTo(-90, -70); ctx.quadraticCurveTo(-60, -84, -34, -74); ctx.lineTo(-22, -24);
+    ctx.quadraticCurveTo(36, -4, 84, 12); ctx.quadraticCurveTo(102, 22, 98, 40); ctx.closePath(); fs(ctx, '#1f1f24');
+    ctx.beginPath(); ctx.moveTo(-90, -70); ctx.quadraticCurveTo(-60, -84, -34, -74); ctx.lineTo(-28, -40); ctx.lineTo(-91, -36); ctx.closePath(); fs(ctx, accento);   // collo
+    ctx.beginPath(); ctx.moveTo(40, -2); ctx.quadraticCurveTo(80, 8, 96, 26); ctx.lineTo(98, 40); ctx.lineTo(30, 40); ctx.closePath(); fs(ctx, accento);              // punta
+    ctx.beginPath(); ctx.moveTo(-91, 0); ctx.lineTo(-40, 0); ctx.lineTo(-34, 40); ctx.lineTo(-92, 40); ctx.closePath(); fs(ctx, accento);                             // tallone
+    ctx.beginPath(); rr(ctx, -100, 40, 202, 26, 12); fs(ctx, '#f3ead8');
+    ctx.save(); ctx.lineWidth = 4; ctx.strokeStyle = '#ffffff'; for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.moveTo(-24 + k * 12, -50 + k * 9); ctx.lineTo(-8 + k * 12, -60 + k * 9); ctx.stroke(); } ctx.restore();
+    stileIcona(ctx);
+  },
   // Zoccolo di gomma tipo Crocs, di profilo: punta tonda e alta, buchi sulla tomaia, cinturino al tallone,
   // suola spessa a onde (reel Crocs, 2026-11-23). Colore = accento.
   crocs(ctx, { accento = CIPRIA }) {

@@ -152,6 +152,8 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
       C.contatore(ctx, n, fatti.length, 540, 268, u, { accento: acc });
       C.scritta(ctx, s.titolo || '', 540, 395, u, { size: 104, maxW: 860, evidenzia: s.evidenzia, accento: acc });
       grande(s.icona, 540, 790, 500, u - 0.05, { ruota: i % 2 ? 0.05 : -0.05 });
+      // timbro facoltativo sulla card (es. "Banned", "Sold out"): si stampa mezzo secondo dopo l'entrata
+      if (s.timbro) C.timbro(ctx, String(s.timbro).toUpperCase(), 790, 1040, u - 0.5, { size: 72, fondo: '#ffd166', ruota: -0.1 });
     } else if (s.tipo === 'dettaglio') {
       const f = S[[...fatti].reverse().find((k) => k < i) ?? i] || {};
       C.scritta(ctx, s.testo || s.titolo || '', 540, 395, u, { size: 96, maxW: 860, evidenzia: s.evidenzia, accento: acc, passo: 0.07 });   // sotto l'intestazione anche su due righe
