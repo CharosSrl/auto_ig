@@ -30,7 +30,7 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 ## Scrivere il copione (regole in `scrittura/`, fonte unica)
 
 Tutte le regole di scrittura stanno in `scrittura/`: struttura a domanda aperta (gancio → attesa → rehook → attesa
-→ risposta per ultima, CTA ≤ 7 parole), gancio, lingua da ragazzo di 20 anni, fatti con fonte, ritmo e durata, CTA e
+→ risposta per ultima, CTA sempre "Segui la pagina e metti like!": Antonio, 2026-11-22), gancio, lingua da ragazzo di 20 anni, fatti con fonte, ritmo e durata, CTA e
 caption, varietà, e il diario delle correzioni di Antonio (`regole/08-errori-di-antonio.md`). Le soglie misurabili
 sono in `scrittura/regole.json` e le controlla `auto_ig/copione.py`. Ogni nuova correzione di Antonio sul copione va
 subito nel diario (e, se si misura, in `regole.json`). Esempi veri: `scrittura/esempi/`.

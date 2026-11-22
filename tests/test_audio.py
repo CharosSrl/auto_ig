@@ -70,10 +70,11 @@ class RegoleAntonioTest(unittest.TestCase):
         d.update(kw)
         return d
 
-    def test_cta_salva_condividi(self):
-        cta = formati.copione(self.base())[-1]["scheda"]
-        self.assertEqual((cta["tipo"], cta["azione"]), ("cta", "salva_condividi"))
-        self.assertNotIn("Segui", cta["bottone"])
+    def test_cta_segui_like(self):
+        """Antonio, 2026-11-22: in tutti i video la CTA è "segui la pagina e metti like"."""
+        for f in ("curiosita", "quiz", "storia"):
+            riga = formati.copione(self.base(formato=f))[-1]
+            self.assertEqual((riga["scheda"]["azione"], riga["testo"]), ("segui_like", "Segui la pagina e metti like!"))
         self.assertEqual(formati.copione(self.base(cta_azione="segui"))[-1]["scheda"]["bottone"], "Segui @cintre_official")
         self.assertTrue(formati.valida(self.base(cta_azione="boh")))
 
@@ -138,7 +139,7 @@ class QuizTest(unittest.TestCase):
             {"testo": "È Genova!", "scheda": {"tipo": "risposta", "titolo": "?", "opzioni": ["Nîmes", "Genova", "Londra"], "giusta": 1}}]}
         self.assertEqual(formati.valida(d), [])
         self.assertEqual(formati.scena(d), "cartoon2d")
-        self.assertEqual(formati.copione(d)[-1]["scheda"]["azione"], "commenta")
+        self.assertEqual(formati.copione(d)[-1]["scheda"]["azione"], "segui_like")   # Antonio, 2026-11-22: CTA fissa anche nei quiz
         d["copione"][2]["scheda"]["giusta"] = 3
         d["copione"][1]["scheda"]["opzioni"] = ["Nîmes", "Genova"]
         errs = formati.valida(d)

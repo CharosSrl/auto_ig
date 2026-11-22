@@ -148,6 +148,9 @@ def controlla(c: dict) -> tuple[list[str], list[str]]:
             av.append(f"battuta {i}: parola ripetuta ({', '.join(ripetute)}) (03-lingua)")
         if len(str(b.get("schermo") or "").split()) > P["schermo_max"]:
             errs.append(f"battuta {i}: 'schermo' oltre {P['schermo_max']} parole (05-ritmo)")
+    fissa = r.get("cta_obbligatoria")
+    if fissa and c["cta"].strip() != fissa:
+        errs.append(f"CTA '{c['cta']}': in tutti i video è '{fissa}' (Antonio, 2026-11-22; 06-cta-e-caption)")
     if len(c["cta"].split()) > P["cta_max"]:
         errs.append(f"CTA di {len(c['cta'].split())} parole (max {P['cta_max']}, 06-cta)")
     # fatti e fonti (04-fatti)

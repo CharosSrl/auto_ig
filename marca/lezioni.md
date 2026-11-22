@@ -47,6 +47,8 @@ Altri dati utili:
 7. **Sotto i 25 secondi.**
 8. **CTA.** Nei quiz l'invito a commentare porta qualche commento. "Mandalo a…" su un account nuovo non ha
    portato nulla. I follow sono a zero: aggiungere un motivo per seguire (es. "ogni giorno un quiz").
+   **Dal 2026-11-22 decide Antonio: in tutti i video la CTA è "Segui la pagina e metti like!"** (cartello
+   `segui_like`). Si controlla negli Insights se i follow salgono.
 9. **Il punteggio dei ganci non basta.** Tutti e quattro gli hook avevano 12/12 e i risultati sono stati
    diversissimi. Il punteggio serve a scartare i ganci brutti, non a prevedere le views: giudicano i dati.
 10. **Foto vere da Wikimedia Commons nei quiz e nelle curiosità** (richiesta di Antonio, 2026-11-16, da

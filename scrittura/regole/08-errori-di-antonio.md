@@ -12,3 +12,4 @@
 | 2026-11-21 | Studio @viewcci: la gente se ne va appena ha la risposta | Rehook a metà, risposta per ultima, CTA ≤ 7 parole |
 | 2026-11-21 | "se ci sta una chat rendila quanto più uguale a whatsapp" | Nei messaggi della chat: frasi da chat vera, corte, minuscole ok, una emoji |
 | 2026-11-21 | "focus assoluto sullo scripting con dei file json" | Copione in `copione.json`, controllato prima del render |
+| 2026-11-22 | "la call to action nuova sarà di seguire la pagina e mettere like", in tutti i video | `cta` sempre "Segui la pagina e metti like!" (il build blocca le altre) |

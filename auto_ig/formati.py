@@ -18,7 +18,9 @@ import yaml
 CATALOGO = Path(__file__).with_name("formati.yaml")
 RESE = ("3d", "2d")
 # Azione della call to action (formati.yaml → cta_azione): decide il cartello finale e il suo bottone.
-AZIONI_CTA = {"salva_condividi": "Salva e invia", "segui": "Segui @cintre_official",
+# Antonio, 2026-11-22: in TUTTI i video la CTA è "segui la pagina e metti like" (segui_like).
+CTA_FISSA = "Segui la pagina e metti like!"
+AZIONI_CTA = {"segui_like": "Segui e like", "salva_condividi": "Salva e invia", "segui": "Segui @cintre_official",
               "commenta": "Scrivilo nei commenti", "app": "Link in bio"}
 MAX_PAROLE_HOOK = 14     # regola: ~12 parole; oltre 14 è un errore (formati.yaml → hook_e_cta)
 
@@ -122,8 +124,8 @@ def copione(data: dict) -> list:
 
 
 def azione_cta(data: dict) -> str:
-    """Azione della CTA: dalla richiesta (cta_azione) o dal formato; predefinita salva_condividi."""
-    az = str(data.get("cta_azione") or formato(data["formato"]).get("cta_azione") or "salva_condividi")
+    """Azione della CTA: dalla richiesta (cta_azione) o dal formato; predefinita segui_like."""
+    az = str(data.get("cta_azione") or formato(data["formato"]).get("cta_azione") or "segui_like")
     if az not in AZIONI_CTA:
         raise ValueError(f"cta_azione '{az}' non valida ({', '.join(AZIONI_CTA)})")
     return az

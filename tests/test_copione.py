@@ -46,6 +46,8 @@ class CopioneTest(unittest.TestCase):
         c = buono()
         c["cta"] = "Salvalo e mandalo subito a tutti quelli che amano Prada"
         self.assertIn("CTA di", self.errori(c))
+        c["cta"] = "Mandalo a chi ama Prada!"            # Antonio, 2026-11-22: solo "segui e metti like"
+        self.assertIn("Segui la pagina e metti like!", self.errori(c))
 
     def test_attenzione(self):
         """Studio 2026-11-22 (scrittura/regole/09-attenzione.md): niente aperture vaghe, gancio concreto."""

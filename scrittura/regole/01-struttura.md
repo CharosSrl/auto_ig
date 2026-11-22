@@ -11,7 +11,7 @@ La gente se ne va **appena ha la risposta**. Ogni copione segue questo schema:
 | `attesa` / `svolta` | la storia si complica | "Prima alla figlia Luisa, poi alla nipote Miuccia." |
 | `risposta` | chiude la domanda, **per ultima** | "E Miuccia sfonda con il nylon che il nonno usava per coprire i bauli." |
 
-Poi c'è solo la CTA (≤ 7 parole, la aggiunge il sistema da `cta`).
+Poi c'è solo la CTA, sempre "Segui la pagina e metti like!" (Antonio, 2026-11-22; la aggiunge il sistema da `cta`).
 - Ogni battuta prima della risposta **aumenta** la voglia di sapere. Se una risponde a metà, va spostata o tolta.
 - Il rehook non è mai la prima né l'ultima battuta.
 - Quiz: gancio (domanda + opzioni A/B/C) → rehook (indizio che spinge verso la trappola) → attesa → `conto`

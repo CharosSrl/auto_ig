@@ -26,7 +26,8 @@ export function timeline(ctx, tappe, attiva, u, t, { accento = '#ffd166', y0 = 5
   ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, yFine); ctx.stroke();
   for (let k = 0; k <= Math.min(attiva, n - 1); k++) {
     const y = yDi(k), att = k === attiva;
-    const kk = att ? clamp((u - 0.3) / 0.35) : 1;            // il nodo nuovo arriva quando la linea lo raggiunge
+    // il nodo nuovo arriva quando la linea lo raggiunge; il primo (nessuna linea da percorrere) entra subito
+    const kk = att ? (k === 0 ? clamp(u / 0.2) : clamp((u - 0.3) / 0.35)) : 1;
     if (kk <= 0) continue;
     const sc = att ? pop(kk) * (1 + 0.05 * Math.sin(t * 6)) : 0.82;
     const r = 76;
@@ -39,7 +40,7 @@ export function timeline(ctx, tappe, attiva, u, t, { accento = '#ffd166', y0 = 5
     else { ctx.fillStyle = INCHIOSTRO; ctx.font = FONT(44, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(k + 1), 0, 2); }
     ctx.restore();
     // testo a destra del nodo: "quando" piccolo in pillola, testo grande
-    const a = att ? clamp((u - 0.4) / 0.3) : 1;
+    const a = att ? (k === 0 ? clamp((u - 0.1) / 0.25) : clamp((u - 0.4) / 0.3)) : 1;
     if (a <= 0) continue;
     ctx.save(); ctx.globalAlpha = att ? a : 0.55; ctx.translate(att ? (1 - easeOut(a)) * 60 : 0, 0);
     const tx = x + 120;

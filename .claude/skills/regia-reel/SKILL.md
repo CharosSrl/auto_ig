@@ -132,12 +132,9 @@ con un amico.
 
 - **Caption-bigino:** la caption ripete per iscritto la risposta e il perché. Chi guarda senza audio, o vuole
   ricordarsela, la trova lì. Aiuta anche la ricerca: le caption sono un segnale per la ricerca di Instagram.
-- **Una CTA alla volta, legata all'utilità:**
-  - "Salvalo per il prossimo quiz con gli amici";
-  - "Mandalo a chi ha le Nike ai piedi".
-
-  Il solo "Mandalo a…" senza un motivo non ha funzionato (lezione 8).
-- Il commento "Tu cosa avevi detto?" resta la CTA del video. Salva e manda vanno in caption.
+- **CTA del video: sempre "Segui la pagina e metti like!"** (Antonio, 2026-11-22), con il cartello `segui_like`
+  (la mano tocca Segui, poi il cuore). Sostituisce le CTA legate al video di prima ("Mandalo a…", "Tu cosa avevi
+  detto?"). Salva e manda possono restare come invito in caption, dopo il bigino.
 
 ## 6. Copertina progettata
 

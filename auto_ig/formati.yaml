@@ -22,7 +22,7 @@ regole_comuni:
   - "HOOK E CTA SONO LA COSA PIÙ IMPORTANTE (regola di Antonio): seguire hook_e_cta qui sotto, senza eccezioni."
   - "Mascotte (modella Cintre) solo se Antonio la chiede: mascotte: false di default; se sembra adatta, chiederlo nelle domande."
   - "Solo fatti verificabili: niente date o attribuzioni inventate; se incerto si riformula o si toglie."
-  - "Ultima frase SEMPRE la call to action (la aggiunge il sistema): UNA sola, legata al valore del video (vedi hook_e_cta)."
+  - "Ultima frase SEMPRE la call to action (la aggiunge il sistema): UNA sola, sempre 'Segui la pagina e metti like!' (Antonio, 2026-11-22; vedi hook_e_cta)."
   - "Caption (skill caption-writer): prima riga = gancio entro 125 caratteri, 1-2 righe di valore, la STESSA CTA del video, 3-5 hashtag (#cintre sempre)."
 
 # Icone vettoriali della resa 2d (preset/grafica2d.js → ICONE). Per un'icona nuova: disegnala lì e aggiungila qui.
@@ -56,7 +56,7 @@ schede_2d:
   # GANCIO VIVO (Antonio, 2026-11-19: "serve qualcosa di dinamico fin dall'inizio"): il gancio può avere
   # `grafica: {tipo: contatore|radar|scena2d|chat|lente|confronto, ..., anticipo: 0.6}` al posto della foto: al fotogramma 0 è già in moto,
   # niente intestazione "Cintre · LO SAPEVI?", solo il titolo grande.
-  cta:       "cartello finale secondo cta_azione del formato (salva_condividi: segnalibro + Invia; segui: bottone Segui; commenta: fumetto; app: telefono); messa dal sistema"
+  cta:       "cartello finale secondo cta_azione del formato (segui_like: Segui + cuore, la CTA fissa; salva_condividi: segnalibro + Invia; segui: bottone Segui; commenta: fumetto; app: telefono); messa dal sistema"
 
 # HOOK E CTA — la parte più importante di ogni contenuto (Antonio, 2026-11-14). Skill: .claude/skills/hook-writer,
 # short-form-video-script, caption-writer, viral-hooks; profilo e voce del brand in marca/.
@@ -69,9 +69,8 @@ hook_e_cta:
     - "Mai aprire con saluti, 'Oggi parliamo di', 'Lo sapevi che', logo o intro lente. Non svelare il payoff: tieni aperto il loop."
     - "In richiesta.yaml annota i candidati scartati e il punteggio del vincente (commento), così Antonio vede la scelta."
   cta:
-    - "UNA sola richiesta, ~2 s, legata al valore del video e concreta (chi/cosa): 'Mandalo a chi ha un trench nell'armadio!'."
-    - "Obiettivo per formato (cta_azione): curiosità → salva/condividi, quiz → commenta, storia → app (link in bio)."
-    - "Mai 'segui e metti like', 'grazie per aver guardato', 'fammi sapere cosa ne pensi' generico, né due CTA insieme."
+    - "Antonio, 2026-11-22: \"la call to action nuova sarà di seguire la pagina e mettere like\", in TUTTI i video. È sempre 'Segui la pagina e metti like!' (cta_azione: segui_like), ~2 s."
+    - "Mai una seconda CTA nel video (niente 'grazie per aver guardato', niente commenta/mandalo in più)."
     - "La stessa CTA va nel video (voce + cartello animato) e nella caption."
   attenzione:
     - "Promessa aperta nei primi 3 s, ripagata per ultima; rehook al 40-60% del video; ogni frase deve agganciare, insegnare o preparare il payoff, sennò si taglia."
@@ -102,8 +101,8 @@ formati:
       - {ruolo: svolta,     guida: "Apre Cintre e chiede aiuto (frase con il nome dell'app)."}
       - {ruolo: soluzione,  guida: "L'app propone l'outfit giusto: si vede il cambio d'abito (tono felice)."}
       - {ruolo: risultato,  guida: "La scena finale dimostra il successo (complimenti, sicurezza)."}
-    cta: "Prova Cintre, l'app che ti aiuta a vestirti: link in bio!"
-    cta_azione: app
+    cta: "Segui la pagina e metti like!"     # Antonio, 2026-11-22: CTA fissa in tutti i video
+    cta_azione: segui_like
     hashtag: "#cintre #outfit #moda #stile #ootd"
     rese:
       3d:
@@ -134,8 +133,8 @@ formati:
       - {ruolo: attesa,   guida: "\"Tre. Due. Uno.\" con ritmo: 1.0 (una parola al secondo) e scheda domanda + conto: 3 (numeri giganti, tic, anello): la suspense prima della risposta."}
       - {ruolo: risposta, guida: "\"È la B: Genova!\" + perché, in 1-2 frasi; meglio se c'è una trappola (l'opzione quasi giusta) da spiegare in un dettaglio."}
       - {ruolo: commenta, guida: "Reazione breve, senza chiedere nulla (la richiesta di commento è la CTA): \"Quanti l'avranno sbagliata?\""}
-    cta: "Scrivi la tua risposta nei commenti: A, B o C?"
-    cta_azione: commenta
+    cta: "Segui la pagina e metti like!"     # Antonio, 2026-11-22: CTA fissa in tutti i video
+    cta_azione: segui_like
     hashtag: "#cintre #quizmoda #moda #stile #lo_sapevi"
     rese:
       3d:
@@ -167,8 +166,8 @@ formati:
       - {ruolo: rehook,    guida: "RILANCIA a metà video (scheda rehook, obbligatoria: il build avvisa se manca): \"Così Nerone ebbe un'idea assurda.\""}
       - {ruolo: sviluppo,  guida: "ATTESA 2: la storia si complica, il perché manca ancora: \"La vietò, e mandò un uomo a venderla di nascosto.\""}
       - {ruolo: payoff,    guida: "RISPOSTA, per ultima e più forte (timbro, boom): \"Era una trappola: fece chiudere tutti i negozi.\" Dopo c'è solo la CTA, ≤ 7 parole."}
-    cta: "Salvalo e mandalo a chi ama la moda!"   # meglio una CTA mirata per video nel campo cta della richiesta
-    cta_azione: salva_condividi
+    cta: "Segui la pagina e metti like!"     # Antonio, 2026-11-22: CTA fissa in tutti i video
+    cta_azione: segui_like
     hashtag: "#cintre #curiosità #moda #storiadellamoda #lo_sapevi #stile"
     rese:
       3d:

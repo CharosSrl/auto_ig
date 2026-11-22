@@ -669,6 +669,64 @@ export function finaleCondividi(ctx, u, { testo: frase = '', accento = CIPRIA, t
 }
 const mix2 = (a, b, k) => a + (b - a) * k;
 
+// Cartello "segui e metti like" (Antonio, 2026-11-22: la CTA di TUTTI i video). Testo grande, poi la mano tocca
+// Segui (diventa "✓ Segui già") e il cuore (si riempie di rosso con un pop e cuoricini che salgono).
+const ROSSO_LIKE = '#ff3040';
+function cuore(ctx, s, pieno, colore) {
+  ctx.save(); ctx.scale(s / 100, s / 100);
+  ctx.beginPath(); ctx.moveTo(0, 38);
+  ctx.bezierCurveTo(-62, -4, -52, -58, -18, -58); ctx.bezierCurveTo(-6, -58, 0, -48, 0, -40);
+  ctx.bezierCurveTo(0, -48, 6, -58, 18, -58); ctx.bezierCurveTo(52, -58, 62, -4, 0, 38); ctx.closePath();
+  ctx.lineJoin = 'round'; ctx.lineWidth = 9;
+  if (pieno) { ctx.fillStyle = ROSSO_LIKE; ctx.fill(); } else { ctx.strokeStyle = colore; ctx.stroke(); }
+  ctx.restore();
+}
+export function finaleSeguiLike(ctx, u, { testo: frase = '', accento = CIPRIA, t = 0 } = {}) {
+  const k = easeOut(u / 0.4);
+  ctx.save(); ctx.globalAlpha = k; ctx.translate(W / 2 - 150, 190); ctx.scale(0.375, 0.375); logo(ctx, 800, 600, { colore: accento, slogan: '' }); ctx.restore();
+  testo(ctx, frase, W / 2, 580, { size: 96, peso: 900, colore: '#fff', maxW: 900, parole: entra(u, 0.05, 0.6), evidenzia: 'segui like', accento, ombra: true });
+  const tapS = 1.0, tapL = 1.7;
+  // Segui: pillola a sinistra
+  const ks = entra(u, 0.35, 0.35);
+  if (ks > 0) {
+    const premuto = u > tapS, tb = clamp((u - tapS) / 0.2);
+    ctx.save(); ctx.translate(330, 860); const sc = pop(ks) * (1 - 0.1 * Math.sin(Math.PI * tb)); ctx.scale(sc, sc);
+    ctx.shadowColor = 'rgba(20,4,10,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+    pillola(ctx, premuto ? '✓ Segui già' : 'Segui', 0, 0, { size: 58, fondo: premuto ? CREMA : accento, colore: BORDEAUX, h: 150, w: 400, peso: 900 });
+    ctx.shadowColor = 'transparent';
+    if (premuto) { const v = clamp((u - tapS) / 0.7); ctx.globalAlpha = 1 - v; ctx.strokeStyle = accento; ctx.lineWidth = 6;
+      rr(ctx, -200 - v * 60, -75 - v * 60, 400 + v * 120, 150 + v * 120, 75 + v * 60); ctx.stroke(); }
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = ks; ctx.fillStyle = '#fff'; ctx.font = FONT(50, 900); ctx.textAlign = 'center'; ctx.fillText('@cintre_official', 330, 1045); ctx.restore();
+  }
+  // cuore: tondo a destra
+  const kl = entra(u, 0.5, 0.35);
+  if (kl > 0) {
+    const premuto = u > tapL, tb = clamp((u - tapL) / 0.2), boom = premuto ? pop(clamp((u - tapL) / 0.35)) : 1;
+    ctx.save(); ctx.translate(780, 860); const sc = 1.3 * pop(kl) * (1 - 0.1 * Math.sin(Math.PI * tb)); ctx.scale(sc, sc);
+    ctx.shadowColor = 'rgba(20,4,10,0.4)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+    ctx.fillStyle = CREMA; ctx.beginPath(); ctx.arc(0, 0, 92, 0, 7); ctx.fill(); ctx.shadowColor = 'transparent';
+    if (premuto) { const v = clamp((u - tapL) / 0.7); ctx.save(); ctx.globalAlpha = 1 - v; ctx.strokeStyle = ROSSO_LIKE; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(0, 0, 92 + v * 90, 0, 7); ctx.stroke(); ctx.restore(); }
+    ctx.translate(0, 8); cuore(ctx, 110 * boom, premuto, BORDEAUX);
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = kl; ctx.fillStyle = '#fff'; ctx.font = FONT(50, 900); ctx.textAlign = 'center'; ctx.fillText('Like', 780, 1045); ctx.restore();
+    // cuoricini che salgono dopo il tocco (restano sopra i sottotitoli)
+    for (let j = 0; j < 5; j++) {
+      const v = clamp((u - tapL - 0.05 - j * 0.12) / 1.1); if (v <= 0 || v >= 1) continue;
+      const x = 780 + (hash(j + 3) - 0.5) * 220 + Math.sin(v * 7 + j) * 18, y = 760 - easeOut(v) * 300;
+      ctx.save(); ctx.globalAlpha = 1 - v; ctx.translate(x, y); cuore(ctx, 40 + hash(j) * 30, true, ROSSO_LIKE); ctx.restore();
+    }
+  }
+  // mano: tocca Segui, poi il cuore
+  if (u > 0.6 && u < 2.6) {
+    const a = clamp((u - 0.6) / 0.35), c = clamp((u - 1.25) / 0.35);
+    const x = mix2(mix2(W / 2 + 260, 370, easeOut(a)), 815, easeOut(c)), y = mix2(1100, 905, easeOut(a));
+    const tocco = Math.max(Math.sin(Math.PI * clamp((u - tapS) / 0.2)), Math.sin(Math.PI * clamp((u - tapL) / 0.2)));
+    mano(ctx, x, y, 120, Math.max(0, tocco));
+  }
+}
+
 // Cartello "commenta" (CTA dei quiz): testo grande, poi una barra commento in stile Instagram in cui si
 // scrive "Per me è la…", la mano tocca Pubblica e salgono fumetti A / B / C (come i commenti che arrivano).
 export function finaleCommenta(ctx, u, { testo: frase = '', accento = CIPRIA, t = 0 } = {}) {
@@ -708,6 +766,7 @@ export function finaleCommenta(ctx, u, { testo: frase = '', accento = CIPRIA, t 
 
 // Cartello finale per azione della CTA (formati.yaml → cta_azione)
 export function finale(ctx, u, opz = {}) {
+  if (opz.azione === 'segui_like') return finaleSeguiLike(ctx, u, opz);
   if (opz.azione === 'salva_condividi') return finaleCondividi(ctx, u, opz);
   if (opz.azione === 'commenta') return finaleCommenta(ctx, u, opz);
   return finaleBottone(ctx, u, opz);

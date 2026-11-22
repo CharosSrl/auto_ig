@@ -12,6 +12,8 @@
     "totale_max": 58
   },
   "secondi": {"parole_al_secondo": 2.6, "pausa": 0.4, "coda": 1.0, "max": 25.0},
+  "cta_obbligatoria": "Segui la pagina e metti like!",
+  "_cta": "Antonio, 2026-11-22: la CTA di TUTTI i video è seguire la pagina e mettere like (06-cta-e-caption).",
   "strutture_valutate": 3,
   "ganci_valutati_min": 3,
   "vietate": [
