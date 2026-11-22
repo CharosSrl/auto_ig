@@ -113,7 +113,9 @@ def load(folder: Path) -> dict:
             c = copione.carica(folder)
         except ValueError as e:                   # JSON non valido
             raise ValueError(f"{folder.name}: copione.json illeggibile: {e}") from e
-        c_err, c_av = copione.controlla(c)
+        # la CTA fissa (Antonio, 2026-11-22: "dal prossimo video in poi") vale per i video nuovi: quelli già
+        # generati o in coda con la CTA di prima restano validi, con un avviso
+        c_err, c_av = copione.controlla(c, cta_fissa=not (folder / "out" / "video.mp4").is_file())
         errs += [f"copione: {e}" for e in c_err]
         data = copione.in_richiesta(c, data)
         data["_avvisi_copione"] = c_av

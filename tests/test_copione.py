@@ -48,6 +48,9 @@ class CopioneTest(unittest.TestCase):
         self.assertIn("CTA di", self.errori(c))
         c["cta"] = "Mandalo a chi ama Prada!"            # Antonio, 2026-11-22: solo "segui e metti like"
         self.assertIn("Segui la pagina e metti like!", self.errori(c))
+        errs, av = copione.controlla(c, cta_fissa=False)  # video già fatto prima della regola: solo avviso
+        self.assertFalse(any("Segui la pagina" in e for e in errs))
+        self.assertTrue(any("Segui la pagina" in a for a in av))
 
     def test_attenzione(self):
         """Studio 2026-11-22 (scrittura/regole/09-attenzione.md): niente aperture vaghe, gancio concreto."""

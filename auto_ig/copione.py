@@ -65,8 +65,9 @@ def _schema(c: dict, r: dict) -> list[str]:
     return errs
 
 
-def controlla(c: dict) -> tuple[list[str], list[str]]:
-    """(errori, avvisi). Errori = il copione va riscritto (il build si ferma). Avvisi = da valutare e dire ad Antonio."""
+def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
+    """(errori, avvisi). Errori = il copione va riscritto (il build si ferma). Avvisi = da valutare e dire ad Antonio.
+    cta_fissa=False: video già fatto prima della CTA fissa (2026-11-22), la CTA vecchia è solo un avviso."""
     r = regole()
     errs = _schema(c, r)
     if errs:
@@ -150,7 +151,7 @@ def controlla(c: dict) -> tuple[list[str], list[str]]:
             errs.append(f"battuta {i}: 'schermo' oltre {P['schermo_max']} parole (05-ritmo)")
     fissa = r.get("cta_obbligatoria")
     if fissa and c["cta"].strip() != fissa:
-        errs.append(f"CTA '{c['cta']}': in tutti i video è '{fissa}' (Antonio, 2026-11-22; 06-cta-e-caption)")
+        (errs if cta_fissa else av).append(f"CTA '{c['cta']}': in tutti i video è '{fissa}' (Antonio, 2026-11-22; 06-cta-e-caption)")
     if len(c["cta"].split()) > P["cta_max"]:
         errs.append(f"CTA di {len(c['cta'].split())} parole (max {P['cta_max']}, 06-cta)")
     # fatti e fonti (04-fatti)
