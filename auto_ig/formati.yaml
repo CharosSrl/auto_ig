@@ -28,7 +28,7 @@ regole_comuni:
 # Icone vettoriali della resa 2d (preset/grafica2d.js → ICONE). Per un'icona nuova: disegnala lì e aggiungila qui.
 icone_2d: [taschino, orologio, tacco, staffa, tubino, auto, lampadina, domanda, commento, cuore, stella, gruccia, telefono, armadio, outfit,
            trench, elmetto, cardigan, medaglia, bikini, atomo, cravatta, sciabole, sneaker, pugnale, silenzio,
-           jeans, sposa, corona, maglia, mutande, zeppa, sughero, borsa, bambu, aereo, polso, baule, lucchetto, lente, paglietta, pagliettaRotta, lumaca]
+           jeans, sposa, corona, maglia, mutande, zeppa, sughero, borsa, bambu, aereo, polso, baule, lucchetto, lente, paglietta, pagliettaRotta, lumaca, crocs]
 
 # Tipi di scheda della resa 2d (scena schede2d) e campi usati.
 schede_2d:

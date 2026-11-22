@@ -412,6 +412,21 @@ export const ICONE = {
     ctx.save(); ctx.lineWidth = 4; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(-26 + k * 14, -16 + k * 6); ctx.lineTo(-14 + k * 14, -28 + k * 6); ctx.stroke(); } ctx.restore();
     ctx.beginPath(); ctx.moveTo(30, 6); ctx.quadraticCurveTo(50, 14, 70, 14); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
   },
+  // Zoccolo di gomma tipo Crocs, di profilo: punta tonda e alta, buchi sulla tomaia, cinturino al tallone,
+  // suola spessa a onde (reel Crocs, 2026-11-23). Colore = accento.
+  crocs(ctx, { accento = CIPRIA }) {
+    ctx.beginPath(); rr(ctx, -104, 34, 210, 30, 14); fs(ctx, '#f3ead8');                         // suola
+    ctx.save(); ctx.lineWidth = 3; for (let x = -92; x < 98; x += 16) { ctx.beginPath(); ctx.moveTo(x, 56); ctx.quadraticCurveTo(x + 8, 46, x + 16, 56); ctx.stroke(); } ctx.restore();
+    ctx.beginPath(); ctx.moveTo(-100, 36); ctx.lineTo(-96, 4); ctx.quadraticCurveTo(-70, -8, -44, -10);                  // tallone basso
+    ctx.quadraticCurveTo(-10, -58, 40, -54); ctx.quadraticCurveTo(104, -48, 104, 4); ctx.quadraticCurveTo(104, 30, 96, 36); // punta alta e tonda
+    ctx.closePath(); fs(ctx, accento);
+    ctx.save(); ctx.fillStyle = INCHIOSTRO;                                                       // buchi
+    [[-14, -30], [8, -38], [32, -40], [56, -36], [78, -26], [-2, -12], [22, -18], [46, -16], [70, -8]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill(); });
+    ctx.restore();
+    ctx.beginPath(); ctx.moveTo(-40, -8); ctx.quadraticCurveTo(-92, -40, -100, 8); ctx.lineWidth = 12; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();   // cinturino
+    ctx.lineWidth = 6; ctx.strokeStyle = accento; ctx.stroke(); stileIcona(ctx);
+    ctx.beginPath(); ctx.arc(-40, -8, 9, 0, 7); fs(ctx, '#f3ead8');                               // rivetto del cinturino
+  },
   // Pugnale (stiletto)
   pugnale(ctx, { t = 0 }) {
     ctx.save(); ctx.rotate(-0.5);
