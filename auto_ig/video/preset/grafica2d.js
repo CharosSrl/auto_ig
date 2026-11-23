@@ -9,7 +9,7 @@
 import { PRIMARIO, ACCENTO, SCURO, CHIARO, simbolo, logo } from './brand.js';
 
 export const W = 1080, H = 1920;
-export const ORO = '#d4af37', INCHIOSTRO = '#120d24';
+export const ORO = '#eaba02', INCHIOSTRO = '#120d24';
 export const FONT = (px, w = 800) => `${w} ${px}px Lato, "DejaVu Sans", sans-serif`;
 export const SERIF = (px, stile = 'italic 400') => `${stile} ${px}px P052, "DejaVu Serif", serif`;
 

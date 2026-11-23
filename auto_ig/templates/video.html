@@ -52,8 +52,8 @@
       {% for s in scene %}<label><input type="radio" name="scena" value="{{ s }}" {{ 'checked' if loop.first }}> {{ s }}</label>
       (<a href="{{ url_for('video_static', name='scenes/' + s + '.html') }}" target="_blank">anteprima</a>) {% endfor %}</p>
     <p>Testo<br><textarea name="testo" rows="2" placeholder="(vuoto = testo predefinito della scena)"></textarea></p>
-    <p>Sfondo <input type="color" name="colore" value="#5b21b6">
-       Accento <input type="color" name="accento" value="#22d3ee">
+    <p>Sfondo <input type="color" name="colore" value="#690aba">
+       Accento <input type="color" name="accento" value="#32bbf0">
        Durata <input type="number" name="durata" value="8" min="3" max="{{ max_sec }}" step="1" style="width:4em"> s
        Qualità <select name="qualita"><option value="alta" selected>alta</option><option value="bozza">bozza (veloce)</option></select></p>
     <button>Crea video</button>

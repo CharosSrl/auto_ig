@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>auto_ig — {% block titolo %}{% endblock %}</title>
+<title>TeamUp Esports — {% block titolo %}{% endblock %}</title>
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
 <style>
   :root { --bordo:#ccc; --ok:#e6f4ea; --err:#fdecea; --mut:#666; }
   body { font: 15px/1.4 system-ui, sans-serif; margin: 0 auto; max-width: 1100px; padding: 0 16px 40px; background:#fafafa; color:#222; }
   nav { display:flex; gap:16px; align-items:center; padding:12px 0; border-bottom:1px solid var(--bordo); margin-bottom:16px; }
   nav a { text-decoration:none; color:#222; padding:4px 8px; border-radius:4px; }
-  nav a.attivo { background:#222; color:#fff; }
+  nav a.attivo { background:#690aba; color:#fff; }
   nav .acc { margin-left:auto; color:var(--mut); }
   .msg { padding:8px 12px; border-radius:4px; margin:6px 0; }
   .msg.ok { background:var(--ok); } .msg.errore { background:var(--err); }
@@ -29,7 +30,8 @@
 </head>
 <body>
 <nav>
-  <strong>auto_ig</strong>
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="TeamUp Esports" style="height:40px">
+  <strong>TeamUp Esports</strong>
   {% set p = request.path %}
   <a href="{{ url_for('cerca') }}" class="{{ 'attivo' if p.startswith('/cerca') }}">Cerca immagini</a>
   <a href="{{ url_for('coda') }}" class="{{ 'attivo' if p.startswith('/coda') }}">Coda</a>

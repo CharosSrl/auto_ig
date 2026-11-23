@@ -1,6 +1,7 @@
 // Base comune delle scene: renderer 1080x1920 (Reels 9:16), parametri da URL,
 // window.renderFrame(t) deterministico per il render fotogramma per fotogramma.
 import * as THREE from '../vendor/three.module.min.js';
+import { logoPronto } from '../preset/brand.js';
 
 export const W = 1080, H = 1920;
 
@@ -79,7 +80,7 @@ export function start(defaults, build) {
   window.grabFrame = (t, q = 0.92) => { window.renderFrame(t); return cv.toDataURL('image/jpeg', q); };
   // `pronto` (facoltativo): Promise delle risorse asincrone (es. foto). Il render aspetta sceneReady;
   // se la Promise fallisce l'errore arriva come pageerror e il render si ferma con il messaggio.
-  Promise.resolve(ctx.pronto).then(() => {
+  Promise.all([ctx.pronto, logoPronto]).then(() => {
     window.sceneReady = true;
     if (!p.render) {             // anteprima nel browser: animazione in loop
       const dur = parseFloat(p.durata) || 8, t0 = performance.now();

@@ -93,7 +93,7 @@ def new(title: str, lines: list | None = None, scene: str = "particelle", bg: st
         f = formati.formato(formato)
         caption = caption or f"\n\n{f['cta']}\n\n{f['hashtag']}"
         if (bg, accent) == ("#000000", "#d4af37"):   # colori del brand TeamUp
-            bg, accent = "#5b21b6", "#22d3ee"
+            bg, accent = "#690aba", "#32bbf0"
     lines = lines or ["Prima frase del copione.", "Seconda frase."]
     folder.mkdir(parents=True)
     (folder / "richiesta.yaml").write_text(TEMPLATE.format(

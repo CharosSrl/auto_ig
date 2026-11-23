@@ -41,9 +41,9 @@ reel:
   scene: [testo, particelle, oggetto]
   # Coppie [sfondo, accento] a rotazione
   colori:
-    - ["#5b21b6", "#22d3ee"]
+    - ["#690aba", "#32bbf0"]
     - ["#0b0a14", "#a855f7"]
-    - ["#0b0a14", "#22d3ee"]
+    - ["#0b0a14", "#32bbf0"]
     - ["#111827", "#facc15"]
   testi:
     - "Il tuo team ti sta cercando."

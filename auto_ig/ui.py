@@ -376,7 +376,7 @@ def create_app(queue_file: Path = QUEUE_FILE, media_dir: Path = MEDIA_DIR, cfg: 
     @app.route("/video/s/<path:name>")
     def video_static(name):
         # Solo i file delle scene e three.js (per l'anteprima dal vivo nel browser)
-        ok = ((name.startswith(("scenes/", "preset/")) and name.endswith((".html", ".js")))
+        ok = ((name.startswith(("scenes/", "preset/")) and name.endswith((".html", ".js", ".png")))
               or name.startswith("vendor/"))
         if not ok or ".." in name:
             abort(404)

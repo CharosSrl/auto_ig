@@ -11,7 +11,7 @@
 #   - {testo: "...", scheda: {tipo: fatto, numero: 1, titolo: "Il primo torneo", icona: trofeo}}
 
 regole_comuni:
-  - "Brand TeamUp Esports (@teamupesportsofficial): viola #5b21b6, ciano neon #22d3ee, quasi nero #0b0a14, bianco lavanda #f5f3ff; simbolo = doppio chevron 'UP' (brand.js)."
+  - "Brand TeamUp Esports (@teamupesportsofficial): colori del logo ufficiale (marca/logo.png): viola #690aba (fondo) e #900dff, ciano #32bbf0 (accento), oro #eaba02, quasi nero #0b0a14, bianco lavanda #f5f3ff; logo = stemma incappucciato + controller + trofeo (brand.js → stemma/simbolo/logo, file preset/logo.png)."
   - "TeamUp è un'app per trovare compagni e team, iscriversi ai tornei e seguire la scena esports: ogni contenuto parla a chi gioca."
   - "Una frase del copione = un atto della scena = una scheda (sincronizzati con la voce dal parametro atti)."
   - "Frasi brevi da parlato (max ~14 parole), seconda persona o prima persona, niente elenchi letti."

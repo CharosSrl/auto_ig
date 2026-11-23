@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
 
 class TestFoto(Base):
-    YAML = ("titolo: x\nstato: da_fare\nscena: cartoon2d\ncolori: {sfondo: '#5b21b6', accento: '#22d3ee'}\n"
+    YAML = ("titolo: x\nstato: da_fare\nscena: cartoon2d\ncolori: {sfondo: '#690aba', accento: '#32bbf0'}\n"
             "copione:\n  - testo: Eccola, del 1916.\n    scheda: {tipo: foto, titolo: Keds, foto: keds.jpg}\n")
 
     def test_foto_mancante_poi_copiata_per_il_render(self):

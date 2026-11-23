@@ -1,31 +1,42 @@
-// PRESET — Identità TeamUp Esports: colori, font, simbolo (doppio chevron "UP") e logo, disegnati su canvas 2D.
+// PRESET — Identità TeamUp Esports: colori, font e logo ufficiale (marca/logo.png, copiato qui in preset/logo.png).
+// Il logo è un'immagine: common.js aspetta `logoPronto` prima del primo fotogramma, così non manca mai nel video.
 
-export const PRIMARIO = '#5b21b6';   // viola profondo: fondo principale
-export const ACCENTO = '#22d3ee';    // ciano neon: evidenziazioni, bottoni, simbolo
+export const PRIMARIO = '#690aba';   // viola scuro del cappuccio: fondo principale
+export const VIOLA = '#900dff';      // viola acceso del cappuccio
+export const LILLA = '#b661ff';      // luce del cappuccio
+export const ACCENTO = '#32bbf0';    // ciano del controller: evidenziazioni, bottoni
+export const ORO = '#eaba02';        // oro del trofeo
 export const SCURO = '#0b0a14';      // quasi nero: testo su fondo chiaro, fondi "buio"
 export const CHIARO = '#f5f3ff';     // bianco lavanda: card e pillole chiare
 
 export const font = (px, w = 700, fam = '"DejaVu Sans", sans-serif') => `${w} ${px}px ${fam}`;
 export const fontLogo = (px) => font(px, 900, 'Lato, "DejaVu Sans", sans-serif');
 
-// Il simbolo: due chevron sovrapposti che salgono ("team" + "up", come i gradi di un rank).
-// cx, cy = centro; s = lato del riquadro; lw = spessore del tratto.
-export function simbolo(ctx, cx, cy, s, color, lw) {
-  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const dy of [-0.16, 0.16]) {
-    ctx.beginPath();
-    ctx.moveTo(cx - s * 0.4, cy + s * (dy + 0.17));
-    ctx.lineTo(cx, cy + s * (dy - 0.17));
-    ctx.lineTo(cx + s * 0.4, cy + s * (dy + 0.17));
-    ctx.stroke();
-  }
-  ctx.restore();
+// Logo ufficiale (stemma: incappucciato + controller + trofeo), 590×872
+export const LOGO = new Image();
+export const logoPronto = new Promise((ok, ko) => {
+  LOGO.onload = () => ok();
+  LOGO.onerror = () => ko(new Error('logo non trovato: auto_ig/video/preset/logo.png (copia di marca/logo.png)'));
+});
+LOGO.src = new URL('./logo.png', import.meta.url).href;
+const RAPPORTO = 590 / 872;
+
+// Lo stemma centrato in (cx, cy), alto h px.
+export function stemma(ctx, cx, cy, h) {
+  if (!LOGO.complete || !LOGO.naturalWidth) return;
+  const w = h * RAPPORTO;
+  ctx.drawImage(LOGO, cx - w / 2, cy - h / 2, w, h);
 }
 
-// Logo completo: simbolo + "TeamUp" + "ESPORTS" + slogan (canvas trasparente)
+// Il simbolo del brand dentro un riquadro di lato s (firma storica: colore e spessore ignorati, è il logo vero).
+export function simbolo(ctx, cx, cy, s) {
+  stemma(ctx, cx, cy, s * 1.25);
+}
+
+// Logo completo: stemma + "TeamUp" + "ESPORTS" + slogan (canvas trasparente)
 export function logo(ctx, w, h, { colore = ACCENTO, slogan = 'Trova il tuo team', coloreSlogan = '#ffffff' } = {}) {
-  simbolo(ctx, w / 2, h * 0.24, h * 0.36, colore, h * 0.045);
-  ctx.fillStyle = '#ffffff'; ctx.font = fontLogo(Math.round(h * 0.22)); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  stemma(ctx, w / 2, h * 0.235, h * 0.43);
+  ctx.fillStyle = '#ffffff'; ctx.font = fontLogo(Math.round(h * 0.2)); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillText('TeamUp', w / 2, h * 0.64);
   ctx.fillStyle = colore; ctx.font = font(Math.round(h * 0.07), 800);
   ctx.fillText('E S P O R T S', w / 2, h * 0.75);

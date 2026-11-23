@@ -12,7 +12,9 @@ import base64
 import functools
 import re
 import http.server
+import os
 import subprocess
+import tempfile
 import threading
 import urllib.parse
 from datetime import datetime
@@ -76,13 +78,25 @@ _RENDERER_JS = """() => { const gl = document.createElement('canvas').getContext
 
 
 def launch_browser(pw, log: Callable[[str], None] = lambda m: None):
-    """Avvia Chrome headless col miglior backend disponibile. Ritorna (browser, nome backend)."""
+    """Avvia Chrome headless col miglior backend disponibile. Ritorna (browser, nome backend).
+    AUTO_IG_BACKEND=gpu-vulkan|gpu-gl|cpu (variabile d'ambiente) forza un backend."""
+    forzato = os.environ.get("AUTO_IG_BACKEND", "")
     for name, args in BACKENDS.items():
+        if forzato and name != forzato:
+            continue
         try:
             browser = pw.chromium.launch(channel="chrome", headless=True, args=args)
         except Exception as e:
-            log(f"backend {name}: avvio fallito ({str(e)[:80]})")
-            continue
+            # Chrome di sistema assente: ripiego sul Chromium di Playwright (playwright install chromium)
+            # Niente Vulkan qui: con GPU AMD (RADV) il canvas 2D esce pieno di rumore (visto il 2026-11-23).
+            if name == "gpu-vulkan" and not forzato:
+                log(f"backend {name}: saltato (Chrome di sistema assente)")
+                continue
+            try:
+                browser = pw.chromium.launch(headless=True, args=args)
+            except Exception:
+                log(f"backend {name}: avvio fallito ({str(e)[:80]})")
+                continue
         page = browser.new_page()
         gpu = page.evaluate(_RENDERER_JS)
         page.close()
@@ -133,7 +147,10 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
     srv, port = _serve(VIDEO_DIR)
     mp4, cover = mp4.resolve(), cover.resolve()
     audio = audio.resolve() if audio else None
-    ff = subprocess.Popen(ffmpeg_cmd(mp4, fps, audio, ass, frames / fps, quality), stdin=subprocess.PIPE, stderr=subprocess.PIPE,
+    # stderr su file, non su PIPE: nessuno la legge durante il render e, piena (64 KB di avvisi di libass),
+    # bloccherebbe ffmpeg e quindi la scrittura dei fotogrammi.
+    ff_err = tempfile.TemporaryFile()
+    ff = subprocess.Popen(ffmpeg_cmd(mp4, fps, audio, ass, frames / fps, quality), stdin=subprocess.PIPE, stderr=ff_err,
                           cwd=ass.parent if ass else None)
     try:
         with sync_playwright() as pw:
@@ -155,7 +172,8 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
             browser.close()
         ff.stdin.close()
         if ff.wait(timeout=300) != 0:
-            raise RuntimeError(f"ffmpeg: {ff.stderr.read().decode()[-500:]}")
+            ff_err.seek(0)
+            raise RuntimeError(f"ffmpeg: {ff_err.read().decode(errors='replace')[-500:]}")
         # copertina presa dal video finale: dimensione giusta e include il testo
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{cover_frame / fps:.2f}",
                        "-i", str(mp4), "-frames:v", "1", "-q:v", "2", str(cover)], check=True)
@@ -167,6 +185,7 @@ def render(scene: str, params: dict | None = None, seconds: float = 8, out_dir: 
         raise
     finally:
         srv.shutdown()
+        ff_err.close()
     return mp4.name, cover.name
 
 

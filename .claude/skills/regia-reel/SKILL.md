@@ -115,10 +115,10 @@ estetici, come il reel locale "East Market" (3,5K), no.
 
 **Per TeamUp:** la copertina (`video.jpg`) va progettata, non presa da un fotogramma a caso:
 - icona o foto grande al centro;
-- titolo corto e grande nello stile TeamUp (viola e ciano, simbolo a doppio chevron);
+- titolo corto e grande nello stile TeamUp (viola e ciano, logo ufficiale in `marca/logo.png`);
 - sempre uguale nella struttura, così la griglia di @teamupesportsofficial si riconosce.
 
-Il nostro "volto" non è una persona: è **la voce fissa del brand** più la palette viola/ciano e il simbolo.
+Il nostro "volto" non è una persona: è **la voce fissa del brand** più la palette viola/ciano e il logo (l'incappucciato col controller).
 
 ## 7. Seguiti dei reel che vanno bene
 

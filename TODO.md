@@ -276,7 +276,17 @@ Antonio chiede contenuti direttamente in chat con Claude Code (abbonamento, nien
       > le foto esports PD/CC0 sono poche.
 - [ ] Antonio: account Instagram **@teamupesportsofficial** in modalità Professional e collegato all'app Meta;
       nuovo `IG_ACCESS_TOKEN` / `IG_USER_ID` in `.env` e nei Secrets GitHub (quelli attuali sono di @cintre_official).
-- [ ] Antonio: confermare palette e simbolo (proposti da Claude) o mandare colori/logo ufficiali di TeamUp.
+- [x] Antonio: confermare palette e simbolo (proposti da Claude) o mandare colori/logo ufficiali di TeamUp.
+      > nota (2026-11-23): logo ufficiale in `marca/logo.png` (copiato in `auto_ig/video/preset/logo.png`).
+      > `brand.js`: `stemma()` disegna il logo vero; `simbolo()` e `logo()` lo usano (HUD, sfondo, icona `simbolo`,
+      > telefono, cartelli finali). `common.js` aspetta il caricamento (`logoPronto`) prima del primo fotogramma.
+      > Palette presa dal logo: viola #690aba / #900dff, ciano #32bbf0, oro #eaba02 (aggiornati richieste.py,
+      > plan.yaml, testo.html, UI video, formati.yaml). UI: favicon + logo nella barra (`auto_ig/static/logo.png`).
+      > Render: se Chrome di sistema manca, ripiego sul Chromium di Playwright (`playwright install chromium`).
+      > Con quel Chromium Vulkan è saltato (su GPU AMD/RADV dava fotogrammi pieni di rumore): usa gpu-gl;
+      > `AUTO_IG_BACKEND=gpu-vulkan|gpu-gl|cpu` forza un backend. Corretto blocco del render: stderr di ffmpeg su file
+      > invece che su PIPE mai letta. Primi reel TeamUp: `richieste/2026-11-23-fortnite-sedicenne-milioni`,
+      > `richieste/2026-11-23-valorant-round-per-vincere` (voce Piper: manca GOOGLE_TTS_API_KEY nel .env).
 - [ ] Antonio: decidere la voce (ora `chirp3-aoede`, femminile, scelta per Cintre) e la pronuncia di "TeamUp"
       (`voce.pronuncia`, es. `{TeamUp: "Tìm ap"}`).
 - [ ] Dopo i primi reel: chiedere gli Insights e riscrivere `marca/lezioni.md` con i dati di TeamUp.
