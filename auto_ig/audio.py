@@ -4,7 +4,7 @@ Le *battute* sono gli istanti in cui la scena cambia qualcosa (stacco, zoom, riv
 una volta sola e vanno sia alla scena (parametro `battute`) sia al mix (effetti sonori sugli stessi istanti):
 immagine e suono restano sincronizzati.
 
-    battute(frasi, schede)                -> [(secondi, tipo), ...]  tipo: boom | stacco | punch | rivela | tic
+    battute(frasi, schede)                -> [(secondi, tipo), ...]  tipo: via | boom | stacco | punch | rivela | tic  (via = inizio, senza colpo)
     mix(voce.wav, battute, durata, out)   -> wav stereo 48 kHz: voce + base (abbassata sotto la voce) + effetti
 
 Nessun file esterno: niente copyright. Ritmo della ricerca (formati.yaml → ritmo_alto): un cambio ogni ~1,5–3 s,
@@ -55,8 +55,10 @@ def battute(frasi: list, schede: list | None = None) -> list[tuple[float, str]]:
             else:
                 out += [(round(t0 + (b - t0) * k / conto, 2), "tic") for k in range(conto)]
             continue
-        out.append((round(t0, 2), {"gancio": "boom", "rehook": "boom", "dettaglio": "rivela",
-                                   "risposta": "rivela"}.get(tipo, "stacco")))
+        # al fotogramma 0 niente boom (Antonio, 2026-11-23: "evita quel boom iniziale, perché non funziona"):
+        # "via" = nessun colpo, nessuna esplosione, nessun impatto; si parte con la voce e la grafica già viva
+        apre = "via" if i == 0 else {"gancio": "boom", "rehook": "boom", "dettaglio": "rivela", "risposta": "rivela"}.get(tipo, "stacco")
+        out.append((round(t0, 2), apre))
         if tipo == "cta":
             continue
         fine = (tempi[i + 1][0] if i + 1 < len(tempi) else b + 0.6) - 0.7
@@ -216,11 +218,9 @@ def suoni(frasi: list, schede: list | None, bt: list[tuple[float, str]]) -> list
     for t, k in bt:
         i = max(j for j, a in enumerate(inizi) if a <= t + 1e-6)
         tipo = sk(i).get("tipo", "")
-        if t < 1e-6 and i == 0:
+        if t < 1e-6 and i == 0:                                           # mai boom/impatto all'inizio (Antonio, 2026-11-23)
             if sk(0).get("foto"):                                         # la foto vera entra con lo scatto
-                ev += [(0.0, "scatto", {}), (0.0, "impatto", {"liv": 0.5})]
-            else:
-                ev.append((0.0, "impatto", {}))
+                ev.append((0.0, "scatto", {}))
         elif k == "tic":
             ev.append((t, "tic", {}))
         elif k == "punch":
@@ -348,7 +348,7 @@ def pop_param(ev: list[tuple[float, str, dict]]) -> str:
 def _da_battute(bt: list[tuple[float, str]]) -> list[tuple[float, str, dict]]:
     """Compatibilità: eventi sonori dalle sole battute (scene senza schede)."""
     m = {"boom": "impatto", "stacco": "whoosh", "punch": "swish", "rivela": "conferma", "tic": "tic"}
-    return [(t, m.get(k, "whoosh"), {}) for t, k in bt]
+    return [(t, m.get(k, "whoosh"), {}) for t, k in bt if k != "via"]
 
 
 def _nota(f: float, dur: float, timbro: str = "pad") -> np.ndarray:

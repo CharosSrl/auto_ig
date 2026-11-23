@@ -9,7 +9,9 @@ esplicitamente; per cambiarla si cambia il codice e glielo si dice.
   "guerra"). Se c'è, va detta e scritta censurata nel gancio (m*rte); se manca è un avviso, da dire ad Antonio con il motivo;
 - suoni: effetti e base sempre accesi;
 - voce: Aoede (chirp3-aoede) a velocità 1.0;
-- durata: sotto i 25 s (controllata dopo la voce, prima del render).
+- durata: sotto i 25 s (controllata dopo la voce, prima del render);
+- attacco: la voce parla già al fotogramma 0 (≤ 0,15 s) e all'inizio non c'è nessun boom/impatto (Antonio, 2026-11-23:
+  "appena comincia il video, la voce deve star quasi già parlando. Evita di fare quel boom iniziale").
 La varietà dei formati è un avviso: se gli ultimi reel hanno tutti lo stesso formato, va proposto altro.
 Anche la struttura è un avviso (studio del 2026-11-21): rehook a metà video, risposta per ultima, CTA ≤ 7 parole.
 """
@@ -85,6 +87,21 @@ def errore_durata(data: dict, secondi: float) -> str | None:
     if si_applica(data) and secondi > MAX_SECONDI:
         return (f"il reel dura {secondi:.1f} s, oltre {MAX_SECONDI:.0f} s: accorcia le frasi o togli l'ultima "
                 "(mai velocizzare la voce)")
+    return None
+
+
+MAX_ATTACCO = 0.15       # secondi massimi di silenzio prima della voce
+
+
+def errore_attacco(data: dict, inizio_voce: float, eventi: list | None = None) -> str | None:
+    """Antonio, 2026-11-23: la voce parte da subito e niente boom iniziale (non funziona)."""
+    if not si_applica(data):
+        return None
+    if inizio_voce > MAX_ATTACCO:
+        return (f"la voce parte a {inizio_voce:.2f} s: deve parlare già al fotogramma 0 (≤ {MAX_ATTACCO} s, "
+                "Antonio 2026-11-23); non alzare voce.LEAD_IN")
+    if any(n == "impatto" and t < 0.5 for t, n, *_ in (eventi or [])):
+        return "c'è un boom/impatto nei primi 0,5 s: Antonio (2026-11-23) non lo vuole, il video parte con la voce"
     return None
 
 

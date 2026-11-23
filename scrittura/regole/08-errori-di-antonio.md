@@ -13,3 +13,4 @@
 | 2026-11-21 | "se ci sta una chat rendila quanto più uguale a whatsapp" | Nei messaggi della chat: frasi da chat vera, corte, minuscole ok, una emoji |
 | 2026-11-21 | "focus assoluto sullo scripting con dei file json" | Copione in `copione.json`, controllato prima del render |
 | 2026-11-22 | "la call to action nuova sarà di seguire la pagina e mettere like", in tutti i video | `cta` sempre "Segui la pagina e metti like!" (il build blocca le altre) |
+| 2026-11-23 | "l'hook è ancora debole, la voce deve star quasi già parlando… evita quel boom iniziale, perché non funziona" | Voce da 0,05 s, niente boom/impatto all'inizio (il build blocca); le prime parole del gancio sono già il colpo, mai un anno per primo |

@@ -19,7 +19,8 @@ from .config import ROOT
 
 VOICES_DIR = ROOT / ".voci"
 DEFAULT_VOICE = "it_IT-paola-medium"
-LEAD_IN = 0.6          # secondi di video prima che parli
+LEAD_IN = 0.05         # la voce parla già al fotogramma 0 (Antonio, 2026-11-23: "appena comincia il video, la voce
+                       # deve star quasi già parlando"). Non alzarlo: il silenzio iniziale fa scrollare via.
 PAUSE = 0.35           # pausa tra una frase e l'altra
 TAIL = 1.0             # secondi di video dopo l'ultima parola
 

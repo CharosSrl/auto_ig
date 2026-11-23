@@ -38,6 +38,10 @@ subito nel diario (e, se si misura, in `regole.json`). Esempi veri: `scrittura/e
 ## Gancio vivo dal fotogramma 0 (obbligatorio; Antonio, 2026-11-20: il reel jeans/acqua "è andato bene")
 
 Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO, con titolo grande e senza intestazione.
+- **La voce parla già al fotogramma 0 e non c'è nessun boom iniziale** (Antonio, 2026-11-23: "appena comincia il video,
+  la voce deve star quasi già parlando. Evita di fare quel boom iniziale, perché non funziona"). `voce.LEAD_IN` = 0,05 s;
+  il build si ferma se la voce arriva dopo 0,15 s o c'è un impatto nei primi 0,5 s (`regole.errore_attacco`). Le prime
+  2-3 parole del gancio sono già il colpo (mai un anno per primo).
 - Si mette nella scheda del gancio: `grafica: {tipo: contatore | radar | scena2d | chat | lente | confronto, ...}`
   (vedi `formati.yaml`).
 - Esempi:

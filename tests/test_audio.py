@@ -14,7 +14,7 @@ class BattuteTest(unittest.TestCase):
         frasi = [(0.6, 4.2), (4.5, 5.5), (5.9, 10.3), (10.6, 12.0)]
         schede = [{"tipo": "gancio"}, {"tipo": "fatto"}, {"tipo": "dettaglio"}, {"tipo": "cta"}]
         bt = audio.battute(frasi, schede)
-        self.assertEqual(bt[0], (0.0, "boom"))                       # gancio dal fotogramma 0
+        self.assertEqual(bt[0], (0.0, "via"))                        # gancio dal fotogramma 0, senza boom (2026-11-23)
         self.assertIn((5.9, "rivela"), bt)
         tempi = [t for t, _ in bt]
         self.assertEqual(tempi, sorted(tempi))
@@ -238,6 +238,24 @@ class SuoniInfograficheTest(unittest.TestCase):
         self.assertIn(4.4, [t for t, n, _ in ev if n == "impatto"])            # lampo del radar
         self.assertTrue(any(n == "pop" and 3.4 <= t < 7.4 for t, n, _ in ev))  # ping
         self.assertIn(8.2, [t for t, n, _ in ev if n == "swish"])              # salto dell'omino
+
+    def test_niente_boom_iniziale(self):
+        """Antonio, 2026-11-23: "evita di fare quel boom iniziale, perché non funziona"."""
+        from auto_ig import regole
+        frasi = [(0.05, 3.0), (3.4, 7.0)]
+        for sk0 in ({"tipo": "gancio"}, {"tipo": "gancio", "foto": "x.jpg"},
+                    {"tipo": "gancio", "grafica": {"tipo": "confronto"}}):
+            sk = [sk0, {"tipo": "fatto"}]
+            bt = audio.battute(frasi, sk)
+            self.assertNotIn("boom", [k for t, k in bt if t < 0.5])
+            ev = audio.suoni(frasi, sk, bt)
+            self.assertFalse([t for t, n, _ in ev if n == "impatto" and t < 0.5])
+        self.assertFalse(any(t == 0 for t, *_ in audio._da_battute([(0.0, "via")])))
+        d = {"formato": "curiosita", "resa": "2d"}
+        self.assertIsNone(regole.errore_attacco(d, voce.LEAD_IN, []))
+        self.assertIn("fotogramma 0", regole.errore_attacco(d, 0.6, []))
+        self.assertIn("boom", regole.errore_attacco(d, 0.05, [(0.0, "impatto", {})]))
+        self.assertLessEqual(voce.LEAD_IN, regole.MAX_ATTACCO)
 
     def test_ganci_nuovi_suonano(self):
         from auto_ig import audio

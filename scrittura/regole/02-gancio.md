@@ -14,6 +14,11 @@ Tutti i nostri reel perdevano il 45-50% del pubblico nei primi 2 s (lezione 3). 
   Ammesse se vere: morte, ucciso, guerra, bomba, veleno, sangue (storico), vietato, illegale, arrestato, scandalo,
   prigione, maledetto, rivolta. Mai parolacce, sesso, droghe, corpo.
 - **A schermo** (`schermo` della battuta gancio): ≤ 7 parole, con la parola chiave in `evidenzia`.
+- **La voce parla dal fotogramma 0, senza boom** (Antonio, 2026-11-23: "appena comincia il video, la voce deve star
+  quasi già parlando. Evita di fare quel boom iniziale, perché non funziona"). Il build parte con 0,05 s di silenzio
+  e si ferma se la voce arriva dopo 0,15 s o se c'è un impatto nei primi 0,5 s (`regole.errore_attacco`).
+  Quindi **le prime 2-3 parole sono già il colpo**: soggetto + fatto strano ("Le scarpe di Jordan erano vietate…"),
+  mai un anno o un luogo per primo ("Nel 2010…" → l'anno va dopo o a schermo; il copione dà un avviso).
 - **Vivo dal fotogramma 0**: la scheda del gancio ha sempre una `grafica` (contatore, chat, lente, confronto, radar,
   scena2d) o, nei quiz, la foto con le opzioni. Il tipo cambia rispetto agli ultimi 3 reel.
 

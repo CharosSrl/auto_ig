@@ -46,7 +46,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   const voceInizi = String(p.atti || atti.inizi.join(',')).split(',').map(Number);
   const fini = p.fini ? String(p.fini).split(',').map(Number) : voceInizi.map((a, i) => (atti.inizi[i + 1] ?? atti.fine) - 0.4);
   const BT = (p.battute ? String(p.battute).split(',').map((x) => { const [t, k] = x.split(':'); return { t: +t, k }; })
-    : atti.inizi.map((t, i) => ({ t, k: i ? 'stacco' : 'boom' }))).sort((a, b) => a.t - b.t);
+    : atti.inizi.map((t, i) => ({ t, k: i ? 'stacco' : 'via' }))).sort((a, b) => a.t - b.t);
   // pop delle opzioni (auto_ig/audio.suoni): "t:n,..." → l'opzione n rimbalza quando si sente il suo pop
   const POP = String(p.pop || '').split(',').filter(Boolean).map((x) => { const [t, n] = x.split(':'); return { t: +t, n: +n }; });
   const popOpz = (t, n) => POP.reduce((e, q) => (q.n === n && t >= q.t ? Math.max(e, Math.exp(-(t - q.t) * 6)) : e), 0);
@@ -83,7 +83,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
 
   // zoom e fuoco per battuta (irregolari: niente metronomo)
   const LIV = [1.08, 1.0, 1.14, 1.04];
-  const livello = (k, b) => ({ boom: 1.0, stacco: 1.0, rivela: 1.1, tic: 1.0 + 0.03 * (b % 3) }[k] ?? LIV[b % 4]);
+  const livello = (k, b) => ({ via: 1.0, boom: 1.0, stacco: 1.0, rivela: 1.1, tic: 1.0 + 0.03 * (b % 3) }[k] ?? LIV[b % 4]);
 
   // Pose ed espressioni per tipo: una per battuta dentro la frase (si cicla)
   const COPIONE = {
@@ -100,7 +100,7 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
 
   // Senza mascotte: l'oggetto è il protagonista. Adesivo grande al centro che "reagisce" a ogni battuta.
   function reazione(bt) {
-    const e = Math.exp(-bt.dt * 7), k = { boom: 1, rivela: 1, punch: 0.6, stacco: 0.4 }[bt.k] ?? 0.4;
+    const e = Math.exp(-bt.dt * 7), k = { via: 0, boom: 1, rivela: 1, punch: 0.6, stacco: 0.4 }[bt.k] ?? 0.4;
     return { sc: 1 + 0.1 * k * e * Math.cos(bt.dt * 22), rot: 0.12 * k * e * Math.sin(bt.dt * 18) * (bt.b % 2 ? 1 : -1) };
   }
   function scenaSola(s, i, t, u, bt, nb) {

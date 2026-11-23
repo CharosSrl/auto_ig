@@ -101,6 +101,10 @@ def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
     for a in r.get("aperture_vietate", []):
         if re.match(rf"{re.escape(a)}(?![\w'])", inizio):
             errs.append(f"il gancio apre con '{a}': troppo vago, la prima parola deve essere già contenuto (09-attenzione)")
+    # Antonio, 2026-11-23: la voce parte al fotogramma 0, quindi le prime 2-3 parole sono già il colpo
+    if re.match(r"(nel|nell'|negli|il|lo|la|era il|anno)?\s*\d{3,4}\b", inizio):
+        av.append("il gancio apre con un anno: la voce parte al fotogramma 0 e le prime parole devono già essere il "
+                  "colpo (soggetto + fatto strano); l'anno va dopo o a schermo (02-gancio, Antonio 2026-11-23)")
     concrete = set(r.get("oggetti_concreti", [])) | set(r.get("numeri_in_lettere", []))
     nome_proprio = re.search(r"(?<![.?!:])\s[A-ZÀ-Ý][\w'’-]+", g["voce"])   # maiuscola non a inizio frase
     if not (re.search(r"\d", g["voce"]) or nome_proprio or any(w in concrete or w.endswith("mila")

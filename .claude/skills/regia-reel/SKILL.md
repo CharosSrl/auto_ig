@@ -77,6 +77,8 @@ Volumi: la voce resta sempre davanti. Gli effetti si sentono ma non coprono le p
 **Implementato (2026-11-18)** in `auto_ig/audio.py`:
 - `suoni(frasi, schede, battute)` produce un evento sonoro per ogni cosa a schermo:
   - scatto al fotogramma 0 se il gancio ha la foto, e quando la foto cambia;
+  - **mai boom/impatto all'inizio** (Antonio, 2026-11-23: "evita quel boom iniziale, perché non funziona"): la prima
+    battuta è `via` (nessun colpo, esplosione o zoom) e la voce parla da 0,05 s; il build blocca il contrario;
   - un pop per ogni lettera "A, B, C" detta dalla voce, con l'intonazione che sale;
   - tic più riser sul 3-2-1, che finisce esattamente sulla risposta;
   - impatto più conferma sulla rivelazione;
