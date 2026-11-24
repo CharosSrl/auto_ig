@@ -70,7 +70,10 @@ Altri dati utili:
     con gli Insights: percentuale ancora a 3 e a 6 s). Registro parlato, tu, sfida e non lezione.
     - Al massimo una parola forte (morte, guerra, bomba, vietato…), vera e nel contesto del fatto.
     - A schermo è censurata in automatico (`auto_ig/censura.py`: m*rte), la voce la dice intera.
-    - Niente parolacce, niente sessuale, niente droghe: dal 2025 Instagram nasconde questi contenuti ai minori (13+).
+    - **Superata il 2026-11-24 (Antonio):** parolacce ammesse, anche tante (censurate a schermo, intere nella voce),
+      temi divisivi, linguaggio brainrot (`scrittura/regole/10-scalpore.md`). Rischio noto: Instagram nasconde ai
+      profili 13-17 i post con linguaggio forte. Da verificare negli Insights: ritenzione a 3 s e quota 13-17.
+      Restano vietati sessuale, droghe, bestemmie, insulti a gruppi o al corpo.
     - Tutto il dettaglio è in `.claude/skills/linguaggio-giovani/SKILL.md`.
 12. **Foto Wikimedia incorniciata e viva dal fotogramma 0, più immagini che scritte** (richiesta di Antonio,
     2026-11-16). L'obiettivo è sempre il massimo dell'attenzione.
@@ -89,7 +92,7 @@ Altri dati utili:
       - sottotitoli `corti`.
     - Il gancio non deve svelare la risposta: va scelta una foto che incuriosisce, non una che risponde.
 13. **Si deve capire al primo ascolto** (Antonio, 2026-11-17, sul Ray-Ban: "non si capisce niente, troppo veloce").
-    - Voce a `velocita: 1.0`, mai 1.2, con `pausa: 0.4-0.5` tra le frasi.
+    - Voce a `velocita: 1.2` (Antonio, 2026-11-24: "voce più veloce"; prima 1.0), con `pausa: 0.4-0.5` tra le frasi.
     - Sottotitoli `blocco`, che sono il default: due righe ferme e grandi, la parola detta si accende man mano,
       quelle ancora da dire sono attenuate. Basta con i pezzi da 1-3 parole che scorrono.
     - Frasi intere da 6 a 14 parole, una sola idea. Niente frammenti telegrafici ("B. Ray, raggio. Fine.").
@@ -109,7 +112,7 @@ Dal 2026-11-19 queste regole non sono più solo scritte: `auto_ig/regole.py` blo
 - parola forte: **solo se è il cuore vero della storia** (Antonio, 2026-11-19: quando era obbligatoria produceva ganci
   forzati, sempre "guerra"). Se c'è, va detta e scritta censurata nel gancio. Se manca arriva un avviso: il motivo
   va scritto in `parola_forte_motivo` e detto ad Antonio;
-- suoni accesi (`audio: {musica: true, sfx: true}`), voce `chirp3-aoede` a 1.0;
+- suoni accesi (`audio: {musica: true, sfx: true}`), voce `chirp3-aoede` a 1.2;
 - durata sotto i 25 s, controllata prima del render.
 Il build stampa la riga "regole: …": va riportata ad Antonio con ogni video. Se gli ultimi 4 reel hanno lo stesso
 formato arriva un avviso, e va proposto un formato diverso.

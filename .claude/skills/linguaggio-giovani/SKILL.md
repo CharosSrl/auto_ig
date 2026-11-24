@@ -8,6 +8,19 @@ description: >-
 
 # Linguaggio giovani — Cintre
 
+> **Svolta del 2026-11-24 (Antonio): vince su tutto quello che segue.** "Voce più veloce, linguaggio per persone
+> brainrottate, vanno bene anche tante parolacce. Devono esserci proprio temi divisivi." Quindi:
+> - voce a 1.2;
+> - slang ammesso (bro, fra, tipo, POV, aura, cringe, red flag…);
+> - parolacce piene: la voce le dice intere, schermo e caption le censurano da soli (`censura.PAROLE`: c*zzo, m*rda);
+> - il gancio divide o sciocca (campo `scalpore` nel copione);
+> - facilissimo, da bambino piccolo: nella voce niente date (prima/dopo) né percentuali o numeri grandi
+>   (un botto, un casino), il numero vero solo a schermo.
+>
+> Restano vietati, e il build si ferma: bestemmie, insulti a gruppi di persone o al corpo. Vietati anche sesso,
+> droghe e fatti inventati. Le righe qui sotto su "niente parolacce", "voce 1.0" e "lessico no: bro, POV…" sono
+> superate. Regole complete: `scrittura/regole/10-scalpore.md`.
+
 **Per chi scriviamo:** il pubblico ha 13-17 anni per circa il 25% e meno di 25 anni per circa il 60%.
 Il 92-98% non ci segue (vedi `marca/lezioni.md`). Scriviamo per un ragazzo che scrolla, non per un adulto che studia.
 Tutto deve andare bene per un quattordicenne.

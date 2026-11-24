@@ -8,7 +8,7 @@ esplicitamente; per cambiarla si cambia il codice e glielo si dice.
 - parola forte: SOLO se è il cuore vero della storia (Antonio, 2026-11-19: obbligarla produceva ganci forzati, sempre
   "guerra"). Se c'è, va detta e scritta censurata nel gancio (m*rte); se manca è un avviso, da dire ad Antonio con il motivo;
 - suoni: effetti e base sempre accesi;
-- voce: Aoede (chirp3-aoede) a velocità 1.0;
+- voce: Aoede (chirp3-aoede) a velocità 1.2 (Antonio, 2026-11-24: "voce più veloce", ritmo da brainrot; prima 1.0);
 - durata: sotto i 25 s (controllata dopo la voce, prima del render);
 - attacco: la voce parla già al fotogramma 0 (≤ 0,15 s) e all'inizio non c'è nessun boom/impatto (Antonio, 2026-11-23:
   "appena comincia il video, la voce deve star quasi già parlando. Evita di fare quel boom iniziale").
@@ -25,6 +25,7 @@ from . import censura
 FORMATI_REEL = ("quiz", "curiosita")
 MAX_SECONDI = 25.0
 VOCE = "chirp3-aoede"
+VELOCITA = 1.2          # Antonio, 2026-11-24: "voce più veloce" (prima 1.0, regola del 17/11 superata)
 
 
 def si_applica(data: dict) -> bool:
@@ -78,15 +79,15 @@ def errori(data: dict) -> list[str]:
     v = data.get("voce") or {}
     if v.get("modello") != VOCE:
         errs.append(f"voce.modello deve essere {VOCE} (la voce di Cintre)")
-    if float(v.get("velocita", 1.0)) != 1.0:
-        errs.append("voce.velocita deve essere 1.0 (più veloce non si capisce, lezioni n. 13)")
+    if abs(float(v.get("velocita", 1.0)) - VELOCITA) > 1e-6:
+        errs.append(f"voce.velocita deve essere {VELOCITA} (Antonio, 2026-11-24: voce più veloce, ritmo da brainrot)")
     return errs
 
 
 def errore_durata(data: dict, secondi: float) -> str | None:
     if si_applica(data) and secondi > MAX_SECONDI:
         return (f"il reel dura {secondi:.1f} s, oltre {MAX_SECONDI:.0f} s: accorcia le frasi o togli l'ultima "
-                "(mai velocizzare la voce)")
+                "(la voce resta a 1.2: non velocizzarla oltre)")
     return None
 
 

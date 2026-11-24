@@ -6,13 +6,14 @@ suoni e animazione restano nelle skill `regia-reel`, `animazione-personaggi-2d` 
 
 ## Ordine di lettura (ogni volta, tutto)
 1. `regole/08-errori-di-antonio.md`: le correzioni di Antonio, per non ripetere gli errori.
-2. `regole/01-struttura.md` → `07-varieta.md` e `09-attenzione.md`, in ordine.
+2. `regole/10-scalpore.md` (svolta del 2026-11-24: gancio divisivo, voce 1.2, brainrot, parolacce), poi
+   `regole/01-struttura.md` → `07-varieta.md` e `09-attenzione.md`, in ordine.
 3. `../marca/lezioni.md`: i dati degli Insights. Se una lezione nuova contraddice una regola qui, vince la lezione
    e si aggiorna la regola.
 4. Un esempio in `esempi/` dello stesso formato.
 
 ## Flusso di lavoro
-1. **Idea**: il fatto deve far dire "ma dai!" (stranissimo, numero incredibile, ribaltamento).
+1. **Idea**: il fatto deve far dire "ma che cazzo?!" e dividere (10-scalpore). Si scrive il perché in `scalpore`.
 2. **Fatti**: ognuno con la sua fonte in `fatti[]`. Quello che non è verificato non si dice.
 3. **3 strutture** in `strutture_valutate[]`: se ne sceglie una e si scrive il perché.
 4. **Almeno 3 ganci** (meglio 5) in `ganci_valutati[]`: se ne sceglie uno e si scrive il perché degli scartati.

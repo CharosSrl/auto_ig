@@ -5,7 +5,8 @@
   "type": "object",
   "required": ["idea", "formato", "fatti", "strutture_valutate", "ganci_valutati", "parola_forte", "battute", "cta", "caption", "autocontrollo"],
   "properties": {
-    "idea": {"type": "string", "description": "la storia in una riga: perché fa dire 'ma dai!'"},
+    "idea": {"type": "string", "description": "la storia in una riga: perché fa dire 'ma che cazzo?!'"},
+    "scalpore": {"type": "string", "description": "obbligatorio dal 2026-11-24: in una frase, perché il gancio divide o sciocca (regole/10-scalpore.md)"},
     "formato": {"enum": ["curiosita", "quiz", "storia"]},
     "richiesta_antonio": {"type": "string", "description": "le parole di Antonio"},
     "fatti": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["fatto", "fonte"],

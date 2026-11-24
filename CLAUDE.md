@@ -11,7 +11,8 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 1. Leggi `marca/lezioni.md`: sono le regole ricavate dai dati, vincono su tutto.
 2. Carica le skill `regia-reel` (suoni, formati, curva di retention, ganci a modello) e `linguaggio-giovani`.
    Se il reel ha personaggi o oggetti animati, carica anche `animazione-personaggi-2d` e `motion-design`
-   (camminata giusta, anticipazione, easing; Antonio 2026-11-20: "sono importantissime").
+   (camminata giusta, anticipazione, easing; Antonio 2026-11-20: "sono importantissime") e `illustrazione-2d`
+   per qualunque disegno nuovo o rifatto.
 3. Fai il formato che Antonio ha chiesto. "Curiosità" vuol dire curiosità, "quiz" vuol dire quiz. Se una lezione
    suggerisce altro, chiediglielo prima.
 4. In ogni gruppo di video alterna i formati: quiz, "N cose", storia con suspense, gancio "Se sei…".
@@ -21,11 +22,25 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
    - parola forte, che è facoltativa: se c'è va anche a schermo, se manca arriva un avviso da girare ad Antonio con
      il motivo;
    - suoni;
-   - voce Aoede a 1.0;
+   - voce Aoede a 1.2;
    - durata sotto i 25 s.
 
    Nel resoconto ad Antonio riporta la riga "regole: …" che stampa.
 7. Usa solo fatti verificati, con la fonte annotata nella richiesta. Le foto vengono da Wikimedia e devono essere PD o CC0.
+
+## Scalpore, brainrot, parolacce (Antonio, 2026-11-24: "migliorare l'hook in modo clamoroso")
+
+"Voce più veloce, linguaggio per persone brainrottate, vanno bene anche tante parolacce. Devono esserci proprio temi
+divisivi… senza scalpore la gente non si ferma a vedere i video." Regole in `scrittura/regole/10-scalpore.md`:
+- voce a **1.2** (il build blocca le altre velocità);
+- **facilissimo, da bambino piccolo** ("te lo devi ricordare sempre"): nella voce niente date (si dice prima, dopo,
+  tanto tempo fa) né percentuali o numeri grandi (un botto, un casino, un sacco); parole semplici, frasi cortissime.
+  Il numero vero solo a schermo e in caption. Il build si ferma su date e percentuali nella voce;
+- gancio divisivo o scioccante, che prende posizione; campo `scalpore` obbligatorio nel copione e avviso se il gancio
+  non ha una scossa nelle prime parole;
+- slang e parolacce ammessi: la voce le dice intere, schermo e caption le censurano da soli (c*zzo);
+- linee rosse che fermano il build: bestemmie, insulti a gruppi di persone o al corpo. Restano vietati sesso, droghe e
+  fatti inventati: lo scalpore viene dal tono e dalla presa di posizione, non da falsi.
 
 ## Scrivere il copione (regole in `scrittura/`, fonte unica)
 
@@ -58,6 +73,16 @@ Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO,
   whatsapp"): intestazione verde, "sta scrivendo…", sfondo beige coi disegnini, fumetti verdi e bianchi con codina,
   ora e spunte blu, barra "Messaggio". È già così in `infografica2d.js` (`chat`): non tornare a uno stile "nostro",
   e mai logo o nome dell'app.
+
+## Disegni belli: skill `illustrazione-2d` (Antonio, 2026-11-25: "devono essere bellissimi, accattivanti")
+
+Ogni icona, oggetto o personaggio nuovo si fa con la skill `illustrazione-2d`:
+- forma con curve vere prima di tutto;
+- luce da una sola direzione, ombra a taglio netto, contorno colorato, riflessi con parsimonia;
+- prova nel laboratorio `auto_ig/video/laboratorio/icone.html`, poi nel reel.
+
+Si valuta con onestà e si rifà finché non è bello. Lo stile illustrato è automatico (`preset/stile2d.js`, `fs`), ma
+non salva una sagoma brutta.
 
 ## Musica di sottofondo (Antonio, 2026-11-21: "le canzoni che metterai sempre in bg, ricordalo pure nel codice")
 

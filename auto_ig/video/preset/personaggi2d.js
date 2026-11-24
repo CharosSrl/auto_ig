@@ -6,6 +6,7 @@
 // ogni azione ha un ciclo continuo: nessuna posa ferma).
 import { W, FONT, clamp, easeOut, rr, icona, pop } from './grafica2d.js';
 import { CREMA, BORDEAUX } from './brand.js';
+import { registra, forma, toni, lucido } from './stile2d.js';
 
 const INK = '#2a0f19';
 const PELLI = ['#eab894', '#c98e64', '#8d5a3b', '#f3cfb1'];
@@ -82,10 +83,24 @@ function posa(azione, u, t, quando = 0, fase = null) {
 function arto(ctx, x, y, [a1, a2], l1, l2, verso, spessore, colore, mano) {
   const x1 = x + Math.sin(a1) * l1 * verso, y1 = y + Math.cos(a1) * l1;
   const x2 = x1 + Math.sin(a1 + a2) * l2 * verso, y2 = y1 + Math.cos(a1 + a2) * l2;
+  const T = toni(colore) || { linea: INK, ombra: colore, luce: colore };
+  const linea = (w, col, dx = 0, dy = 0) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x + dx, y + dy); ctx.lineTo(x1 + dx, y1 + dy); ctx.lineTo(x2 + dx, y2 + dy); ctx.stroke(); };
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.strokeStyle = INK; ctx.lineWidth = spessore + 12; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  ctx.strokeStyle = colore; ctx.lineWidth = spessore; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  if (mano) { ctx.fillStyle = mano; ctx.beginPath(); ctx.arc(x2, y2, spessore * 0.62, 0, 7); ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = INK; ctx.stroke(); }
+  linea(spessore + 12, T.linea);
+  linea(spessore, colore);
+  // volume (skill illustrazione-2d): ombra sul lato in basso-destra, filo di luce in alto-sinistra
+  ctx.save(); ctx.globalAlpha = 0.75; linea(spessore * 0.3, T.ombra, spessore * 0.2, spessore * 0.16); ctx.restore();
+  ctx.save(); ctx.globalAlpha = 0.55; linea(spessore * 0.16, T.luce, -spessore * 0.24, -spessore * 0.22); ctx.restore();
+  if (mano === INK) {                                     // piede: scarpa che punta avanti, con la suola chiara
+    ctx.save(); ctx.translate(x2, y2); ctx.scale(verso, 1);
+    ctx.beginPath(); ctx.moveTo(-spessore * 0.55, -spessore * 0.35); ctx.bezierCurveTo(spessore * 0.2, -spessore * 0.6, spessore * 1.3, -spessore * 0.3, spessore * 1.35, spessore * 0.25);
+    ctx.lineTo(-spessore * 0.6, spessore * 0.3); ctx.closePath(); ctx.fillStyle = '#2b2430'; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.beginPath(); rr(ctx, -spessore * 0.65, spessore * 0.18, spessore * 2.05, spessore * 0.3, spessore * 0.12); ctx.fillStyle = '#efe6d8'; ctx.fill(); ctx.stroke();
+    ctx.restore();
+  } else if (mano) {
+    const M = toni(mano);
+    ctx.beginPath(); ctx.arc(x2, y2, spessore * 0.62, 0, 7); ctx.fillStyle = mano; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = M ? M.linea : INK; ctx.stroke();
+  }
   return [x2, y2];
 }
 
@@ -108,13 +123,23 @@ export function omino(ctx, x, y, sc, { azione = 'fermo', u = 0, t = 0, quando = 
   ctx.save(); ctx.translate(0, -210); ctx.rotate(P.tilt * verso); ctx.translate(0, 210);
   // braccio dietro
   const manoDietro = arto(ctx, -40 * verso, -385, P.rb, 85, 80, verso, 34, maglia, pl);
-  // busto
-  ctx.fillStyle = maglia; rr(ctx, -66, -420, 132, 225, 50); ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = INK; ctx.stroke();
-  ctx.fillStyle = pantaloni; rr(ctx, -66, -235, 132, 46, 18); ctx.fill(); ctx.stroke();
-  // testa
+  // busto (2026-11-25, skill illustrazione-2d): spalle tonde, vita che stringe appena, volume con luce e ombra
+  const R = registra(ctx);
+  R.lineWidth = 7; R.strokeStyle = INK; R.lineJoin = 'round';
+  R.beginPath(); R.moveTo(-50, -424); R.bezierCurveTo(-74, -424, -78, -404, -76, -380); R.bezierCurveTo(-72, -300, -64, -240, -62, -200);
+  R.lineTo(62, -200); R.bezierCurveTo(64, -240, 72, -300, 76, -380); R.bezierCurveTo(78, -404, 74, -424, 50, -424); R.closePath(); forma(R, maglia);
+  R.beginPath(); R.moveTo(-63, -236); R.lineTo(63, -236); R.lineTo(62, -190); R.bezierCurveTo(20, -184, -20, -184, -62, -190); R.closePath(); forma(R, pantaloni);
+  ctx.save(); ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(30,10,20,0.35)'; ctx.beginPath(); ctx.moveTo(-26, -424); ctx.quadraticCurveTo(0, -400, 26, -424); ctx.stroke(); ctx.restore();   // scollo
+  // testa: collo, orecchio, testa, capelli col ciuffo
   const hx = 6 * verso, hy = -490;
-  ctx.fillStyle = pl; ctx.beginPath(); ctx.arc(hx, hy, 66, 0, 7); ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = INK; ctx.stroke();
-  ctx.fillStyle = capelli; ctx.beginPath(); ctx.arc(hx, hy - 6, 68, Math.PI * 1.05, Math.PI * 1.95); ctx.closePath(); ctx.fill(); ctx.stroke();
+  R.beginPath(); rr(R, hx - 22 * verso - 14, hy + 44, 28, 34, 10); forma(R, pl);
+  R.beginPath(); R.arc(hx, hy, 66, 0, 7); forma(R, pl);
+  R.beginPath(); R.ellipse(hx - 54 * verso, hy + 10, 12, 16, 0.15 * verso, 0, 7); forma(R, pl);
+  R.beginPath(); R.moveTo(hx - 70 * verso, hy + 14); R.bezierCurveTo(hx - 80 * verso, hy - 60, hx - 20 * verso, hy - 86, hx + 30 * verso, hy - 70);
+  R.bezierCurveTo(hx + 62 * verso, hy - 58, hx + 76 * verso, hy - 30, hx + 66 * verso, hy - 14);
+  R.bezierCurveTo(hx + 40 * verso, hy - 34, hx + 12 * verso, hy - 30, hx - 6 * verso, hy - 44);
+  R.bezierCurveTo(hx - 22 * verso, hy - 36, hx - 40 * verso, hy - 30, hx - 50 * verso, hy - 12);
+  R.bezierCurveTo(hx - 56 * verso, hy - 4, hx - 62 * verso, hy + 4, hx - 68 * verso, hy + 12); R.closePath(); forma(R, capelli);
   if (cappello === 'basco') { ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.ellipse(hx - 6 * verso, hy - 62, 74, 26, -0.2 * verso, 0, 7); ctx.fill(); ctx.stroke(); }
   if (cappello === 'corona') {
     ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(hx - 60, hy - 50); ctx.lineTo(hx - 64, hy - 120); ctx.lineTo(hx - 30, hy - 85); ctx.lineTo(hx, hy - 135);
@@ -127,12 +152,27 @@ export function omino(ctx, x, y, sc, { azione = 'fermo', u = 0, t = 0, quando = 
     ctx.fillStyle = '#e8435a'; ctx.beginPath(); ctx.arc(hx + 10 * verso, hy - 74, 12, 0, 7); ctx.fill(); }
   if (cappello === 'paglia') { ctx.fillStyle = '#e6c46a'; ctx.beginPath(); ctx.ellipse(hx, hy - 50, 110, 22, 0, 0, 7); ctx.fill(); ctx.stroke(); rr(ctx, hx - 55, hy - 100, 110, 52, 20); ctx.fill(); ctx.stroke(); }
   // faccia: occhi che sbattono, bocca che parla o urla
-  const blink = (t % 3.1) < 0.12 ? 0.15 : 1;
+  // occhi veri (bianco, pupilla verso dove guarda, riflesso), sopracciglia che si alzano quando urla, guance
+  const blink = (t % 3.1) < 0.12 ? 0.12 : 1, bo = P.bocca;
+  for (const ex of [18, 48]) {
+    const cx0 = hx + (ex - 16) * verso, cy0 = hy + 2;
+    ctx.save(); ctx.translate(cx0, cy0); ctx.scale(1, blink);
+    ctx.beginPath(); ctx.ellipse(0, 0, 11, 14, 0, 0, 7); ctx.fillStyle = '#fffdf8'; ctx.fill(); ctx.lineWidth = 3.5; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.beginPath(); ctx.arc(3 * verso, 2, 7, 0, 7); ctx.fillStyle = '#1d1015'; ctx.fill();
+    ctx.beginPath(); ctx.arc(3 * verso - 2.5, -1.5, 2.6, 0, 7); ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 6; ctx.strokeStyle = capelli;
+    ctx.beginPath(); ctx.moveTo(cx0 - 10, cy0 - 22 - bo * 8); ctx.quadraticCurveTo(cx0, cy0 - 28 - bo * 10, cx0 + 10, cy0 - 22 - bo * 6); ctx.stroke(); ctx.restore();
+  }
+  ctx.save(); ctx.fillStyle = 'rgba(255,110,120,0.32)';
+  ctx.beginPath(); ctx.ellipse(hx + 2 * verso, hy + 28, 12, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(hx + 56 * verso, hy + 28, 9, 6, 0, 0, 7); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = toni(pl)?.ombra || INK;            // naso
+  ctx.beginPath(); ctx.moveTo(hx + 44 * verso, hy + 10); ctx.quadraticCurveTo(hx + 54 * verso, hy + 20, hx + 44 * verso, hy + 24); ctx.stroke(); ctx.restore();
   ctx.fillStyle = INK;
-  for (const ex of [22, 50]) { ctx.beginPath(); ctx.ellipse(hx + (ex - 20) * verso, hy + 2, 7, 10 * blink, 0, 0, 7); ctx.fill(); }
-  if (baffi) { ctx.beginPath(); ctx.ellipse(hx + 34 * verso, hy + 26, 20, 7, 0, 0, 7); ctx.fill(); }
-  const bo = P.bocca;
-  ctx.beginPath(); ctx.ellipse(hx + 34 * verso, hy + 38, 12 + 4 * bo, 3 + 14 * bo, 0, 0, 7); ctx.fill();
+  if (baffi) { ctx.beginPath(); ctx.ellipse(hx + 34 * verso, hy + 30, 20, 7, 0, 0, 7); ctx.fill(); }
+  ctx.beginPath(); ctx.ellipse(hx + 32 * verso, hy + 42, 10 + 4 * bo, 2.5 + 13 * bo, 0, 0, 7); ctx.fillStyle = '#4a1420'; ctx.fill();
+  ctx.lineWidth = 3.5; ctx.strokeStyle = INK; ctx.stroke();
+  if (bo > 0.3) { ctx.beginPath(); ctx.ellipse(hx + 32 * verso, hy + 42 + 7 * bo, 7 * bo, 4 * bo, 0, 0, 7); ctx.fillStyle = '#e8657a'; ctx.fill(); }
   // braccio davanti
   const manoDavanti = arto(ctx, 40 * verso, -385, P.lb, 85, 80, verso, 34, maglia, pl);
   if (lanterna) {                                         // lanterna in mano, con l'alone che tremola

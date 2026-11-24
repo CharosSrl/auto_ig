@@ -1,6 +1,7 @@
 # 02 · Gancio
 
 Tutti i nostri reel perdevano il 45-50% del pubblico nei primi 2 s (lezione 3). Il gancio è la battuta più importante.
+**Prima leggi `10-scalpore.md`**: dal 2026-11-24 il gancio è divisivo, brainrot, con parolacce ammesse.
 
 - **Nasce dal fatto più sorprendente** della storia, quello che fa dire "ma dai!". Mai una presentazione
   ("Oggi parliamo di…", "Lo sapevi che…").
@@ -12,7 +13,10 @@ Tutti i nostri reel perdevano il 45-50% del pubblico nei primi 2 s (lezione 3). 
   "guerra"). Se c'è, va detta nel gancio e scritta a schermo (censurata in automatico se è in lista: v*etato). Se non
   c'è, si scrive il motivo in `parola_forte.perche` e lo si dice ad Antonio.
   Ammesse se vere: morte, ucciso, guerra, bomba, veleno, sangue (storico), vietato, illegale, arrestato, scandalo,
-  prigione, maledetto, rivolta. Mai parolacce, sesso, droghe, corpo.
+  prigione, maledetto, rivolta. Dal 2026-11-24 anche le parolacce (censurate a schermo in automatico). Mai
+  bestemmie, insulti a gruppi, sesso, droghe, corpo (10-scalpore).
+- **Scalpore** (Antonio, 2026-11-24: "senza quella cosa assurda la gente non si ferma"): il gancio divide o sciocca,
+  prende posizione, accusa. Vedi `10-scalpore.md`; il campo `scalpore` è obbligatorio.
 - **A schermo** (`schermo` della battuta gancio): ≤ 7 parole, con la parola chiave in `evidenzia`.
 - **La voce parla dal fotogramma 0, senza boom** (Antonio, 2026-11-23: "appena comincia il video, la voce deve star
   quasi già parlando. Evita di fare quel boom iniziale, perché non funziona"). Il build parte con 0,05 s di silenzio

@@ -44,6 +44,15 @@ Il secondo cita la repo [lemomo-ai/lemo-opuscar](https://github.com/lemomo-ai/le
 codice da Claude. La sua guida di regia (`DIRECTOR.md`) è riassunta con parole nostre in §14. Non l'abbiamo installata:
 la licenza non è dichiarata e il formato base è 16:9.
 
+## 0. Scalpore prima di tutto (Antonio, 2026-11-24)
+
+Il gancio deve dividere o scioccare: senza "quella cosa assurda" la gente non si ferma. Si scrive in stile brainrot:
+- voce a 1.2;
+- parolacce censurate a schermo;
+- un'interruzione di schema al secondo 0 (la grafica viva fa la cosa assurda che la voce dice).
+
+Regole: `scrittura/regole/10-scalpore.md`.
+
 ## 1. Il video fa quello che dice
 
 Nei due reel nessun suono viene solo nominato: lo senti e lo vedi applicato nello stesso istante. Lo zoom secco

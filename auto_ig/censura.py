@@ -1,5 +1,8 @@
 """Parole forti censurate a schermo (m*rte), dette per intero dalla voce.
 
+Dal 2026-11-24 (Antonio) anche le parolacce: la voce le dice per intero, a schermo escono censurate (c*zzo).
+Bestemmie e insulti a gruppi di persone non si censurano: sono vietati (scrittura/regole.json "vietate_sempre").
+
 Regola (skill .claude/skills/linguaggio-giovani): una parola forte, vera e nel suo contesto, fa da gancio; nelle scritte
 animate (sottotitoli, schede, caption) si censura in stile "algospeak", la voce invece la pronuncia normalmente.
 La voce non passa mai da qui: `voce.tts_text` riceve sempre il testo originale.
@@ -18,6 +21,12 @@ PAROLE = [
     r"sess[oi]", r"sexy",
     r"drog[ae]", r"droghe",
     r"guerr[ae]", r"bomb[ae]", r"velen[oi]",
+    # parolacce (Antonio, 2026-11-24: "vanno bene anche tante parolacce"): la voce le dice intere, a schermo c*zzo
+    r"cazz[oi]", r"cazzat[ae]", r"cazzut[oaie]", r"sticazzi", r"incazz\w*",
+    r"merd[ae]", r"merdos[oaie]", r"stronz[oaie]", r"stronzat[ae]",
+    r"minchi[ae]", r"minchiat[ae]", r"coglion[ei]", r"coglionat[ae]", r"rompicoglioni",
+    r"fottut[oaie]", r"fottere", r"fottiti", r"fott[eo]",
+    r"vaffanculo", r"fanculo", r"cul[oi]", r"cagare", r"cagata", r"cacat[ae]", r"puttanat[ae]",
 ]
 
 _VOCALI = "aeiouàèéìòóùAEIOUÀÈÉÌÒÓÙ"

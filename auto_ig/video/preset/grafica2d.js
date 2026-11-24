@@ -7,6 +7,10 @@
 //   card(ctx, x, y, w, h)                   pop(u), entra(u, ritardo, durata)
 // Icone disponibili: vedi ICONE (nomi elencati anche in auto_ig/formati.yaml → icone_2d).
 import { BORDEAUX, CIPRIA, SCURO, CREMA, gruccia, figurino, logo, OUTFITS } from './brand.js';
+import { forma, iconaIllustrata, lucido, lama, toni } from './stile2d.js';
+
+// Stile delle icone: illustrato (luce, ombra a taglio netto, contorno colorato, grana: preset/stile2d.js) o piatto
+export const STILE = { illustrato: true };
 
 export const W = 1080, H = 1920;
 export const ORO = '#d4af37', DENIM = '#3b5b8c', INCHIOSTRO = '#2a0f19';
@@ -177,11 +181,88 @@ export function mano(ctx, x, y, s, tocco = 0) {
 // --- Icone (disegnate in un riquadro 200x200 centrato in 0,0; s = lato in px) -----------------
 const L = 7;   // spessore del contorno
 function stileIcona(ctx) { ctx.lineWidth = L; ctx.strokeStyle = INCHIOSTRO; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; }
-function fs(ctx, fill) { ctx.fillStyle = fill; ctx.fill(); ctx.stroke(); }
+function fs(ctx, fill) { if (ctx.__registra) return forma(ctx, fill); ctx.fillStyle = fill; ctx.fill(); ctx.stroke(); }
 function cucitura(ctx, disegna, colore = '#e9b44c') {
   ctx.save(); ctx.setLineDash([9, 8]); ctx.lineWidth = 4; ctx.strokeStyle = colore; disegna(); ctx.stroke(); ctx.restore();
 }
 function rivetto(ctx, x, y) { ctx.save(); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fillStyle = '#e0b04a'; ctx.fill(); ctx.stroke(); ctx.restore(); }
+
+// Ritaglia i pannelli dentro la sagoma appena riempita e ripassa il contorno alla fine (scarpe, maglie)
+function dentro(ctx, disegna) {
+  const p = ctx.__path; ctx.save(); if (p) ctx.clip(p); else ctx.clip(); disegna(); ctx.restore();
+  return p;
+}
+function ripassa(ctx, p, colore) {
+  if (!p) return; const T = toni(colore); ctx.save(); ctx.lineWidth = 6.5; ctx.strokeStyle = T ? T.linea : INCHIOSTRO; ctx.stroke(p); ctx.restore();
+}
+// Scarpa sportiva di profilo (ridisegnata 2026-11-25, skill illustrazione-2d): sagoma bassa o alta, pannelli
+// (punta, tallone, fascia, collo) ritagliati dentro la sagoma, lacci in fila, intersuola con la punta rialzata.
+function scarpaSport(ctx, { alta = false, tomaia = '#f6f3ee', punta, tallone, fascia, collo, linguetta, suola = '#fbf8f2' }) {
+  // intersuola con la punta che sale (toe spring) e la riga del battistrada
+  ctx.beginPath(); ctx.moveTo(-98, 32); ctx.lineTo(96, 30); ctx.bezierCurveTo(112, 30, 116, 50, 102, 58); ctx.lineTo(-90, 62);
+  ctx.bezierCurveTo(-106, 62, -108, 34, -98, 32); ctx.closePath(); fs(ctx, suola);
+  ctx.save(); ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(60,40,50,0.28)'; ctx.beginPath(); ctx.moveTo(-96, 47); ctx.bezierCurveTo(0, 46, 60, 45, 106, 43); ctx.stroke(); ctx.restore();
+  ctx.beginPath(); ctx.moveTo(-94, 58); ctx.lineTo(100, 55); ctx.bezierCurveTo(98, 62, 94, 64, 86, 64); ctx.lineTo(-88, 66); ctx.bezierCurveTo(-94, 66, -96, 62, -94, 58); ctx.closePath(); fs(ctx, '#b9a48e');
+  // tomaia
+  ctx.beginPath(); ctx.moveTo(-94, 34);
+  if (alta) {
+    ctx.bezierCurveTo(-100, 0, -98, -58, -90, -84); ctx.bezierCurveTo(-72, -94, -52, -92, -38, -84);
+    ctx.lineTo(-32, -100); ctx.bezierCurveTo(-22, -106, -12, -100, -14, -90);
+    ctx.bezierCurveTo(-8, -52, 8, -22, 40, -10); ctx.bezierCurveTo(62, -2, 82, 0, 92, 6);
+  } else {
+    ctx.bezierCurveTo(-100, 8, -96, -20, -86, -30); ctx.bezierCurveTo(-70, -40, -54, -36, -42, -26);
+    ctx.lineTo(-36, -44); ctx.bezierCurveTo(-28, -50, -18, -46, -16, -38);
+    ctx.bezierCurveTo(6, -22, 46, -8, 84, 0);
+  }
+  ctx.bezierCurveTo(106, 8, 110, 28, 100, 32); ctx.closePath(); fs(ctx, tomaia);
+  const sagoma = dentro(ctx, () => {
+    if (fascia) { ctx.beginPath(); ctx.moveTo(-130, 60); ctx.lineTo(-130, 18); ctx.bezierCurveTo(-40, 10, 40, 12, 130, 14); ctx.lineTo(130, 60); ctx.closePath(); fs(ctx, fascia); }
+    if (punta) { ctx.beginPath(); ctx.moveTo(34, 60); ctx.bezierCurveTo(36, 18, 52, -4, 80, -6); ctx.lineTo(140, -10); ctx.lineTo(140, 60); ctx.closePath(); fs(ctx, punta); }
+    if (tallone) { ctx.beginPath(); ctx.moveTo(-140, 60); ctx.lineTo(-140, -50); ctx.lineTo(-74, -50); ctx.bezierCurveTo(-60, -14, -54, 24, -50, 60); ctx.closePath(); fs(ctx, tallone); }
+    if (collo && alta) { ctx.beginPath(); ctx.moveTo(-140, -130); ctx.lineTo(-140, -52); ctx.bezierCurveTo(-90, -60, -50, -54, -22, -44); ctx.lineTo(0, -130); ctx.closePath(); fs(ctx, collo); }
+    // cuciture dei pannelli
+    ctx.save(); ctx.setLineDash([4, 5]); ctx.lineWidth = 2.2; ctx.strokeStyle = 'rgba(40,20,30,0.35)';
+    ctx.beginPath(); ctx.moveTo(-120, 24); ctx.bezierCurveTo(-40, 16, 40, 18, 120, 20); ctx.stroke(); ctx.restore();
+  });
+  ripassa(ctx, sagoma, tomaia);
+  // linguetta che spunta e lacci in fila sulla linea dell'allacciatura
+  if (linguetta) { const [x, y] = alta ? [-26, -94] : [-29, -40]; ctx.beginPath(); rr(ctx, x - 7, y - 8, 14, 16, 5); fs(ctx, linguetta); }
+  const lacci = alta ? [[-14, -78], [-10, -62], [-4, -46], [6, -32], [18, -20]] : [[-12, -32], [0, -26], [12, -20], [24, -15]];
+  for (const [x, y] of lacci) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(alta ? -0.9 : -1.05);
+    ctx.beginPath(); rr(ctx, -12, -3.5, 24, 7, 3.5); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(40,20,30,0.7)'; ctx.stroke();
+    ctx.restore();
+  }
+  stileIcona(ctx);
+  // lucido sulla punta, lama sul tallone
+  lucido(ctx, 70, alta ? 2 : 4, 22, 8, { rot: 0.2, alpha: 0.6 });
+  lama(ctx, alta ? [[-84, -70], [-88, -20], [-86, 20]] : [[-84, -20], [-88, 0], [-86, 22]], { w: 4.5, alpha: 0.45 });
+}
+// Maglietta vista davanti (ridisegnata 2026-11-25): maniche inclinate, fianchi che stringono appena, orlo morbido,
+// collo a costina, pieghe del tessuto. `righe` = colore delle righe (marinière), altrimenti tinta unita.
+function maglietta(ctx, colore, { righe = null, collo = null } = {}) {
+  ctx.beginPath(); ctx.moveTo(-28, -90); ctx.bezierCurveTo(-14, -74, 14, -74, 28, -90);
+  ctx.lineTo(62, -82); ctx.bezierCurveTo(80, -74, 94, -60, 106, -40); ctx.lineTo(80, -18); ctx.lineTo(64, -34);
+  ctx.bezierCurveTo(60, 10, 62, 60, 66, 94); ctx.bezierCurveTo(20, 100, -20, 100, -66, 94);
+  ctx.bezierCurveTo(-62, 60, -60, 10, -64, -34); ctx.lineTo(-80, -18); ctx.lineTo(-106, -40);
+  ctx.bezierCurveTo(-94, -60, -80, -74, -62, -82); ctx.closePath(); fs(ctx, righe ? '#fbf7ef' : colore);
+  const sagoma = dentro(ctx, () => {
+    if (righe) { ctx.fillStyle = righe; for (let y = -62; y < 100; y += 26) ctx.fillRect(-120, y, 240, 11); }
+    // pieghe: sotto le ascelle e sull'orlo, più scure e morbide
+    ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(40,10,30,0.16)'; ctx.lineWidth = 6;
+    for (const q of [[[-56, -20], [-40, 0], [-44, 30]], [[56, -20], [44, 4], [48, 36]], [[-20, 70], [-8, 84], [-14, 96]], [[24, 66], [30, 82], [26, 96]]]) {
+      ctx.beginPath(); ctx.moveTo(...q[0]); ctx.quadraticCurveTo(...q[1], ...q[2]); ctx.stroke(); }
+    ctx.restore();
+    // orli delle maniche e del fondo (cucitura doppia)
+    ctx.save(); ctx.setLineDash([5, 5]); ctx.lineWidth = 2.2; ctx.strokeStyle = 'rgba(40,10,30,0.4)';
+    ctx.beginPath(); ctx.moveTo(-66, 84); ctx.bezierCurveTo(-20, 90, 20, 90, 66, 84); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-98, -30); ctx.lineTo(-76, -10); ctx.moveTo(98, -30); ctx.lineTo(76, -10); ctx.stroke(); ctx.restore();
+  });
+  ripassa(ctx, sagoma, righe ? '#fbf7ef' : colore);
+  // collo a costina
+  ctx.beginPath(); ctx.moveTo(-30, -92); ctx.bezierCurveTo(-14, -70, 14, -70, 30, -92); ctx.lineWidth = 11; ctx.strokeStyle = collo || toni(colore)?.ombra || colore; ctx.stroke(); stileIcona(ctx);
+  lucido(ctx, -36, -50, 26, 12, { rot: -0.6, alpha: 0.28 });
+}
 
 export const ICONE = {
   // Tasca destra dei jeans con il taschino piccolo (evidenziato) e i rivetti
@@ -217,17 +298,22 @@ export const ICONE = {
     ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.sin(am) * 42, -Math.cos(am) * 42); ctx.stroke();
     ctx.fillStyle = INCHIOSTRO; ctx.beginPath(); ctx.arc(0, 0, 6, 0, 7); ctx.fill(); ctx.restore();
   },
-  // Décolleté con tacco a spillo (di profilo)
+  // Décolleté con tacco a spillo, di profilo (ridisegnata 2026-11-25): punta affusolata, scollatura morbida, interno
+  // color carne, tacco sottile che si stringe, pelle lucida. Niente suola rossa (è un marchio).
   tacco(ctx, { accento = CIPRIA }) {
-    ctx.beginPath();
-    ctx.moveTo(-82, -38); ctx.quadraticCurveTo(-60, -20, -22, 2); ctx.quadraticCurveTo(30, 18, 58, 22);
-    ctx.quadraticCurveTo(98, 30, 100, 56); ctx.quadraticCurveTo(100, 70, 82, 70); ctx.lineTo(28, 70);
-    ctx.quadraticCurveTo(-20, 66, -52, 22); ctx.lineTo(-74, 14); ctx.quadraticCurveTo(-92, -10, -82, -38); ctx.closePath();
-    fs(ctx, BORDEAUX);
-    ctx.beginPath(); ctx.moveTo(-74, 14); ctx.lineTo(-52, 20); ctx.lineTo(-58, 96); ctx.lineTo(-68, 96); ctx.closePath(); fs(ctx, '#3b0d1e');
-    ctx.save(); ctx.strokeStyle = accento; ctx.lineWidth = 5; ctx.globalAlpha = 0.7;
-    ctx.beginPath(); ctx.moveTo(-64, -22); ctx.quadraticCurveTo(-30, 0, 10, 12); ctx.stroke(); ctx.restore();
-    ctx.beginPath(); ctx.moveTo(28, 70); ctx.lineTo(84, 70); ctx.lineWidth = 9; ctx.strokeStyle = '#c0392b'; ctx.stroke();
+    // tacco a spillo
+    ctx.beginPath(); ctx.moveTo(-80, 2); ctx.lineTo(-56, 14); ctx.bezierCurveTo(-60, 40, -64, 70, -62, 96); ctx.lineTo(-72, 96);
+    ctx.bezierCurveTo(-74, 66, -78, 34, -80, 2); ctx.closePath(); fs(ctx, '#3e0f1f');
+    ctx.beginPath(); rr(ctx, -75, 92, 16, 8, 3); fs(ctx, '#1d0a10');
+    // scarpa: contrafforte alto dietro, arco che scende, punta con la sua altezza (le dita ci stanno dentro)
+    ctx.beginPath(); ctx.moveTo(-84, -44); ctx.bezierCurveTo(-94, -16, -88, 6, -74, 12);
+    ctx.bezierCurveTo(-30, 18, 10, 34, 46, 54); ctx.bezierCurveTo(70, 64, 100, 66, 110, 58);
+    ctx.bezierCurveTo(116, 50, 106, 36, 86, 30); ctx.bezierCurveTo(70, 24, 54, 22, 42, 22);
+    ctx.bezierCurveTo(10, 16, -40, -6, -84, -44); ctx.closePath(); fs(ctx, BORDEAUX);
+    // interno visibile dalla scollatura
+    ctx.beginPath(); ctx.moveTo(-80, -38); ctx.bezierCurveTo(-46, -10, 0, 10, 38, 21); ctx.bezierCurveTo(4, 22, -48, 6, -78, -20); ctx.closePath(); fs(ctx, '#f1c7b8');
+    lucido(ctx, 84, 40, 22, 8, { rot: 0.3, alpha: 0.7 });
+    lama(ctx, [[-84, -26], [-86, -6], [-76, 6]], { w: 4, alpha: 0.5 });
   },
   // Staffa da cavaliere con cinghia di cuoio
   staffa(ctx) {
@@ -402,42 +488,83 @@ export const ICONE = {
       ctx.restore();
     }
   },
-  // Sneaker di profilo, suola di gomma bianca
+  // Sneaker bassa di profilo, pelle bianca con punta e tallone del colore accento (ridisegnata 2026-11-25). Nessun logo.
   sneaker(ctx, { accento = CIPRIA }) {
-    ctx.beginPath(); ctx.moveTo(-96, 40); ctx.lineTo(-92, -30); ctx.quadraticCurveTo(-60, -50, -40, -40); ctx.lineTo(-10, -20);
-    ctx.quadraticCurveTo(40, 0, 82, 14); ctx.quadraticCurveTo(100, 22, 98, 40); ctx.closePath(); fs(ctx, '#ffffff');
-    ctx.beginPath(); ctx.moveTo(-92, -30); ctx.quadraticCurveTo(-60, -50, -40, -40); ctx.lineTo(-30, 10); ctx.lineTo(-94, 10); ctx.closePath(); fs(ctx, accento);
-    ctx.beginPath(); rr(ctx, -100, 40, 202, 26, 12); fs(ctx, '#f3ead8');
-    ctx.save(); ctx.lineWidth = 3; for (let x = -88; x < 96; x += 14) { ctx.beginPath(); ctx.moveTo(x, 50); ctx.lineTo(x + 6, 58); ctx.stroke(); } ctx.restore();
-    ctx.save(); ctx.lineWidth = 4; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(-26 + k * 14, -16 + k * 6); ctx.lineTo(-14 + k * 14, -28 + k * 6); ctx.stroke(); } ctx.restore();
-    ctx.beginPath(); ctx.moveTo(30, 6); ctx.quadraticCurveTo(50, 14, 70, 14); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
+    scarpaSport(ctx, { tomaia: '#f6f3ee', punta: accento, tallone: accento, linguetta: accento });
   },
-  // Sneaker da basket alta nera con pannelli del colore accento (colori Bulls nel reel Jordan, 2026-11-23).
-  // Nessun logo: mai marchi disegnati.
+  // Sneaker da basket alta (colori Bulls nel reel Jordan, 2026-11-23; ridisegnata 2026-11-25): bianca con punta,
+  // tallone e collo del colore accento e fascia nera. Nessun logo: mai marchi disegnati.
   jordan(ctx, { accento = CIPRIA }) {
-    ctx.beginPath(); ctx.moveTo(-92, 40); ctx.lineTo(-90, -70); ctx.quadraticCurveTo(-60, -84, -34, -74); ctx.lineTo(-22, -24);
-    ctx.quadraticCurveTo(36, -4, 84, 12); ctx.quadraticCurveTo(102, 22, 98, 40); ctx.closePath(); fs(ctx, '#1f1f24');
-    ctx.beginPath(); ctx.moveTo(-90, -70); ctx.quadraticCurveTo(-60, -84, -34, -74); ctx.lineTo(-28, -40); ctx.lineTo(-91, -36); ctx.closePath(); fs(ctx, accento);   // collo
-    ctx.beginPath(); ctx.moveTo(40, -2); ctx.quadraticCurveTo(80, 8, 96, 26); ctx.lineTo(98, 40); ctx.lineTo(30, 40); ctx.closePath(); fs(ctx, accento);              // punta
-    ctx.beginPath(); ctx.moveTo(-91, 0); ctx.lineTo(-40, 0); ctx.lineTo(-34, 40); ctx.lineTo(-92, 40); ctx.closePath(); fs(ctx, accento);                             // tallone
-    ctx.beginPath(); rr(ctx, -100, 40, 202, 26, 12); fs(ctx, '#f3ead8');
-    ctx.save(); ctx.lineWidth = 4; ctx.strokeStyle = '#ffffff'; for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.moveTo(-24 + k * 12, -50 + k * 9); ctx.lineTo(-8 + k * 12, -60 + k * 9); ctx.stroke(); } ctx.restore();
-    stileIcona(ctx);
+    scarpaSport(ctx, { alta: true, tomaia: '#f6f3ee', punta: accento, tallone: accento, collo: accento, fascia: '#1f1f24' });
   },
-  // Zoccolo di gomma tipo Crocs, di profilo: punta tonda e alta, buchi sulla tomaia, cinturino al tallone,
-  // suola spessa a onde (reel Crocs, 2026-11-23). Colore = accento.
+  // Zoccolo di gomma tipo Crocs, di profilo (reel Crocs, 2026-11-23; ridisegnato 2026-11-25 con la skill
+  // illustrazione-2d): punta a cupola alta, file di buchi in prospettiva sulla tomaia, cinturino al tallone col
+  // rivetto, suola a battistrada con i tasselli. Colore = accento. Niente logo.
   crocs(ctx, { accento = CIPRIA }) {
-    ctx.beginPath(); rr(ctx, -104, 34, 210, 30, 14); fs(ctx, '#f3ead8');                         // suola
-    ctx.save(); ctx.lineWidth = 3; for (let x = -92; x < 98; x += 16) { ctx.beginPath(); ctx.moveTo(x, 56); ctx.quadraticCurveTo(x + 8, 46, x + 16, 56); ctx.stroke(); } ctx.restore();
-    ctx.beginPath(); ctx.moveTo(-100, 36); ctx.lineTo(-96, 4); ctx.quadraticCurveTo(-70, -8, -44, -10);                  // tallone basso
-    ctx.quadraticCurveTo(-10, -58, 40, -54); ctx.quadraticCurveTo(104, -48, 104, 4); ctx.quadraticCurveTo(104, 30, 96, 36); // punta alta e tonda
-    ctx.closePath(); fs(ctx, accento);
-    ctx.save(); ctx.fillStyle = INCHIOSTRO;                                                       // buchi
-    [[-14, -30], [8, -38], [32, -40], [56, -36], [78, -26], [-2, -12], [22, -18], [46, -16], [70, -8]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill(); });
+    // suola: battistrada con i tasselli tondi sotto
+    ctx.beginPath(); ctx.moveTo(-98, 34); ctx.lineTo(96, 34); ctx.quadraticCurveTo(110, 36, 108, 50); ctx.quadraticCurveTo(106, 66, 90, 66);
+    ctx.lineTo(-88, 66); ctx.quadraticCurveTo(-104, 64, -104, 50); ctx.quadraticCurveTo(-104, 36, -98, 34); ctx.closePath(); fs(ctx, '#efe6d2');
+    for (let x = -86; x <= 90; x += 22) { ctx.beginPath(); rr(ctx, x - 8, 62, 16, 10, 5); fs(ctx, '#d9ccb2'); }
+    // tomaia: tallone basso che sale a cupola sulla punta
+    ctx.beginPath(); ctx.moveTo(-98, 36); ctx.bezierCurveTo(-100, 14, -92, 2, -72, -2);
+    ctx.bezierCurveTo(-52, -6, -40, -10, -28, -26); ctx.bezierCurveTo(-8, -54, 30, -64, 62, -54);
+    ctx.bezierCurveTo(96, -44, 112, -14, 108, 14); ctx.bezierCurveTo(106, 28, 100, 36, 92, 36); ctx.closePath(); fs(ctx, accento);
+    // bordo d'ingresso del piede (il bordino rialzato)
+    ctx.beginPath(); ctx.moveTo(-74, -2); ctx.bezierCurveTo(-56, -6, -42, -12, -30, -27); ctx.lineWidth = 9; ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.stroke(); stileIcona(ctx);
+    // buchi: ellissi in prospettiva, scure dentro con il labbro chiaro sotto
+    const buchi = [[-12, -36, 1], [10, -46, 1], [34, -50, 1], [58, -46, 1], [80, -34, 1], [0, -18, 0.92], [24, -26, 0.95], [48, -26, 0.95], [72, -16, 0.92], [92, -2, 0.85]];
+    for (const [x, y, k] of buchi) {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(-0.25 + x / 400);
+      ctx.beginPath(); ctx.ellipse(0, 0, 8.5 * k, 5.5 * k, 0, 0, 7); ctx.fillStyle = 'rgba(30,8,14,0.78)'; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, 1.8, 8 * k, 4 * k, 0, 0.15, Math.PI - 0.15); ctx.lineWidth = 2.5; ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.stroke();
+      ctx.restore();
+    }
+    stileIcona(ctx);
+    // cinturino al tallone e rivetto
+    ctx.beginPath(); ctx.moveTo(-40, -12); ctx.bezierCurveTo(-66, -40, -100, -24, -100, 10);
+    ctx.lineWidth = 17; ctx.strokeStyle = 'rgba(30,8,14,0.9)'; ctx.stroke(); ctx.lineWidth = 10; ctx.strokeStyle = accento; ctx.stroke(); stileIcona(ctx);
+    ctx.beginPath(); ctx.arc(-40, -12, 11, 0, 7); fs(ctx, '#efe6d2'); ctx.beginPath(); ctx.arc(-40, -12, 4, 0, 7); ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fill();
+    // gomma lucida: un riflesso morbido sulla cupola e una lama sul bordo
+    lucido(ctx, 40, -44, 34, 12, { rot: 0.1, alpha: 0.55 });
+    lama(ctx, [[66, -50], [94, -38], [104, -10]], { w: 6, alpha: 0.6 });
+  },
+  // Anfibio stile 1460 di profilo (ridisegnato 2026-11-25, skill illustrazione-2d): punta a bulbo, gambale che si
+  // stringe, linguetta posteriore, 8 occhielli con i lacci incrociati, cucitura gialla sul guardolo, suola a gradini
+  // con le scanalature. Pelle rosso ciliegia lucida. Niente logo né scritte.
+  anfibio(ctx, { accento = CIPRIA }) {
+    const PELLE = '#8a1f2b';
+    // suola: guardolo (fascia sopra) + battistrada scanalato
+    ctx.beginPath(); ctx.moveTo(-92, 46); ctx.lineTo(96, 46); ctx.bezierCurveTo(110, 46, 112, 66, 98, 72); ctx.lineTo(-88, 72);
+    ctx.bezierCurveTo(-98, 72, -100, 50, -92, 46); ctx.closePath(); fs(ctx, '#2b211d');
+    ctx.save(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,240,220,0.16)'; for (let x = -80; x < 96; x += 11) { ctx.beginPath(); ctx.moveTo(x, 60); ctx.lineTo(x - 3, 70); ctx.stroke(); } ctx.restore();
+    ctx.beginPath(); rr(ctx, -94, 36, 200, 14, 7); fs(ctx, '#3a2c26');
+    ctx.save(); ctx.setLineDash([6, 5]); ctx.lineWidth = 3.5; ctx.strokeStyle = accento; ctx.beginPath(); ctx.moveTo(-88, 43); ctx.lineTo(100, 43); ctx.stroke(); ctx.restore();
+    // tomaia e gambale in un pezzo
+    ctx.beginPath(); ctx.moveTo(-88, 38); ctx.bezierCurveTo(-94, 0, -88, -60, -82, -98);
+    ctx.bezierCurveTo(-64, -104, -42, -104, -26, -98);
+    ctx.bezierCurveTo(-22, -66, -16, -40, -2, -22);
+    ctx.bezierCurveTo(26, -12, 66, -12, 88, 4); ctx.bezierCurveTo(108, 18, 106, 36, 98, 38); ctx.closePath(); fs(ctx, PELLE);
+    // linguetta e collare imbottito
+    ctx.beginPath(); ctx.moveTo(-30, -104); ctx.bezierCurveTo(-16, -110, -4, -106, -2, -98); ctx.lineTo(-6, -70); ctx.lineTo(-26, -76); ctx.closePath(); fs(ctx, '#6e1822');
+    ctx.beginPath(); ctx.moveTo(-84, -96); ctx.bezierCurveTo(-64, -104, -44, -104, -27, -97); ctx.lineWidth = 12; ctx.strokeStyle = '#5a141c'; ctx.stroke(); stileIcona(ctx);
+    // linguetta posteriore (tirante) a righe
+    ctx.beginPath(); rr(ctx, -92, -122, 16, 30, 6); fs(ctx, '#1f1a18');
+    ctx.save(); ctx.fillStyle = accento; ctx.fillRect(-90, -114, 12, 3); ctx.fillRect(-90, -106, 12, 3); ctx.restore();
+    // cuciture: quarto posteriore e tallone
+    ctx.save(); ctx.setLineDash([5, 5]); ctx.lineWidth = 2.6; ctx.strokeStyle = 'rgba(255,214,140,0.55)';
+    ctx.beginPath(); ctx.moveTo(-24, -86); ctx.bezierCurveTo(-30, -30, -38, 10, -44, 36); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(4, -20); ctx.bezierCurveTo(30, -10, 70, -8, 92, 10); ctx.stroke(); ctx.restore();
+    // occhielli e lacci incrociati
+    const occ = []; for (let k = 0; k < 8; k++) { const u = k / 7; occ.push([-26 + u * 20 + u * u * 6, -94 + u * 70]); }
+    ctx.save(); ctx.lineCap = 'round';
+    for (let k = 0; k < 7; k++) { const [a, b] = occ[k], [c, d] = occ[k + 1];
+      ctx.lineWidth = 6; ctx.strokeStyle = '#141010'; ctx.beginPath(); ctx.moveTo(a + 2, b); ctx.lineTo(c + 12, d - 3); ctx.stroke();
+      ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.moveTo(a + 3, b - 1); ctx.lineTo(c + 11, d - 4); ctx.stroke(); }
+    for (const [x, y] of occ) { ctx.beginPath(); ctx.arc(x, y, 4.6, 0, 7); ctx.fillStyle = '#d8cfc4'; ctx.fill(); ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fillStyle = '#2a1416'; ctx.fill(); }
     ctx.restore();
-    ctx.beginPath(); ctx.moveTo(-40, -8); ctx.quadraticCurveTo(-92, -40, -100, 8); ctx.lineWidth = 12; ctx.strokeStyle = INCHIOSTRO; ctx.stroke();   // cinturino
-    ctx.lineWidth = 6; ctx.strokeStyle = accento; ctx.stroke(); stileIcona(ctx);
-    ctx.beginPath(); ctx.arc(-40, -8, 9, 0, 7); fs(ctx, '#f3ead8');                               // rivetto del cinturino
+    // pelle lucida: riflesso sulla punta e lama lungo il gambale
+    lucido(ctx, 66, -4, 26, 10, { rot: 0.25, alpha: 0.6 });
+    lama(ctx, [[-76, -84], [-80, -40], [-78, 10]], { w: 5, alpha: 0.35 });
   },
   // Pugnale (stiletto)
   pugnale(ctx, { t = 0 }) {
@@ -492,16 +619,10 @@ export const ICONE = {
     ctx.save(); ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 4); ctx.strokeStyle = '#fff'; ctx.lineWidth = 5;
     ctx.beginPath(); ctx.moveTo(-60, -20); ctx.lineTo(-40, 0); ctx.stroke(); ctx.restore();
   },
-  // Maglia di jersey a righe marinière (Chanel)
-  maglia(ctx, { accento = CIPRIA }) {
-    const corpo = () => { ctx.beginPath(); ctx.moveTo(-40, -86); ctx.quadraticCurveTo(0, -66, 40, -86); ctx.lineTo(100, -50); ctx.lineTo(82, 4); ctx.lineTo(60, -6);
-      ctx.lineTo(62, 92); ctx.lineTo(-62, 92); ctx.lineTo(-60, -6); ctx.lineTo(-82, 4); ctx.lineTo(-100, -50); ctx.closePath(); };
-    corpo(); fs(ctx, '#fffaf0');
-    ctx.save(); corpo(); ctx.clip(); ctx.fillStyle = '#1f2f5a';
-    for (let y = -56; y < 96; y += 30) ctx.fillRect(-110, y, 220, 12);
-    ctx.restore(); corpo(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-40, -86); ctx.quadraticCurveTo(0, -60, 40, -86); ctx.lineWidth = 9; ctx.strokeStyle = accento; ctx.stroke();
-  },
+  // Maglia di jersey a righe marinière (Chanel): righe blu notte su bianco, collo del colore accento
+  maglia(ctx, { accento = CIPRIA }) { maglietta(ctx, '#fbf7ef', { righe: '#1f2f5a', collo: accento }); },
+  // Maglietta tinta unita nel colore d'accento (es. "il rosa era dei maschi": nel confronto serve il colore vero)
+  magliaTinta(ctx, { accento = CIPRIA }) { maglietta(ctx, accento); },
   // Boxer da uomo (la biancheria in jersey): sobrio, a righine
   mutande(ctx) {
     ctx.beginPath(); ctx.moveTo(-84, -60); ctx.lineTo(84, -60); ctx.lineTo(92, 70); ctx.lineTo(14, 70); ctx.lineTo(0, 0); ctx.lineTo(-14, 70); ctx.lineTo(-92, 70); ctx.closePath();
@@ -646,6 +767,11 @@ export const NOMI_ICONE = Object.keys(ICONE);
 export function icona(ctx, nome, cx, cy, s, { t = 0, accento = CIPRIA, k = 1, ruota = 0 } = {}) {
   if (k <= 0) return;
   const f = ICONE[nome] || ICONE.stella;
+  if (STILE.illustrato) {
+    iconaIllustrata(ctx, (o) => { stileIcona(o); f(o, { t, accento }); }, cx, cy, s,
+      { scala: pop(k), ruota: ruota + (1 - easeOut(k)) * 0.4, alpha: clamp(k * 2), chiave: `${nome}|${accento}|${t.toFixed(3)}` });
+    return;
+  }
   ctx.save(); ctx.translate(cx, cy); const sc = (s / 200) * pop(k); ctx.scale(sc, sc); ctx.rotate(ruota + (1 - easeOut(k)) * 0.4);
   ctx.globalAlpha *= clamp(k * 2);
   stileIcona(ctx); f(ctx, { t, accento });

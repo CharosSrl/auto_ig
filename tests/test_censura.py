@@ -10,8 +10,13 @@ class CensuraTest(unittest.TestCase):
         self.assertEqual(censura.censura("Nati per la GUERRA!"), "Nati per la G*ERRA!")
         self.assertEqual(censura.censura("Morte, sesso e bombe"), "M*rte, s*sso e b*mbe")
 
+    def test_parolacce(self):
+        """Antonio, 2026-11-24: parolacce piene nella voce, censurate a schermo."""
+        self.assertEqual(censura.censura("Che cazzo è sta merda?"), "Che c*zzo è sta m*rda?")
+        self.assertEqual(censura.censura("Sono incazzato, che stronzata"), "Sono inc*zzato, che str*nzata")
+
     def test_parole_innocue_restano(self):
-        for t in ("mortadella", "Sessione", "bombetta", "morbido", "Guerrini"):
+        for t in ("mortadella", "Sessione", "bombetta", "morbido", "Guerrini", "cazzuola", "culotte", "merdeggiare"):
             self.assertEqual(censura.censura(t), t)
 
     def test_gia_censurata_non_cambia(self):

@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>laboratorio icone</title>
+<style>html,body{margin:0;background:#111}</style></head><body>
+<canvas id="c" width="1800" height="600"></canvas>
+<script type="module">
+// Laboratorio dello stile illustrato (skill illustrazione-2d): stesse icone, stile piatto (sopra) e illustrato (sotto).
+//   ?icone=anfibio,crocs,...  &sfondo=%232a1c16  &accento=%23ffd23f  &solo=illustrato|piatto  &s=220
+import * as G from '../preset/grafica2d.js';
+import { omino } from '../preset/personaggi2d.js';
+const q = new URLSearchParams(location.search);
+const nomi = (q.get('icone') || 'anfibio,magliaTinta,crocs,jordan,borsa,tacco').split(',');
+const sfondo = q.get('sfondo') || '#2a1c16', accento = q.get('accento') || '#ffd23f', s = +(q.get('s') || 220);
+const per = +(q.get('per') || nomi.length);
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const cella = s * 1.36, solo = q.get('solo');
+const stili = solo ? [solo === 'illustrato'] : [false, true];
+const righeIcone = Math.ceil(nomi.length / per);
+cv.width = Math.min(per, nomi.length) * cella; cv.height = righeIcone * stili.length * cella;
+ctx.fillStyle = sfondo; ctx.fillRect(0, 0, cv.width, cv.height);
+let r = 0;
+for (let blocco = 0; blocco < righeIcone; blocco++) {
+  for (const ill of stili) {
+    G.STILE.illustrato = ill;
+    nomi.slice(blocco * per, blocco * per + per).forEach((n, i) =>
+      G.icona(ctx, n, i * cella + cella / 2, r * cella + cella / 2, s, { t: 0.7, accento }));
+    r++;
+  }
+}
+// ?omini=sorpresa,cammina,indica : un omino per azione (scala 0.7), sopra l'icona
+if (q.get('omini')) {
+  const az = q.get('omini').split(','), w = 420;
+  cv.width = az.length * w; cv.height = 760; ctx.fillStyle = sfondo; ctx.fillRect(0, 0, cv.width, cv.height);
+  az.forEach((a, i) => omino(ctx, i * w + w / 2, 720, 1.1, { azione: a, u: 0.5, t: 0.6, quando: 0.2, verso: 1, maglia: ['#c0392b', '#2f8f6b', '#f2b33d', '#4d6bd1'][i % 4],
+    pantaloni: '#2b2f45', capelli: '#3b2a1a', pelle: i % 4 }));
+}
+document.title = 'pronto';
+</script></body></html>

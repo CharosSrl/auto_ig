@@ -74,6 +74,34 @@ class CopioneTest(unittest.TestCase):
         for pezzo in ("manca la fonte", "battuta 2", "strutture_valutate", "autocontrollo"):
             self.assertIn(pezzo, e)
 
+    def test_scalpore_e_linee_rosse(self):
+        """Antonio, 2026-11-24: scalpore, slang e parolacce sì; bestemmie e insulti a gruppi mai."""
+        c = buono()
+        c.pop("scalpore")
+        self.assertIn("scalpore", self.errori(c))
+        self.assertTrue(any("scalpore" in a for a in copione.controlla(c, cta_fissa=False)[1]))   # video vecchio
+        c = buono()
+        c["battute"][1]["voce"] = "Bro, il nonno di Miuccia era un genio del cazzo, ma tipo davvero."
+        self.assertNotIn("vietato", self.errori(c))
+        c["battute"][1]["voce"] = "Porco dio, il nonno vietava le donne."
+        self.assertIn("vietato SEMPRE", self.errori(c))
+        c = buono()
+        c["battute"][0]["voce"] = "Prada aveva un nonno con una regola sulle donne."
+        self.assertTrue(any("senza scossa" in a for a in copione.controlla(c)[1]))
+        c["battute"][0]["voce"] = "Prada ti frega da cent'anni, e il nonno era peggio."
+        self.assertFalse(any("senza scossa" in a for a in copione.controlla(c)[1]))
+
+    def test_facilissimo_niente_date_e_percentuali(self):
+        """Antonio, 2026-11-24: 'quando dici le date dici prima, dopo; l'80% è un botto'."""
+        for frase in ("Nel 1927 i negozi lo consigliano ai maschi.", "L'80% delle vendite va alle signore.",
+                      "Negli anni quaranta cambia tutto, bro.", "Le compra il cinquanta per cento delle signore."):
+            c = buono()
+            c["battute"][1]["voce"] = frase
+            self.assertIn("brainrot", self.errori(c), frase)
+        c = buono()
+        c["battute"][1]["voce"] = "Prima era dei maschi, poi un botto di negozi lo cambia."
+        self.assertNotIn("brainrot", self.errori(c))
+
     def test_parola_forte_detta_e_scritta(self):
         c = buono()
         c["battute"][0]["schermo"] = "Donne in Prada?"

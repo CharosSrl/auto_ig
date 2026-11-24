@@ -38,7 +38,7 @@ def parole(t: str) -> list[str]:
 
 
 def stima_secondi(c: dict, r: dict | None = None) -> float:
-    """Durata stimata (voce Aoede 1.0): parole / velocità + pause + coda. Il build misura quella vera."""
+    """Durata stimata (voce Aoede 1.2, Antonio 2026-11-24): parole / velocità + pause + coda. Il build misura quella vera."""
     s = (r or regole())["secondi"]
     testi = [b.get("voce", "") for b in c.get("battute") or []] + [c.get("cta", "")]
     n = sum(len(str(t).split()) for t in testi)
@@ -67,12 +67,15 @@ def _schema(c: dict, r: dict) -> list[str]:
 
 def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
     """(errori, avvisi). Errori = il copione va riscritto (il build si ferma). Avvisi = da valutare e dire ad Antonio.
-    cta_fissa=False: video già fatto prima della CTA fissa (2026-11-22), la CTA vecchia è solo un avviso."""
+    cta_fissa=False: video già fatto (CTA fissa 2026-11-22, campo scalpore 2026-11-24): le regole nuove sono solo avvisi."""
     r = regole()
     errs = _schema(c, r)
     if errs:
         return errs, []
     av = []
+    # scalpore (10-scalpore, Antonio 2026-11-24): "senza scalpore la gente non si ferma a vedere i video"
+    if not str(c.get("scalpore") or "").strip():
+        (errs if cta_fissa else av).append("manca 'scalpore': in una frase, perché il gancio divide o sciocca (10-scalpore)")
     P = r["parole"]
     bt = c["battute"]
     ruoli = [b["ruolo"] for b in bt]
@@ -134,15 +137,37 @@ def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
                                              (g.get("scheda") or {}).get("timbro")) if x).lower()
         if w not in scritto:
             errs.append(f"parola forte '{pf['parola']}' non scritta a schermo nel gancio ('schermo')")
+    from . import censura
+    scossa = set(r.get("scalpore_parole", []))
+    if not (censura.compila().search(g["voce"]) or any(w in scossa for w in parole(g["voce"]))
+            or re.search(r"\d+\s*(%|mila|milioni|euro|€)", g["voce"])):
+        av.append("gancio senza scossa: niente parolaccia, accusa, assurdo o numero choc nelle prime parole. "
+                  "Senza scalpore la gente non si ferma (10-scalpore, Antonio 2026-11-24)")
     # lingua (03-lingua)
     vietate = [re.compile(rf"(?<![\w']){re.escape(v)}(?![\w'])", re.I) for v in r["vietate"]]
+    sempre = [re.compile(rf"(?<![\w']){v}(?![\w'])", re.I) for v in r.get("vietate_sempre", [])]
     vuote = set(r["parole_vuote_ripetizione"])
     testi = [(f"battuta {i}", b["voce"]) for i, b in enumerate(bt, 1)] + \
             [(f"schermo {i}", b.get("schermo") or "") for i, b in enumerate(bt, 1)] + [("cta", c["cta"])]
     for dove, t in testi:
         for rx in vietate:
             if m := rx.search(t):
-                errs.append(f"{dove}: '{m.group(0)}' è vietato (03-lingua: niente tono da prof, marketing o slang no)")
+                errs.append(f"{dove}: '{m.group(0)}' è vietato (03-lingua: niente tono da prof o da marketing)")
+        for rx in sempre:
+            if m := rx.search(t):
+                errs.append(f"{dove}: '{m.group(0)}' è vietato SEMPRE: bestemmie e insulti a gruppi o al corpo "
+                            "(10-scalpore, linee rosse)")
+    # facilissimo (Antonio, 2026-11-24): niente date né percentuali né numeri grandi nella voce, parole da bambino
+    for i, b in enumerate(bt, 1):
+        if m := re.search(r"\d{2,}|\d+\s*%|per\s?cento|anni\s*'?\s*(venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta)",
+                          b["voce"], re.I):
+            (errs if cta_fissa else av).append(
+                f"battuta {i}: '{m.group(0)}' nella voce. Il pubblico è brainrot: niente date, percentuali o numeri "
+                "grandi. Si dice 'prima / dopo / tanto tempo fa', 'un botto / un casino / quasi tutte'; il numero vero "
+                "va solo a schermo (10-scalpore, Antonio 2026-11-24)")
+        difficili = [w for w in parole(b["voce"]) if len(w) >= 12 and not w[0].isdigit()]
+        if difficili:
+            av.append(f"battuta {i}: parole lunghe ({', '.join(difficili)}): le capirebbe un bambino? (10-scalpore)")
     for i, b in enumerate(bt, 1):
         n = len(b["voce"].split())
         if b["ruolo"] not in ("rehook", "conto") and not P["battuta_min"] <= n <= P["battuta_max"]:
@@ -269,7 +294,8 @@ def da_richiesta(data: dict) -> dict:
 
 
 MODELLO = {
-    "idea": "la storia in una riga: perché fa dire 'ma dai!'",
+    "idea": "la storia in una riga: perché fa dire 'ma che cazzo?!'",
+    "scalpore": "perché il gancio divide o sciocca (10-scalpore)",
     "formato": "curiosita",
     "richiesta_antonio": "",
     "fatti": [{"fatto": "", "fonte": "", "url": ""}],
