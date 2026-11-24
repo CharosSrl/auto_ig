@@ -108,8 +108,9 @@ sagoma brutta resta brutto: le Crocs a "pagnotta" e il tacco a "ciabatta" sono m
 | 2026-11-25 | Ombra dei bianchi con il giro "caldo" | Macchie arancioni sulla marinière → bianchi con ombra lilla fredda |
 | 2026-11-25 | Anfibio, Crocs, sneaker, Jordan, tacco, magliette ridisegnati con curve, pannelli e riflessi | Salto netto: oggetti riconoscibili e "da sticker" |
 | 2026-11-25 | Omino: occhi con pupilla e riflesso, sopracciglia, guance, scarpe | Da stecchino a personaggio simpatico; ciuffo e orecchio corretti al secondo giro |
+| 2026-11-25 | Trench ridisegnato (svasato ad A, maniche raglan, aletta, cintura con coda), nuove fiamma e anello (reel Burberry e Nike) | Leggibili a 100 px; trench nel contatore a pila si riconosce anche piccolo |
 
 ## Da fare (in ordine di uso nei reel)
 Ridisegnare con lo stesso metodo le icone ancora "vecchie di forma": mutande, zeppa, sughero, bambù, aereo, outfit
-(figurino), armadio, trench, telefono, lente, borsa (manico e chiusura), jeans (pieghe), sposa, staffa, poi il
+(figurino), armadio, telefono, lente, borsa (manico e chiusura), jeans (pieghe), sposa, staffa, poi il
 narratore e i fondali di `scena2d`.

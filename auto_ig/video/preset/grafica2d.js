@@ -404,16 +404,58 @@ export const ICONE = {
 
   // --- Curiosità "capi nati in guerra" / "nomi nascosti" (2026-11-14) ---
   // Trench doppiopetto color cammello con cintura e spalline
+  // Ridisegnato 2026-11-25 (skill illustrazione-2d): sagoma svasata ad A, maniche raglan dietro, collo alto,
+  // revers grandi, aletta sulla spalla, cintura che segue la vita con la coda che pende, doppio petto.
   trench(ctx) {
-    ctx.beginPath(); ctx.moveTo(-30, -92); ctx.lineTo(-70, -78); ctx.quadraticCurveTo(-84, -40, -80, 0); ctx.lineTo(-92, 98); ctx.lineTo(92, 98);
-    ctx.lineTo(80, 0); ctx.quadraticCurveTo(84, -40, 70, -78); ctx.lineTo(30, -92); ctx.lineTo(0, -40); ctx.closePath(); fs(ctx, '#c8a26b');
-    ctx.beginPath(); ctx.moveTo(-30, -92); ctx.lineTo(-8, -30); ctx.lineTo(-30, -20); ctx.lineTo(-48, -74); ctx.closePath(); fs(ctx, '#b48d57');   // revers
-    ctx.beginPath(); ctx.moveTo(30, -92); ctx.lineTo(8, -30); ctx.lineTo(30, -20); ctx.lineTo(48, -74); ctx.closePath(); fs(ctx, '#b48d57');
-    ctx.beginPath(); rr(ctx, -84, 8, 168, 20, 4); fs(ctx, '#a07a45');                                   // cintura
-    ctx.beginPath(); rr(ctx, -14, 4, 28, 28, 4); ctx.lineWidth = 5; ctx.stroke(); stileIcona(ctx);
-    for (const [x, y] of [[-22, -12], [22, -12], [-22, 50], [22, 50]]) { ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); fs(ctx, '#5a3d1e'); }
-    for (const s of [-1, 1]) { ctx.beginPath(); rr(ctx, s * 66 - 16, -86, 32, 12, 4); fs(ctx, '#a07a45'); } // spalline
-    ctx.save(); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, 28); ctx.lineTo(0, 98); ctx.stroke(); ctx.restore();
+    const C = '#cfa86c', S = '#b88f55', B = '#5a3d1e';
+    for (const s of [-1, 1]) {                                                                   // maniche (dietro al corpo)
+      ctx.save(); ctx.scale(s, 1);
+      ctx.beginPath(); ctx.moveTo(50, -82); ctx.bezierCurveTo(80, -78, 92, -52, 96, -12); ctx.lineTo(104, 58);
+      ctx.quadraticCurveTo(92, 68, 76, 64); ctx.lineTo(68, -4); ctx.closePath(); fs(ctx, S);
+      ctx.beginPath(); ctx.moveTo(78, 40); ctx.lineTo(102, 38); ctx.lineTo(103, 48); ctx.lineTo(79, 51); ctx.closePath(); fs(ctx, '#a57d47');  // cinturino al polso
+      ctx.restore();
+    }
+    ctx.beginPath(); ctx.moveTo(-28, -92); ctx.bezierCurveTo(-56, -88, -72, -76, -72, -50); ctx.bezierCurveTo(-74, -12, -70, 8, -66, 22);
+    ctx.bezierCurveTo(-76, 58, -84, 84, -90, 98); ctx.quadraticCurveTo(0, 110, 90, 98); ctx.bezierCurveTo(84, 84, 76, 58, 66, 22);
+    ctx.bezierCurveTo(70, 8, 74, -12, 72, -50); ctx.bezierCurveTo(72, -76, 56, -88, 28, -92); ctx.quadraticCurveTo(0, -80, -28, -92); ctx.closePath(); fs(ctx, C);
+    ctx.save(); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(4, 30); ctx.quadraticCurveTo(6, 70, 4, 104); ctx.stroke(); ctx.restore();   // apertura davanti
+    ctx.beginPath(); ctx.moveTo(26, -84); ctx.lineTo(68, -72); ctx.lineTo(70, -38); ctx.quadraticCurveTo(48, -34, 30, -42); ctx.closePath(); fs(ctx, C);   // aletta
+    for (const s of [-1, 1]) {                                                                   // revers
+      ctx.save(); ctx.scale(s, 1);
+      ctx.beginPath(); ctx.moveTo(-26, -92); ctx.lineTo(-48, -80); ctx.lineTo(-40, -58); ctx.lineTo(-54, -50); ctx.lineTo(-6, -14);
+      ctx.quadraticCurveTo(-18, -50, -26, -92); fs(ctx, S); ctx.restore();
+    }
+    ctx.beginPath(); ctx.moveTo(-28, -94); ctx.quadraticCurveTo(0, -78, 28, -94); ctx.lineTo(22, -104); ctx.quadraticCurveTo(0, -90, -22, -104); ctx.closePath(); fs(ctx, '#a57d47');  // collo
+    for (const [x, y] of [[-20, -2], [24, -2], [-20, 54], [24, 54], [-20, 80], [24, 80]]) { ctx.beginPath(); ctx.arc(x, y, 6.5, 0, 7); fs(ctx, B); }
+    ctx.beginPath(); ctx.moveTo(-68, 10); ctx.quadraticCurveTo(0, 24, 68, 10); ctx.lineTo(68, 30); ctx.quadraticCurveTo(0, 44, -68, 30); ctx.closePath(); fs(ctx, S);  // cintura
+    ctx.beginPath(); ctx.moveTo(-26, 26); ctx.lineTo(-12, 27); ctx.lineTo(-18, 76); ctx.lineTo(-32, 74); ctx.closePath(); fs(ctx, S);                       // coda della cintura
+    ctx.save(); ctx.lineWidth = 6; ctx.strokeStyle = B; ctx.beginPath(); rr(ctx, -16, 14, 30, 26, 5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-1, 14); ctx.lineTo(-1, 40); ctx.stroke(); ctx.restore();
+    lama(ctx, [[-62, -40], [-66, 0], [-62, 20]], { w: 4.5, alpha: 0.35 });
+  },
+  // Fiamma che guizza (2026-11-25, reel Burberry): lingua esterna rosso-arancio, interna gialla, cuore chiaro
+  fiamma(ctx, { t = 0 }) {
+    const w = (k, f) => Math.sin(t * f + k) * 7;
+    ctx.beginPath(); ctx.moveTo(0, 96);
+    ctx.bezierCurveTo(-80, 96, -94, 28, -58, -16); ctx.bezierCurveTo(-52, 6, -36, 12, -30, 2);
+    ctx.bezierCurveTo(-42, -42, -12 + w(0, 9), -72, 6 + w(1, 7), -102); ctx.bezierCurveTo(18, -60, 52, -50, 46, -10);
+    ctx.bezierCurveTo(58, -22, 62, -36, 60 + w(2, 8), -54); ctx.bezierCurveTo(98, -6, 88, 96, 0, 96); fs(ctx, '#f0552a');
+    ctx.beginPath(); ctx.moveTo(0, 92);
+    ctx.bezierCurveTo(-46, 92, -52, 40, -24, 8); ctx.bezierCurveTo(-18, 26, -4, 28, -2, 18);
+    ctx.bezierCurveTo(-10, -10, 4, -30, 14 + w(3, 11), -52); ctx.bezierCurveTo(24, -20, 54, 6, 44, 40); ctx.bezierCurveTo(50, 70, 34, 92, 0, 92); fs(ctx, '#ffc23a');
+    ctx.save(); ctx.fillStyle = 'rgba(255,246,200,0.95)'; ctx.beginPath(); ctx.ellipse(2, 62, 18, 26 + w(4, 13) * 0.4, 0, 0, 7); ctx.fill(); ctx.restore();
+  },
+  // Anello d'oro con diamante che brilla (2026-11-25, reel logo Nike)
+  anello(ctx, { t = 0 }) {
+    ctx.beginPath(); ctx.ellipse(0, 32, 80, 64, 0, 0, Math.PI * 2); ctx.moveTo(60, 36); ctx.ellipse(0, 36, 60, 46, 0, 0, Math.PI * 2, true); fs(ctx, ORO);
+    ctx.beginPath(); ctx.moveTo(-24, -26); ctx.lineTo(-30, -46); ctx.lineTo(30, -46); ctx.lineTo(24, -26); ctx.closePath(); fs(ctx, '#c9a13a');   // castone
+    ctx.beginPath(); ctx.moveTo(-42, -68); ctx.lineTo(-24, -92); ctx.lineTo(24, -92); ctx.lineTo(42, -68); ctx.lineTo(0, -30); ctx.closePath(); fs(ctx, '#bfe6ff');
+    ctx.save(); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(40,80,130,0.55)'; ctx.beginPath();
+    ctx.moveTo(-42, -68); ctx.lineTo(42, -68); ctx.moveTo(-24, -92); ctx.lineTo(-12, -68); ctx.lineTo(0, -30); ctx.lineTo(12, -68); ctx.lineTo(24, -92);
+    ctx.moveTo(-12, -68); ctx.lineTo(0, -92); ctx.lineTo(12, -68); ctx.stroke(); ctx.restore();
+    lama(ctx, [[-60, 10], [-70, 40], [-56, 70]], { w: 6, alpha: 0.55 });
+    const k = 0.55 + 0.45 * Math.sin(t * 5);                                                     // scintilla
+    ctx.save(); ctx.translate(34, -96); ctx.scale(k, k); ctx.fillStyle = '#fff'; ctx.beginPath();
+    for (let j = 0; j < 8; j++) { const r = j % 2 ? 6 : 28, a = j * Math.PI / 4; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.restore();
   },
   // Elmetto da soldato (Prima guerra mondiale, forma a scodella)
   elmetto(ctx) {
