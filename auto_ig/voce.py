@@ -176,10 +176,9 @@ def _chirp_post(nome: str, inp: dict) -> bytes:
     return cached.read_bytes()
 
 
-def confini(pcm: bytes, rate: int, quote: list[float], min_pausa: float = 0.12) -> list[tuple[float, float]] | None:
-    """Divide un audio con N frasi dette di fila in N tratti (inizio, fine) in secondi.
-    quote: lunghezza relativa attesa di ogni frase (caratteri). Si cercano i silenzi (energia ogni 10 ms) e se ne
-    scelgono N-1 in ordine, premiando quelli lunghi e vicini al confine atteso. None se i silenzi non bastano."""
+def _silenzi(pcm: bytes, rate: int, min_pausa: float):
+    """(primo e ultimo centesimo con voce, silenzi interni [(da, a)] lunghi almeno min_pausa), in centesimi di
+    secondo (energia ogni 10 ms). None se non c'è voce."""
     import numpy as np
     a = np.frombuffer(pcm, "<i2").astype(np.float32) / 32768
     hop = int(rate * 0.01)
@@ -193,7 +192,7 @@ def confini(pcm: bytes, rate: int, quote: list[float], min_pausa: float = 0.12) 
         return None
     i0, i1 = int(parla[0]), int(parla[-1]) + 1
     buchi, k = [], i0
-    while k < i1:                                        # silenzi interni lunghi almeno min_pausa
+    while k < i1:
         if zitto[k]:
             j = k
             while j < i1 and zitto[j]:
@@ -203,6 +202,18 @@ def confini(pcm: bytes, rate: int, quote: list[float], min_pausa: float = 0.12) 
             k = j
         else:
             k += 1
+    return i0, i1, buchi
+
+
+def confini(pcm: bytes, rate: int, quote: list[float], min_pausa: float = 0.12,
+            min_tratto: float = 0.25) -> list[tuple[float, float]] | None:
+    """Divide un audio con N frasi dette di fila in N tratti (inizio, fine) in secondi.
+    quote: lunghezza relativa attesa di ogni frase (caratteri). Si cercano i silenzi (energia ogni 10 ms) e se ne
+    scelgono N-1 in ordine, premiando quelli lunghi e vicini al confine atteso. None se i silenzi non bastano."""
+    sil = _silenzi(pcm, rate, min_pausa)
+    if not sil:
+        return None
+    i0, i1, buchi = sil
     m = len(quote) - 1
     if m == 0:
         return [(i0 * 0.01, i1 * 0.01)]
@@ -235,7 +246,7 @@ def confini(pcm: bytes, rate: int, quote: list[float], min_pausa: float = 0.12) 
         tratti.append((inizio * 0.01, b * 0.01 + 0.04))
         inizio = e - 2
     tratti.append((inizio * 0.01, i1 * 0.01))
-    if any(e - s < 0.25 for s, e in tratti):
+    if any(e - s < min_tratto for s, e in tratti):
         return None
     return tratti
 
@@ -315,6 +326,137 @@ def tts_text(text: str, pronuncia: dict | None = None) -> str:
     return re.sub(r"\b[A-ZÀ-Ý]{2,}\b", lambda m: m.group(0).lower(), text)
 
 
+def parole_sull_audio(text: str, start: float, end: float, pcm: bytes, rate: int, base: float = 0.0) -> list[Word]:
+    """Tempi delle parole agganciati alle pause VERE dentro la frase (Antonio, 2026-11-25: "voce e testo non sono in
+    sync"). La frase si spezza dopo la punteggiatura forte (: ? … . !). Ogni confine si appaia a una pausa reale
+    (≥ 0,15 s: più corte sono le consonanti, tipo la p di "dopo") vicina a dove te l'aspetti; un confine senza pausa
+    si salta e i pezzi si uniscono. Dentro ogni pezzo le parole si stimano dalla lunghezza.
+    start/end: tempi della frase nel wav `pcm` meno `base` (secondi)."""
+    pezzi, cur = [], []
+    for w in text.split():
+        cur.append(w)
+        if re.search(r"[:.!?…]$", w):                  # solo punteggiatura forte: dopo le virgole spesso non si ferma
+            pezzi.append(cur); cur = []
+    if cur:
+        pezzi.append(cur)
+    if len(pezzi) < 2:
+        return word_timings(text, start, end)
+    a, b = int((start + base) * rate) * 2, int((end + base) * rate) * 2
+    sil = _silenzi(pcm[a:b], rate, 0.15)
+    if not sil or not sil[2]:
+        return word_timings(text, start, end)
+    i0, i1, buchi = sil
+    lung = [len(" ".join(p)) + 1 for p in pezzi]
+    tot, attesi, c = sum(lung), [], 0
+    for q in lung[:-1]:
+        c += q
+        attesi.append(i0 + (i1 - i0) * c / tot)
+    # allineamento in ordine confini ↔ pause: si può saltare un confine o una pausa; si appaia solo se conviene
+    B, G = len(attesi), len(buchi)
+    punti = lambda k, g: (buchi[g][1] - buchi[g][0]) - 0.35 * abs((buchi[g][0] + buchi[g][1]) / 2 - attesi[k])  # noqa: E731
+    best = [[0.0] * (G + 1) for _ in range(B + 1)]
+    via = [[None] * (G + 1) for _ in range(B + 1)]
+    for k in range(1, B + 1):
+        for g in range(1, G + 1):
+            opz = [(best[k - 1][g], "k"), (best[k][g - 1], "g"), (best[k - 1][g - 1] + punti(k - 1, g - 1), "m")]
+            best[k][g], via[k][g] = max(opz, key=lambda x: x[0])
+    coppie, k, g = [], B, G
+    while k > 0 and g > 0:
+        v = via[k][g]
+        if v == "m":
+            coppie.append((k - 1, g - 1)); k -= 1; g -= 1
+        elif v == "k":
+            k -= 1
+        else:
+            g -= 1
+    coppie.reverse()
+    if not coppie:
+        return word_timings(text, start, end)
+    out, da_pezzo, da_t = [], 0, i0
+    for kb, gb in coppie + [(len(pezzi) - 1, None)]:
+        parole = " ".join(" ".join(p) for p in pezzi[da_pezzo:kb + 1])
+        fine = buchi[gb][0] + 4 if gb is not None else i1
+        out += word_timings(parole, round(start + da_t * 0.01, 3), round(start + fine * 0.01, 3))
+        if gb is not None:
+            da_pezzo, da_t = kb + 1, buchi[gb][1] - 2
+    return out
+
+
+@lru_cache(maxsize=1)
+def _whisper():
+    """Modello faster-whisper 'small' (CPU, int8) dalla cache locale di Hugging Face; None se non c'è."""
+    try:
+        from faster_whisper import WhisperModel
+        return WhisperModel("small", device="cpu", compute_type="int8", local_files_only=True)
+    except Exception as e:                                   # pacchetto o modello mancante: si resta sulla stima
+        print(f"avviso voce: faster-whisper non disponibile ({e.__class__.__name__}), tempi delle parole stimati")
+        return None
+
+
+def _norm(w: str) -> str:
+    return re.sub(r"[^\wàèéìòù]", "", w.lower())
+
+
+def allinea_whisper(wav: Path, sentences: list[Sentence], min_quota: float = 0.6) -> list[Sentence]:
+    """Tempi VERI di ogni parola (Antonio, 2026-11-26: "voce e testo non sono in sync"): faster-whisper trascrive il
+    wav con i tempi per parola, le parole del copione si appaiano a quelle sentite (difflib) e quelle non riconosciute
+    (es. "molli lì" sentito come "mollili") si interpolano tra le vicine. Se si riconosce meno di `min_quota` delle
+    parole si tengono i tempi di prima. Inizio e fine di ogni frase vengono dalle sue parole."""
+    import difflib
+    m = _whisper()
+    if m is None:
+        return sentences
+    segs, _ = m.transcribe(str(wav), language="it", word_timestamps=True, beam_size=1, vad_filter=False)
+    sentite = [(_norm(w.word), float(w.start), float(w.end)) for s in segs for w in (s.words or []) if _norm(w.word)]
+    nostre = [(i, j, _norm(w.text)) for i, s in enumerate(sentences) for j, w in enumerate(s.words)]
+    if not sentite or not nostre:
+        return sentences
+    sm = difflib.SequenceMatcher(a=[x[2] for x in nostre], b=[x[0] for x in sentite], autojunk=False)
+    tempi: list[tuple[float, float] | None] = [None] * len(nostre)
+    for blk in sm.get_matching_blocks():
+        for k in range(blk.size):
+            _, a, b = sentite[blk.b + k]
+            tempi[blk.a + k] = (a, b)
+    trovate = sum(t is not None for t in tempi)
+    if trovate < min_quota * len(nostre):
+        print(f"avviso voce: whisper riconosce solo {trovate}/{len(nostre)} parole, tempi stimati")
+        return sentences
+    # interpolazione delle parole non riconosciute tra le vicine riconosciute (a pari lettere)
+    k = 0
+    while k < len(tempi):
+        if tempi[k] is not None:
+            k += 1
+            continue
+        h = k
+        while h < len(tempi) and tempi[h] is None:
+            h += 1
+        da = tempi[k - 1][1] if k > 0 else max(LEAD_IN, (tempi[h][0] - 0.3) if h < len(tempi) else LEAD_IN)
+        a = tempi[h][0] if h < len(tempi) else da + 0.35 * (h - k)
+        pesi = [len(nostre[x][2]) + 1 for x in range(k, h)]
+        t = da
+        for x, p in zip(range(k, h), pesi):
+            d = (a - da) * p / sum(pesi)
+            tempi[x] = (t, t + d)
+            t += d
+        k = h
+    out, prima = [], 0.0
+    for i, s in enumerate(sentences):
+        idx = [x for x, (si, _, _) in enumerate(nostre) if si == i]
+        words, fine = [], prima
+        for x in idx:
+            a, b = tempi[x]
+            a = max(a, fine)
+            b = max(b, a + 0.05)
+            words.append(Word(s.words[nostre[x][1]].text, round(a, 3), round(b, 3)))
+            fine = b
+        if not words:
+            out.append(s)
+            continue
+        out.append(Sentence(s.text, words[0].start, words[-1].end, words, s.tone))
+        prima = words[-1].end
+    return out
+
+
 def _scrivi_tutto(tutto, lines, out_wav: Path) -> tuple[list[Sentence], float]:
     """Scrive il wav del copione detto tutto di fila: le pause tra le battute sono quelle vere della voce."""
     pcm, rate, tratti = tutto
@@ -323,7 +465,8 @@ def _scrivi_tutto(tutto, lines, out_wav: Path) -> tuple[list[Sentence], float]:
     sentences = []
     for (text, tone), (s, e) in zip(lines, tratti):
         s, e = round(LEAD_IN + s - off, 3), round(LEAD_IN + e - off, 3)
-        sentences.append(Sentence(text, s, e, word_timings(text, s, e), tone))
+        words = parole_sull_audio(text, s, e, pcm, rate, base=off - LEAD_IN)
+        sentences.append(Sentence(text, s, e, words, tone))
     out_wav.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(out_wav), "wb") as wf:
         wf.setnchannels(1)
@@ -345,7 +488,9 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
         nome = voice_name.partition("-")[2] or "aoede"
         tutto = _chirp_tutto(nome, [tts_text(t, pronuncia) for t, _ in lines])
         if tutto:
-            return _scrivi_tutto(tutto, lines, out_wav)
+            frasi, _ = _scrivi_tutto(tutto, lines, out_wav)
+            frasi = allinea_whisper(out_wav, frasi)
+            return frasi, round(frasi[-1].end + TAIL, 2)
         print("avviso voce: non trovo le pause tra le battute, sintetizzo frase per frase (meno naturale)")
     if synth is None and is_chirp(voice_name):
         nome = voice_name.partition("-")[2] or "aoede"

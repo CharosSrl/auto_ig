@@ -54,7 +54,8 @@ class SpeakTuttoTest(unittest.TestCase):
             chiamate.append((nome, inp))
             return wav(pcm)
 
-        with tempfile.TemporaryDirectory() as d, mock.patch.object(voce, "_chirp_post", finto):
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(voce, "_chirp_post", finto), \
+                mock.patch.object(voce, "allinea_whisper", lambda wav, frasi: frasi):
             frasi, durata = voce.speak(["Cosa succede?", "Nel freezer."], Path(d) / "v.wav", "chirp3-charon", 1.0)
             self.assertEqual(len(chiamate), 1)
             self.assertEqual(chiamate[0][1], {"markup": "Cosa succede? [pause short] Nel freezer."})
@@ -68,6 +69,47 @@ class SpeakTuttoTest(unittest.TestCase):
                 mock.patch.object(voce, "_chirp_synth", lambda n, t, s: (audio([(0.5, 1)]), RATE, 2, 1)):
             frasi, _ = voce.speak(["Uno.", "Due."], Path(d) / "v.wav", "chirp3-charon", 1.1)
             self.assertEqual(len(frasi), 2)
+
+
+class ParoleSullAudioTest(unittest.TestCase):
+    def test_pause_vere_e_consonanti(self):
+        # "La mattina dopo?" 0,9 s con una chiusura da consonante (0,1 s) | pausa 0,3 | "Le rimetti." 0,6 | pausa 0,3 | "Ancora umide." 0,7
+        pcm = audio([(0.5, 1), (0.1, 0), (0.3, 1), (0.3, 0), (0.6, 1), (0.3, 0), (0.7, 1)])
+        w = voce.parole_sull_audio("La mattina dopo? Le rimetti. Ancora umide.", 0.0, 2.8, pcm, RATE)
+        inizio = {x.text: x.start for x in w}
+        self.assertAlmostEqual(inizio["Le"], 1.18, delta=0.05)
+        self.assertAlmostEqual(inizio["Ancora"], 2.08, delta=0.05)
+
+    def test_confine_senza_pausa_si_salta(self):
+        # tre pezzi ma una sola pausa vera: si aggancia il confine atteso più vicino (dopo "cinque:")
+        pcm = audio([(1.0, 1), (0.4, 0), (1.0, 1)])
+        w = voce.parole_sull_audio("Uno due tre. Quattro cinque: sei sette otto.", 0.0, 2.4, pcm, RATE)
+        inizio = {x.text: x.start for x in w}
+        self.assertAlmostEqual(inizio["sei"], 1.38, delta=0.05)
+        self.assertEqual(len(w), 8)
+
+
+class WhisperTest(unittest.TestCase):
+    def test_tempi_veri_e_interpolazione(self):
+        W = lambda w, a, b: mock.Mock(word=" " + w, start=a, end=b)   # noqa: E731
+        seg = mock.Mock(words=[W("Sudi", 3.66, 4.0), W("e", 4.76, 4.9), W("la", 5.06, 5.2), W("sera", 5.22, 5.4),
+                               W("mollili.", 5.6, 6.0), W("La", 6.34, 6.5), W("mattina", 6.58, 6.9), W("dopo?", 6.94, 7.3)])
+        finto = mock.Mock(transcribe=lambda *a, **k: ([seg], None))
+        frasi = [voce.Sentence(t, 0, 1, voce.word_timings(t, 0, 1)) for t in ["Sudi… e la sera le molli lì.", "La mattina dopo?"]]
+        with mock.patch.object(voce, "_whisper", lambda: finto):
+            out = voce.allinea_whisper(Path("x.wav"), frasi)
+        self.assertAlmostEqual(out[0].start, 3.66)
+        self.assertAlmostEqual(out[1].start, 6.34)                  # la frase parte dove la voce la dice davvero
+        le, molli, li = out[0].words[4:]
+        self.assertTrue(5.4 <= le.start < molli.start < li.start < 6.34)   # non riconosciute: interpolate
+        self.assertAlmostEqual(out[1].end, 7.3)
+
+    def test_pochi_riconoscimenti_tiene_la_stima(self):
+        seg = mock.Mock(words=[mock.Mock(word=" boh", start=0.1, end=0.2)])
+        finto = mock.Mock(transcribe=lambda *a, **k: ([seg], None))
+        frasi = [voce.Sentence("Uno due tre.", 0, 1, voce.word_timings("Uno due tre.", 0, 1))]
+        with mock.patch.object(voce, "_whisper", lambda: finto):
+            self.assertIs(voce.allinea_whisper(Path("x.wav"), frasi), frasi)
 
 
 if __name__ == "__main__":
