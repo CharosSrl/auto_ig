@@ -66,7 +66,8 @@ class SpeakTuttoTest(unittest.TestCase):
     def test_velocita_diversa_usa_frase_per_frase(self):
         with tempfile.TemporaryDirectory() as d, \
                 mock.patch.object(voce, "_chirp_tutto", side_effect=AssertionError("non deve")), \
-                mock.patch.object(voce, "_chirp_synth", lambda n, t, s: (audio([(0.5, 1)]), RATE, 2, 1)):
+                mock.patch.object(voce, "_chirp_synth", lambda n, t, s: (audio([(0.5, 1)]), RATE, 2, 1)), \
+                mock.patch.object(voce, "allinea_whisper", lambda wav, frasi: frasi):
             frasi, _ = voce.speak(["Uno.", "Due."], Path(d) / "v.wav", "chirp3-charon", 1.1)
             self.assertEqual(len(frasi), 2)
 

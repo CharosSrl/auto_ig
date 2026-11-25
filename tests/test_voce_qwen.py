@@ -18,7 +18,8 @@ class QwenTest(unittest.TestCase):
                 return [np.sin(np.linspace(0, 2000, 24000)).astype(np.float32) * 0.3], 24000
 
         with tempfile.TemporaryDirectory() as d, mock.patch.object(voce, "CACHE_DIR", Path(d)), \
-                mock.patch.object(voce, "_qwen_model", lambda: Finto()):
+                mock.patch.object(voce, "_qwen_model", lambda: Finto()), \
+                mock.patch.object(voce, "allinea_whisper", lambda wav, frasi: frasi):
             frasi, durata = voce.speak(["Ciao a tutti.", "Ciao a tutti."], Path(d) / "v.wav", "qwen3-serena", 1.0)
             self.assertEqual(chiamate, [("Ciao a tutti.", "Italian", "serena")])   # seconda volta: dalla cache
             self.assertAlmostEqual(frasi[0].end - frasi[0].start, 1.0, places=2)

@@ -34,6 +34,10 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 divisivi… senza scalpore la gente non si ferma a vedere i video." Regole in `scrittura/regole/10-scalpore.md`:
 - voce maschile **Charon a 1.0**, naturale e con enfasi (Antonio, 2026-11-25: "metti la voce a 1x… troppo meccanico";
   prima Aoede 1.2): il build blocca le altre. Tutto il copione si sintetizza in una chiamata sola (`voce._chirp_tutto`);
+- **sottotitoli sempre in sync con faster-whisper** (Antonio, 2026-11-26: "ora è in sync… dovrai usarlo per tutti i
+  prossimi video"): `voce.speak` prende i tempi veri di ogni parola con `allinea_whisper` (modello small, offline).
+  Se nel build compare "avviso voce: faster-whisper non disponibile" o "whisper riconosce solo…", va sistemato
+  prima di consegnare il video (`pip install -r requirements.txt`);
 - **facilissimo, da bambino piccolo** ("te lo devi ricordare sempre"): nella voce niente date (si dice prima, dopo,
   tanto tempo fa) né percentuali o numeri grandi (un botto, un casino, un sacco); parole semplici, frasi cortissime.
   Il numero vero solo a schermo e in caption. Il build si ferma su date e percentuali nella voce;

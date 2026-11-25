@@ -484,12 +484,13 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
     lines = normalize_lines(lines)
     if not lines:
         raise ValueError("Il copione è vuoto")
+    vera = synth is None                    # voce vera (non un synth finto dei test): tempi presi con whisper
     if synth is None and is_chirp(voice_name) and abs(speed - 1.0) < 1e-6 and not any(passi) and len(lines) > 1:
         nome = voice_name.partition("-")[2] or "aoede"
         tutto = _chirp_tutto(nome, [tts_text(t, pronuncia) for t, _ in lines])
         if tutto:
             frasi, _ = _scrivi_tutto(tutto, lines, out_wav)
-            frasi = allinea_whisper(out_wav, frasi)
+            frasi = allinea_whisper(out_wav, frasi)       # tempi veri delle parole, sempre (Antonio 2026-11-26)
             return frasi, round(frasi[-1].end + TAIL, 2)
         print("avviso voce: non trovo le pause tra le battute, sintetizzo frase per frase (meno naturale)")
     if synth is None and is_chirp(voice_name):
@@ -533,7 +534,10 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
         wf.setsampwidth(width)
         wf.setframerate(rate)
         wf.writeframes(b"".join(chunks))
-    return sentences, round(t - pausa + TAIL, 2)
+    # SEMPRE i tempi veri delle parole (Antonio, 2026-11-26: "ora è in sync… dovrai usarlo per tutti i prossimi video")
+    if vera and not any(passi):
+        sentences = allinea_whisper(out_wav, sentences)
+    return sentences, round(max(t - pausa, sentences[-1].end) + TAIL, 2)
 
 
 # --- Sottotitoli ASS ------------------------------------------------------
