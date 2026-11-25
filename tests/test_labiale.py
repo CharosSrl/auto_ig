@@ -73,7 +73,8 @@ class CampoNarratoreTest(unittest.TestCase):
         base = {"formato": "curiosita", "resa": "2d", "copione": []}
         self.assertTrue(formati.narratore(base))
         self.assertFalse(formati.narratore({**base, "narratore": False}))
-        self.assertFalse(formati.narratore({**base, "resa": "3d"}))
+        self.assertFalse(formati.narratore({**base, "resa": "3d", "scena": "armadio_infinito"}))   # 3D con la modella: niente gruccia
+        self.assertTrue(formati.narratore({**base, "resa": "3d"}))      # 3D a blocchi (2026-11-25): parla la gruccia
         self.assertTrue(formati.narratore({**base, "narratore": {"lato": "sinistra"}}))
 
     def test_validazione(self):

@@ -22,7 +22,7 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
    - parola forte, che è facoltativa: se c'è va anche a schermo, se manca arriva un avviso da girare ad Antonio con
      il motivo;
    - suoni;
-   - voce Aoede a 1.2;
+   - voce maschile Charon a 1.1 (la dice la gruccia narratrice);
    - durata sotto i 25 s.
 
    Nel resoconto ad Antonio riporta la riga "regole: …" che stampa.
@@ -32,7 +32,7 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 
 "Voce più veloce, linguaggio per persone brainrottate, vanno bene anche tante parolacce. Devono esserci proprio temi
 divisivi… senza scalpore la gente non si ferma a vedere i video." Regole in `scrittura/regole/10-scalpore.md`:
-- voce a **1.2** (il build blocca le altre velocità);
+- voce maschile **Charon a 1.1**, calma e scandita (Antonio, 2026-11-25; prima Aoede 1.2): il build blocca le altre;
 - **facilissimo, da bambino piccolo** ("te lo devi ricordare sempre"): nella voce niente date (si dice prima, dopo,
   tanto tempo fa) né percentuali o numeri grandi (un botto, un casino, un sacco); parole semplici, frasi cortissime.
   Il numero vero solo a schermo e in caption. Il build si ferma su date e percentuali nella voce;

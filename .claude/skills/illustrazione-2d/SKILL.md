@@ -109,8 +109,21 @@ sagoma brutta resta brutto: le Crocs a "pagnotta" e il tacco a "ciabatta" sono m
 | 2026-11-25 | Anfibio, Crocs, sneaker, Jordan, tacco, magliette ridisegnati con curve, pannelli e riflessi | Salto netto: oggetti riconoscibili e "da sticker" |
 | 2026-11-25 | Omino: occhi con pupilla e riflesso, sopracciglia, guance, scarpe | Da stecchino a personaggio simpatico; ciuffo e orecchio corretti al secondo giro |
 | 2026-11-25 | Trench ridisegnato (svasato ad A, maniche raglan, aletta, cintura con coda), nuove fiamma e anello (reel Burberry e Nike) | Leggibili a 100 px; trench nel contatore a pila si riconosce anche piccolo |
+| 2026-11-25 | Avatar 3D a blocchi (`preset/blocchi/`): capelli a cupola sferica | La cupola finiva DENTRO la testa (si vedeva solo una riga) → calotta che segue la forma della testa gonfiata di 0,02-0,24, più alta sulla fronte per lasciare libere le sopracciglia |
+| 2026-11-25 | Facce degli avatar: tratti in scala 1 | Illeggibili in figura intera → scala 1,7 (bocche ×1,3); palpebre con il ritaglio, non con una pezza color pelle (faceva una macchia chiara) |
 
 ## Da fare (in ordine di uso nei reel)
 Ridisegnare con lo stesso metodo le icone ancora "vecchie di forma": mutande, zeppa, sughero, bambù, aereo, outfit
 (figurino), armadio, telefono, lente, borsa (manico e chiusura), jeans (pieghe), sposa, staffa, poi il
 narratore e i fondali di `scena2d`.
+
+## Avatar 3D a blocchi (dal 2026-11-25, richiesta di Antonio: "personaggi tipo Roblox, componibili come i Lego")
+- Codice in `auto_ig/video/preset/blocchi/`:
+  - `corpo.js`: `creaAvatar(THREE, ricetta)`;
+  - `facce.js`, `capelli.js`, `vestiti.js`, `scarpe.js`, `accessori.js`: i pezzi;
+  - `pose.js`: 18 azioni;
+  - `ambienti.js`: città, aula, cameretta, negozio, parco, tg;
+  - `camera.js`: primo piano, quinta, campo largo, orbita…;
+  - `ricette.js`: 9 personaggi pronti e `casuale(seed)` per le comparse.
+- Laboratorio: `auto_ig/video/laboratorio/avatar.html?foglio=personaggi|capelli|facce|bocche|occhi|sopra|sotto|scarpe|accessori|pose|ambienti|casuali`.
+- Lo stile "a blocchi" è un genere: niente asset, loghi, nomi o facce di Roblox. È tutto disegnato da noi.

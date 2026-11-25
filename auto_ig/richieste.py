@@ -60,9 +60,9 @@ audio: {{musica: {audio}, sfx: {audio}}}   # base musicale e effetti sonori gene
 
 # Voce (locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
-  modello: chirp3-aoede   # la voce di Cintre: Google Chirp 3 HD (GOOGLE_TTS_API_KEY nel .env, gratis fino a 1M car./mese)
+  modello: chirp3-charon  # la voce di Cintre (maschile, dal 2026-11-25): Google Chirp 3 HD (GOOGLE_TTS_API_KEY nel .env, gratis fino a 1M car./mese)
                           # | qwen3-vivian (Qwen3-TTS locale, lenta) | it_IT-paola-medium (Piper, istantanea)
-  velocita: 1.2           # 1.2 nei reel (Antonio, 2026-11-24: voce più veloce, ritmo da brainrot)
+  velocita: 1.1           # 1.1 nei reel (Antonio, 2026-11-25: voce maschile, più calma e scandita)
   pausa: 0.5              # silenzio tra le frasi (default 0.35)
   # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole
 # cornice: oro            # cornice della foto: polaroid | oro | pellicola | nastro (default: quiz oro, curiosità polaroid)

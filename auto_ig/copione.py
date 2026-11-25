@@ -38,7 +38,7 @@ def parole(t: str) -> list[str]:
 
 
 def stima_secondi(c: dict, r: dict | None = None) -> float:
-    """Durata stimata (voce Aoede 1.2, Antonio 2026-11-24): parole / velocità + pause + coda. Il build misura quella vera."""
+    """Durata stimata (voce Charon 1.1, Antonio 2026-11-25): parole / velocità + pause + coda. Il build misura quella vera."""
     s = (r or regole())["secondi"]
     testi = [b.get("voce", "") for b in c.get("battute") or []] + [c.get("cta", "")]
     n = sum(len(str(t).split()) for t in testi)
@@ -143,6 +143,10 @@ def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
             or re.search(r"\d+\s*(%|mila|milioni|euro|€)", g["voce"])):
         av.append("gancio senza scossa: niente parolaccia, accusa, assurdo o numero choc nelle prime parole. "
                   "Senza scalpore la gente non si ferma (10-scalpore, Antonio 2026-11-24)")
+    tu = set(r.get("attacco_parole", []))
+    if tu and not any(w in tu for w in parole(g["voce"])):
+        av.append("gancio non parla a chi guarda: serve la seconda persona su una sua abitudine ('Cosa cazzo succede "
+                  "se metti…', 'Perché cazzo fai ancora…') (11-attacco-a-te, Antonio 2026-11-25)")
     # lingua (03-lingua)
     vietate = [re.compile(rf"(?<![\w']){re.escape(v)}(?![\w'])", re.I) for v in r["vietate"]]
     sempre = [re.compile(rf"(?<![\w']){v}(?![\w'])", re.I) for v in r.get("vietate_sempre", [])]

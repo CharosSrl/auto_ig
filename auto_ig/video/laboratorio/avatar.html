@@ -1,0 +1,96 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>laboratorio avatar</title>
+<style>html,body{margin:0;background:#16141a;font-family:system-ui,"DejaVu Sans",sans-serif}
+#w{position:relative;display:inline-block}.et{position:absolute;color:#fff;font:600 17px system-ui;background:rgba(0,0,0,.55);padding:2px 8px;border-radius:6px}</style>
+</head><body><div id="w"></div>
+<script type="module">
+// Laboratorio degli avatar a blocchi (skill illustrazione-2d: foto → critica onesta → correzione).
+//   ?foglio=personaggi | capelli | facce | bocche | occhi | sopra | sotto | scarpe | accessori | pose | ambienti | casuali
+//   &ricetta=tu  (la base per i fogli dei pezzi)   &per=6 (celle per riga)
+import * as THREE from '../vendor/three.module.min.js';
+import { creaAvatar } from '../preset/blocchi/corpo.js';
+import { RICETTE, casuale } from '../preset/blocchi/ricette.js';
+import { CAPELLI, CAPPELLI } from '../preset/blocchi/capelli.js';
+import { ESPRESSIONI, BOCCHE, OCCHI } from '../preset/blocchi/facce.js';
+import { SOPRA, SOTTO } from '../preset/blocchi/vestiti.js';
+import { SCARPE } from '../preset/blocchi/scarpe.js';
+import { ACCESSORI } from '../preset/blocchi/accessori.js';
+import { POSE_NOMI } from '../preset/blocchi/pose.js';
+import { creaAmbiente, AMBIENTI } from '../preset/blocchi/ambienti.js';
+import { inquadra } from '../preset/blocchi/camera.js';
+
+const q = new URLSearchParams(location.search);
+const foglio = q.get('foglio') || 'personaggi';
+const base = RICETTE[q.get('ricetta') || 'tu'];
+const T = +(q.get('t') || 1.3);
+
+// ogni cella: {ricetta, posa, opz, espr, bocca, camera:{tipo,...}, set, etichetta}
+const celle = [];
+const conRicetta = (mod) => JSON.parse(JSON.stringify({ ...base, ...mod }));
+switch (foglio) {
+  case 'personaggi': for (const k in RICETTE) celle.push({ ricetta: RICETTE[k], etichetta: k, camera: { tipo: 'figura' }, espr: 'felice' }); break;
+  case 'casuali': for (let i = 1; i <= 12; i++) celle.push({ ricetta: casuale(i), etichetta: 'comparsa ' + i, camera: { tipo: 'figura' } }); break;
+  case 'capelli':
+    for (const c of CAPELLI) celle.push({ ricetta: conRicetta({ capelli: c, cappello: null }), etichetta: c, camera: { tipo: 'primoPiano', angolo: 0.55, dist: 7 } });
+    for (const c of CAPPELLI) celle.push({ ricetta: conRicetta({ capelli: 'corti', cappello: c }), etichetta: c, camera: { tipo: 'primoPiano', angolo: 0.55, dist: 7 } });
+    for (const c of ['lunghi', 'coda', 'treccine']) celle.push({ ricetta: conRicetta({ capelli: c }), etichetta: c + ' (dietro)', camera: { tipo: 'primoPiano', angolo: 2.6, dist: 7 } });
+    break;
+  case 'facce': for (const e of ESPRESSIONI) celle.push({ ricetta: base, espr: e, etichetta: e, camera: { tipo: 'primoPiano', angolo: 0.15, dist: 5 } }); break;
+  case 'bocche': for (const b of BOCCHE) celle.push({ ricetta: base, bocca: b, etichetta: 'bocca ' + b, camera: { tipo: 'primoPiano', angolo: 0.1, dist: 4.6 } }); break;
+  case 'occhi': for (const o of OCCHI) celle.push({ ricetta: conRicetta({ occhi: o }), etichetta: o, camera: { tipo: 'primoPiano', angolo: 0.1, dist: 4.6 } }); break;
+  case 'sopra':
+    for (const s of SOPRA) celle.push({ ricetta: conRicetta({ sopra: { tipo: s, colore: '#e9463c', colore2: '#ffffff', stampa: s === 'tshirt' ? 'stella' : s === 'felpa' ? 'logo' : null } }), etichetta: s, camera: { tipo: 'mezzoBusto', angolo: 0.35 } });
+    celle.push({ ricetta: conRicetta({ sopra: { tipo: 'tshirt', colore: '#1d1d1f', colore2: '#ffffff', stampa: 'righe' } }), etichetta: 'tshirt righe', camera: { tipo: 'mezzoBusto', angolo: 0.35 } });
+    celle.push({ ricetta: conRicetta({ sopra: { tipo: 'felpa', colore: '#d8262f', colore2: '#ffffff', stampa: 'numero' } }), etichetta: 'felpa (dietro)', camera: { tipo: 'mezzoBusto', angolo: 2.9 } });
+    break;
+  case 'sotto': for (const s of SOTTO) celle.push({ ricetta: conRicetta({ sotto: { tipo: s, colore: s === 'jeans' ? '#41679e' : '#2f6fd1', colore2: '#ffffff' } }), etichetta: s, camera: { tipo: 'figura', angolo: 0.5 } }); break;
+  case 'scarpe': for (const s of SCARPE) celle.push({ ricetta: conRicetta({ scarpe: { tipo: s, colore: s === 'anfibi' ? '#141414' : s === 'crocs' ? '#8fd6b4' : s === 'tacchi' ? '#c0213a' : s === 'stivali' ? '#7a4a2a' : '#f7f7f7', colore2: '#e9463c' } }), etichetta: s, camera: { tipo: 'dettaglio', piedi: true, dist: 6 } }); break;
+  case 'accessori': for (const a of ACCESSORI) celle.push({ ricetta: conRicetta({ accessori: [a === 'cartello' ? { nome: a, testo: 'BASTA!' } : a] }), etichetta: a, posa: a === 'telefono' ? 'telefono' : a === 'cartello' ? 'fermo' : 'fermo', camera: { tipo: ['zaino', 'borsa', 'cartello'].includes(a) ? 'figura' : 'primoPiano', angolo: a === 'zaino' ? 2.4 : 0.5, dist: ['zaino', 'borsa', 'cartello'].includes(a) ? 15 : 7 } }); break;
+  case 'pose': for (const p of POSE_NOMI) celle.push({ ricetta: base, posa: p, opz: { u: 0.6, fase: 1.2, energia: 0.9 }, espr: p === 'facepalm' || p === 'disperato' ? 'triste' : p === 'esulta' || p === 'balla' ? 'risata' : 'neutra', etichetta: p, camera: { tipo: 'figura', angolo: 0.6 } }); break;
+  case 'ambienti': for (const a of AMBIENTI) celle.push({ set: a, ricetta: base, etichetta: a, camera: { tipo: 'set' }, amica: true }); break;
+}
+
+const lunga = ['personaggi', 'casuali', 'pose', 'sotto', 'ambienti'].includes(foglio);
+const CW = +(q.get('cw') || (lunga ? 330 : 300)), CH = +(q.get('ch') || (lunga ? 520 : 300));
+const per = +(q.get('per') || Math.min(celle.length, lunga ? 6 : 6));
+const righe = Math.ceil(celle.length / per);
+const W = per * CW, H = righe * CH;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setScissorTest(true);
+const wrap = document.getElementById('w'); wrap.appendChild(renderer.domElement);
+
+function studio(scene) {
+  scene.background = new THREE.Color('#2c2a33');
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const pav = new THREE.Mesh(new THREE.CircleGeometry(9, 48), new THREE.MeshStandardMaterial({ color: '#d9d4cc', roughness: 0.9 }));
+  pav.rotation.x = -Math.PI / 2; pav.receiveShadow = true; scene.add(pav);
+  const hemi = new THREE.HemisphereLight('#cfe6ff', '#b39b84', 1.4);
+  const sun = new THREE.DirectionalLight('#fff3e2', 2.6); sun.position.set(8, 16, 12); sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024); sun.shadow.normalBias = 0.03; Object.assign(sun.shadow.camera, { left: -8, right: 8, top: 10, bottom: -4 });
+  const fill = new THREE.DirectionalLight('#dfe9ff', 0.6); fill.position.set(-8, 6, 8);
+  scene.add(hemi, sun, fill);
+}
+
+celle.forEach((c, i) => {
+  const scene = new THREE.Scene();
+  let set = null;
+  if (c.set) set = creaAmbiente(THREE, scene, renderer, c.set, {}); else studio(scene);
+  const av = creaAvatar(THREE, c.ricetta); scene.add(av.root);
+  if (set) av.mettiA(set.posti.sinistra[0], set.posti.sinistra[1], 0.25);
+  if (c.amica) { const b = creaAvatar(THREE, RICETTE.amica); scene.add(b.root); b.mettiA(set.posti.destra[0], set.posti.destra[1], -0.35); b.posa('conserte', T, { u: 1 }); b.faccia({ espr: 'furba' }); }
+  av.posa(c.posa || (c.set ? 'parla' : 'fermo'), T, c.opz || { u: 1 });
+  av.faccia({ espr: c.espr || 'neutra', bocca: c.bocca || null });
+  const cam = new THREE.PerspectiveCamera(38, CW / CH, 0.1, 400);
+  if (c.camera.tipo === 'dettaglio') inquadra(THREE, cam, { tipo: 'dettaglio', punto: new THREE.Vector3(0, 0.5, 0.3), dist: c.camera.dist, mano: 0 }, 0, 0);
+  else if (c.camera.tipo === 'set') { cam.position.set(2, 6.5, 24); cam.lookAt(0, 3.6, 0); }
+  else inquadra(THREE, cam, { ...c.camera, chi: av, mano: 0 }, 0, 0);
+  if (c.camera.tipo === 'dettaglio') { cam.position.set(3.2, 2.2, 5.5); cam.lookAt(0, 0.6, 0.3); }
+  const col = i % per, rig = Math.floor(i / per), x = col * CW, y = H - (rig + 1) * CH;
+  renderer.setViewport(x, y, CW, CH); renderer.setScissor(x, y, CW, CH);
+  renderer.render(scene, cam);
+  const et = document.createElement('div'); et.className = 'et'; et.textContent = c.etichetta;
+  et.style.left = (col * CW + 8) + 'px'; et.style.top = (rig * CH + 8) + 'px'; wrap.appendChild(et);
+});
+document.title = 'pronto';
+</script></body></html>

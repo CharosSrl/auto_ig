@@ -171,11 +171,11 @@ formati:
     hashtag: "#cintre #curiosità #moda #storiadellamoda #lo_sapevi #stile"
     rese:
       3d:
-        scene: []
+        scene: [blocchi3d]
         ricetta:
-          - "(Solo con mascotte: true) La modella Cintre fa da presentatrice nello studio: 'posa' sul gancio, 'gioia' sulle sorprese."
-          - "Ogni fatto mostra il capo di cui si parla: vetrinaCapo (pedana girevole) o la modella che lo indossa (indossa)."
-          - "Numero del fatto su card (oggetti.js) nella parte alta; ultimo atto = cartelloFinale."
+          - "(Antonio, 2026-11-25) Scena blocchi3d: avatar 3D a blocchi componibili (preset/blocchi, laboratorio/avatar.html) che fanno solo i FIGURANTI, muti: mimano la storia con pose ed espressioni. Parla solo la gruccia narratrice (voce maschile), in basso a destra."
+          - "Ogni scheda può avere scena3d: {set: citta|aula|cameretta|negozio|parco|tg, cast: [{chi: tu|amica|amico|prof|commesso|boss|rapper|sorella|conduttore|comparsa1.., dove: [x,z], ry, posa, espr, da: [x,z], a: [x,z], azione: posa a tempo}], camera: {tipo: primoPiano|mezzoBusto|figura|quinta|campoLargo|dalBasso|orbita|carrello|dettaglio, chi, verso, angolo, dist}, effetto: germi}."
+          - "La camera cambia a ogni battuta (stacco netto) e si muove sempre un po'; gancio vivo: qualcuno già in azione al fotogramma 0. Titolo (schermo) grande in alto."
       2d:
         scene: [cartoon2d, schede2d]
         ricetta:

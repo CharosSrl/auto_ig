@@ -75,7 +75,8 @@ class TestRegole(unittest.TestCase):
         self.assertIn("icona 'drago'", " ".join(formati.valida(d)))
         d = curiosita(); d["copione"].reverse()
         self.assertIn("gancio", " ".join(formati.valida(d)))
-        self.assertIn("va creata", " ".join(formati.valida(curiosita(resa="3d", copione=["x"]))))
+        # dal 2026-11-25 le curiosità 3D hanno la scena blocchi3d (avatar a blocchi): non va più "creata"
+        self.assertEqual(formati.scena(curiosita(resa="3d", copione=["x"])), "blocchi3d")
         self.assertEqual(formati.valida(curiosita(resa="3d", copione=["x"], scena="armadio_infinito")), [])
 
     def test_schede_e_scena(self):

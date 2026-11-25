@@ -1,0 +1,164 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>blocchi3d</title>
+<style>html,body{margin:0;background:#000;overflow:hidden}</style></head><body>
+<script type="module">
+// SCENA blocchi3d — reel 3D con avatar a blocchi (preset/blocchi). Antonio, 2026-11-25: gli avatar sono FIGURANTI
+// muti che mimano la storia; parla solo la gruccia narratrice (voce maschile), in basso a destra.
+// Parametri come cartoon2d: schede (JSON, una per frase), atti, fini, battute, narratore, accento, durata.
+// Regia per frase (scheda.scena3d):
+//   {set, cast: [{chi, dove:[x,z], ry, posa, espr, da:[x,z], a:[x,z], poi:{posa, espr, dopo}}], camera: {tipo, chi, verso, ...}, effetto, su}
+//   chi: nome di RICETTE (tu, amica, amico, prof, ...) oppure comparsaN (casuale(N)).
+// Ogni frame: prima la scena 3D, poi sopra la tela 2D trasparente (titolo, barra, flash, CTA, narratore).
+import { start } from './common.js';
+import { tempiAtti } from '../preset/regia.js';
+import * as G from '../preset/grafica2d.js';
+import * as C from '../preset/cartoon2d.js';
+import { CIPRIA } from '../preset/brand.js';
+import { narratore, statoNarratore, caricaTraccia, posNarratore } from '../preset/narratore.js';
+import { creaAvatar } from '../preset/blocchi/corpo.js';
+import { RICETTE, casuale } from '../preset/blocchi/ricette.js';
+import { creaAmbiente } from '../preset/blocchi/ambienti.js';
+import { inquadra } from '../preset/blocchi/camera.js';
+import { mescolaPose, easeInOut } from '../preset/blocchi/pose.js';
+import { creaEffetto } from '../preset/blocchi/effetti.js';
+
+const ESEMPIO = [
+  { tipo: 'gancio', titolo: 'Stesse scarpe ogni giorno?', evidenzia: 'scarpe', scena3d: { set: 'cameretta', cast: [{ chi: 'tu', da: [-4, -6], a: [0, 1.5], espr: 'felice' }], camera: { tipo: 'dalBasso', chi: 'tu' } } },
+  { tipo: 'fatto', titolo: 'Le molli lì', scena3d: { set: 'citta', cast: [{ chi: 'tu', da: [-9, 1], a: [3, 1] }], camera: { tipo: 'carrello', chi: 'tu' } } },
+  { tipo: 'rehook', titolo: 'Ancora umide', scena3d: { set: 'aula', cast: [{ chi: 'amica', dove: [0, 1], posa: 'facepalm', espr: 'schifata' }], camera: { tipo: 'primoPiano', chi: 'amica' } } },
+  { tipo: 'cta', titolo: 'Segui la pagina e metti like!', azione: 'segui_like' },
+];
+const AZIONI_A_TEMPO = new Set(['indica', 'conserte', 'facepalm', 'salta', 'gira', 'saluta', 'spallucce', 'esulta', 'disperato']);
+const PASSO = 1.7;              // lunghezza di un passo: la fase della camminata viene dallo spazio percorso
+
+start({ schede: '', accento: '#ffd23f', formato: 'curiosita', durata: '12', narratore: '' }, (THREE, p, renderer) => {
+  const S = p.schede ? JSON.parse(p.schede) : ESEMPIO;
+  const atti = tempiAtti(p, S.length);
+  const inizi = String(p.atti || atti.inizi.join(',')).split(',').map(Number);
+  const fineTot = atti.fine;
+  const fineDi = (i) => (i + 1 < S.length ? inizi[i + 1] : fineTot);
+  const BT = (p.battute ? String(p.battute).split(',').map((x) => { const [t, k] = x.split(':'); return { t: +t, k }; }) : []).sort((a, b) => a.t - b.t);
+  const colpi = BT.filter((b) => b.k === 'boom' || b.k === 'rivela').map((b) => b.t);
+  const acc = p.accento || CIPRIA;
+  const NARRA = caricaTraccia(p.narratore), POSN = NARRA && posNarratore(NARRA);
+  const iCta = S.findIndex((x) => x.tipo === 'cta'), inchino = iCta >= 0 ? (inizi[iCta] ?? null) : null;
+
+  // --- regia di ogni frase (con i default se manca scena3d) ---
+  let ultimoSet = 'cameretta';
+  const REGIA_PREC = [];
+  const REGIA = S.map((s, i) => {
+    const d = JSON.parse(JSON.stringify(s.scena3d || {}));
+    d.set = d.set || ultimoSet; ultimoSet = d.set;
+    // CTA senza regia: tutto il cast della frase prima balla, inquadrato largo (il cartello sta sopra)
+    if ((!d.cast || !d.cast.length) && s.tipo === 'cta' && i > 0) {
+      const prima = REGIA_PREC[i - 1];
+      d.set = prima.set;
+      d.cast = prima.cast.map((c, k) => ({ chi: c.chi, dove: c.a || c.dove || [k ? 2.4 : -2.2, 1.5], ry: k ? -0.3 : 0.3, posa: 'balla', espr: 'risata' }));
+      d.camera = d.cast.length > 1 ? { tipo: 'gruppo', chi: d.cast[0].chi, verso: d.cast[1].chi, dist: 24 } : { tipo: 'figura', chi: d.cast[0].chi, dist: 22 };
+    }
+    if (!d.cast || !d.cast.length) d.cast = [{ chi: 'tu', dove: [0, 1.5], posa: s.tipo === 'cta' ? 'balla' : 'fermo', espr: s.tipo === 'rehook' ? 'sorpresa' : 'neutra' }];
+    if (!d.camera) {
+      const chi = d.cast[0].chi;
+      d.camera = i === 0 ? { tipo: 'dalBasso', chi } : s.tipo === 'rehook' ? { tipo: 'primoPiano', chi } : s.tipo === 'cta' ? { tipo: 'orbita', chi }
+        : [{ tipo: 'mezzoBusto', chi }, { tipo: 'figura', chi }, { tipo: 'campoLargo' }][i % 3];
+    }
+    REGIA_PREC.push(d);
+    return d;
+  });
+
+  // --- cache di set e personaggi ---
+  const SET = {}, AV = {};
+  const set = (nome) => {
+    if (!SET[nome]) { const sc = new THREE.Scene(); SET[nome] = { scene: sc, amb: creaAmbiente(THREE, sc, renderer, nome, {}) }; }
+    return SET[nome];
+  };
+  const avatar = (chi) => {
+    if (!AV[chi]) {
+      const m = /^comparsa(\d+)$/.exec(chi);
+      AV[chi] = creaAvatar(THREE, m ? casuale(+m[1]) : (RICETTE[chi] || RICETTE.tu));
+    }
+    return AV[chi];
+  };
+  REGIA.forEach((d) => { set(d.set); d.cast.forEach((c) => avatar(c.chi)); });
+  const EFF = {};
+  const effetto = (tipo) => (EFF[tipo] ||= creaEffetto(THREE, tipo));
+
+  const cam = new THREE.PerspectiveCamera(38, 1080 / 1920, 0.1, 500);
+  const tela = G.tela2d(THREE, renderer), ctx = tela.ctx;
+  tela.scene.children[0].material.transparent = true;
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const ammicca = (t, seme) => { const per = 2.6 + (seme % 5) * 0.37, f = (t + seme * 0.71) % per; return f < 0.09 ? 1 : f < 0.16 ? 0.5 : 0; };
+
+  function frase(t) { let i = 0; while (i + 1 < S.length && t >= inizi[i + 1]) i++; return i; }
+
+  return {
+    scene: tela.scene, camera: tela.camera,
+    update(t) {
+      const i = frase(t), s = S[i], d = REGIA[i];
+      const t0 = i === 0 ? 0 : inizi[i], dur = Math.max(0.6, fineDi(i) - t0), lt = t - t0, u = Math.min(1, lt / dur);
+      const { scene } = set(d.set);
+      // personaggi: in scena solo quelli del cast di questa frase
+      const presenti = new Set(d.cast.map((c) => c.chi));
+      for (const [chi, av] of Object.entries(AV)) if (!presenti.has(chi) && av.root.parent) av.root.parent.remove(av.root);
+      d.cast.forEach((c, k) => {
+        const av = avatar(c.chi); if (av.root.parent !== scene) scene.add(av.root);
+        const seme = k * 3 + c.chi.length;
+        let posa = c.posa || 'fermo', o = { u: 1, energia: 0.7 }, espr = c.espr || 'neutra';
+        if (c.da && c.a) {                         // cammina da → a: easing all'avvio e all'arrivo, piedi che non scivolano
+          const tc = c.durata ?? dur * 0.85, kk = easeInOut(Math.min(1, lt / tc));
+          const dx = c.a[0] - c.da[0], dz = c.a[1] - c.da[1], L = Math.hypot(dx, dz);
+          const x = c.da[0] + dx * kk, z = c.da[1] + dz * kk, ry = Math.atan2(dx, dz);
+          av.mettiA(x, z, kk < 1 ? ry : (c.ry ?? ry));
+          if (kk < 1) { posa = c.corre ? 'corre' : 'cammina'; o = { fase: (L * kk) / PASSO * Math.PI, ampiezza: Math.min(1, 0.4 + (1 - Math.abs(2 * kk - 1)) * 0.8) }; }
+          else posa = c.posa || 'fermo';
+        } else av.mettiA((c.dove || [0, 1.5])[0], (c.dove || [0, 1.5])[1], c.ry ?? 0);
+        if (AZIONI_A_TEMPO.has(posa)) o = { u: Math.min(1, Math.max(0, lt - (c.ritardo || 0)) / Math.min(1.6, dur)) };
+        // "poi": cambia posa/espressione a metà frase, con 0,25 s di dissolvenza tra le pose
+        if (c.poi && lt >= (c.poi.dopo ?? dur * 0.5)) {
+          const lt2 = lt - (c.poi.dopo ?? dur * 0.5), w = Math.min(1, lt2 / 0.25);
+          const p2 = c.poi.posa || posa, o2 = AZIONI_A_TEMPO.has(p2) ? { u: Math.min(1, lt2 / 1.2) } : { u: 1, energia: 0.7 };
+          mescolaPose(av, [[posa, 1 - w, o], [p2, w, o2]], t);
+          espr = c.poi.espr || espr;
+        } else av.posa(posa, t, o);
+        av.faccia({ espr, palpebra: ammicca(t, seme), sguardo: [c.sguardo ?? 0, 0] });
+      });
+      // effetto (germi che escono dalle scarpe di chi è indicato)
+      for (const [tipo, e] of Object.entries(EFF)) if (e.gruppo.parent && tipo !== d.effetto) e.gruppo.parent.remove(e.gruppo);
+      if (d.effetto) {
+        const e = effetto(d.effetto); if (e.gruppo.parent !== scene) scene.add(e.gruppo);
+        const chiE = avatar(d.su || d.cast[0].chi); e.aggiorna(lt - (d.ritardoEffetto || 0.2), V(chiE.root.position.x, 0, chiE.root.position.z + 0.3));
+      }
+      // camera
+      const cs = { ...d.camera, chi: d.camera.chi ? avatar(d.camera.chi) : null, verso: d.camera.verso ? avatar(d.camera.verso) : null, colpi };
+      if (cs.tipo === 'dettaglio') cs.punto = d.camera.punto ? V(...d.camera.punto) : (cs.chi ? V(cs.chi.root.position.x, 0.6, cs.chi.root.position.z + 0.4) : V(0, 0.6, 0));
+      if (cs.tipo === 'campoLargo' && !cs.centro) cs.centro = V(0, 1.5, 0);
+      if (cs.tipo === 'quinta' && !cs.verso) cs.tipo = 'mezzoBusto';
+      inquadra(THREE, cam, cs, u, t);
+      // 1) scena 3D
+      renderer.autoClear = true; renderer.render(scene, cam); renderer.autoClear = false;
+
+      // 2) tela 2D sopra
+      tela.inizia();
+      if (s.tipo === 'cta') {
+        G.finale(ctx, Math.min(1, lt / 0.6), { testo: s.titolo || '', bottone: s.bottone, azione: s.azione, accento: acc, t });
+      } else {
+        C.barra(ctx, t / fineTot, { colore: acc });
+        if (s.titolo) {                            // titolo grande in alto: entra con un piccolo rimbalzo a ogni frase
+          const k = i === 0 ? 1 : G.entra(lt, 0, 0.35), sc = 0.85 + 0.15 * (1 - Math.pow(1 - k, 3)) + (k < 1 ? 0.06 * Math.sin(k * Math.PI) : 0);
+          ctx.save(); ctx.translate(540, 250); ctx.scale(sc, sc); ctx.globalAlpha = Math.min(1, k * 1.6);
+          ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 0;
+          for (const [ox, oy] of [[-5, 0], [5, 0], [0, -5], [0, 7], [-4, -4], [4, 4], [-4, 4], [4, -4]]) { ctx.shadowOffsetX = ox; ctx.shadowOffsetY = oy; G.testo(ctx, s.titolo, 0, 0, { size: 100, peso: 900, colore: '#1a0710', maxW: 940 }); }
+          ctx.shadowColor = 'transparent';
+          G.testo(ctx, s.titolo, 0, 0, { size: 100, peso: 900, colore: '#ffffff', maxW: 940, evidenzia: s.evidenzia || '', accento: acc });
+          ctx.restore();
+        }
+      }
+      const bt = BT.filter((b) => b.t <= t).pop();
+      if (bt && bt.t > 0.3) C.flash(ctx, ({ boom: 0.45, rivela: 0.3, stacco: 0.12 }[bt.k] ?? 0) * Math.exp(-(t - bt.t) * 12));
+      if (NARRA) narratore(ctx, ...POSN, statoNarratore(NARRA, t, { inchino }));
+      tela.fine();
+    },
+  };
+});
+</script>
+</body></html>

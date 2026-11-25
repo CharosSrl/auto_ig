@@ -377,3 +377,48 @@ qualcosa.)
    reel. Io posso preparare le risposte pronte per ogni reel.
 6. **Il cartello finale con l'esempio** ("scrivi così: B") ripreso da @human.debug: chi guarda sa esattamente cosa
    fare.
+
+---
+
+# Parte 3: @previsionidelcazzo e il gancio che attacca chi guarda (25/11, richiesta di Antonio)
+
+**L'account** (letto in Chrome, solo lettura):
+- 354K follower, 78 post, 3 seguiti;
+- bio: "Siete curiosi di scoprire il meteo di domani?? Ecco, a me non me ne frega un cazzo ma ve lo racconto
+  comunque";
+- reel "Meteo del 25 Novembre": 13,8K like in 1 giorno.
+
+**Com'è fatto**:
+- una mappa meteo da TG, con città, temperature e nuvolette, e la data in basso come al telegiornale;
+- sopra, una voce maschile tranquilla e impassibile che parla del tempo e intanto prende in giro le abitudini di
+  tutti.
+
+**I commenti**, che sono il segnale più utile:
+- "I rincoglioniti al volante sono proprio i primi ad uscire di casa 😂 quanta verità!!!";
+- "rincoglioniti escono quando piove 🤣 è verissimo" (227 like);
+- "La Sardegna dove fa comodo per riempire gli spazi 😂" (94 like);
+- "La Sardegna è stata sicuramente spostata dal vento" (519 like, 9 risposte): ribattono alla sua battuta
+  ricorrente.
+
+La gente **cita la battuta e ci si riconosce** ("quanta verità"). È la leva "il tuo" della Parte 2, portata al
+massimo.
+
+**Cosa prendiamo** (regola `regole/11-attacco-a-te.md`):
+1. La voce calma e maschile che dice cose forti senza alzare il tono. Il contrasto fa ridere e si ricorda.
+2. Il gancio parla di un'abitudine di chi guarda, non di un marchio: "cosa cazzo succede se metti…".
+3. Le battute ricorrenti (la Sardegna) diventano tormentoni da commentare. Possibile tormentone nostro, da proporre
+   ad Antonio: una frase fissa del narratore.
+
+**Cosa NON prendiamo**:
+- l'insulto a chi guarda ("rincoglioniti"): da noi un quarto del pubblico ha 13-17 anni, quindi si dice "fai una
+  cazzata";
+- il meteo: è il suo formato.
+
+## Banca idee "attacco a te" (fatti da verificare di nuovo prima di scrivere)
+
+| Gancio | Fatto | Fonte trovata |
+|---|---|---|
+| "Cosa cazzo succede se metti le stesse scarpe ogni giorno?" | L'interno non si asciuga dal sudore e diventa un serbatoio di batteri e funghi; consiglio di almeno 24 h di riposo tra un uso e l'altro | my-personaltrainer.it (articoli su sudorazione e odore dei piedi): serve una seconda fonte, meglio un podologo |
+| "Perché cazzo lavi ancora i jeans in lavatrice?" | Chip Bergh, CEO di Levi's, ha detto di non lavarli quasi mai (pulisce le macchie a mano); le FAQ di Levi's dicono di lavarli circa ogni 10 usi | articoli che citano Levi's (trend-online, LADbible): da verificare sulle FAQ di Levi's |
+| "Smettila di mettere la felpa in asciugatrice" | Il calore fa restringere il cotone | da cercare |
+| "Tu che tagli le etichette…" | Cosa dicono i simboli di lavaggio e perché servono | da cercare (GINETEX) |

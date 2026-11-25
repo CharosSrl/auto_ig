@@ -27,7 +27,7 @@
     "totale_max": 70
   },
   "secondi": {
-    "parole_al_secondo": 3.1,
+    "parole_al_secondo": 3.0,
     "pausa": 0.4,
     "coda": 1.0,
     "max": 25.0
@@ -180,7 +180,7 @@
     "come",
     "anche"
   ],
-  "_secondi": "Antonio, 2026-11-24: voce a 1.2 → circa 3,1 parole al secondo (05-ritmo-e-durata)",
+  "_secondi": "Antonio, 2026-11-25: voce maschile Charon a 1.1 → circa 3,0 parole al secondo (05-ritmo-e-durata)",
   "_vietate": "Antonio, 2026-11-24: slang brainrot e parolacce ammessi; restano vietati solo il tono da prof e il marketing",
   "vietate_sempre": [
     "porc[oa]\\s+(dio|madonna|cristo|ges[uù])",
@@ -254,5 +254,9 @@
     "morto",
     "morte"
   ],
-  "_scalpore": "10-scalpore: il gancio deve avere una scossa (parolaccia, accusa, assurdo, numero choc); senza, avviso"
+  "_scalpore": "10-scalpore: il gancio deve avere una scossa (parolaccia, accusa, assurdo, numero choc); senza, avviso",
+  "attacco_parole": ["tu", "ti", "te", "tuo", "tua", "tuoi", "tue", "hai", "sei", "fai", "stai", "metti", "lavi",
+    "porti", "compri", "indossi", "usi", "tagli", "butti", "paghi", "sbagli", "smetti", "smettila", "mettiti", "lavarti",
+    "pensi", "credi", "vuoi", "devi"],
+  "_attacco": "11-attacco-a-te (Antonio, 2026-11-25): il gancio parla a chi guarda, in seconda persona, di una sua abitudine; senza, avviso"
 }

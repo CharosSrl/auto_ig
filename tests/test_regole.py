@@ -9,7 +9,7 @@ from auto_ig import regole
 
 def reel(**kw):
     d = {"richiesta": "creiamo due video curiosità per domani", "formato": "curiosita", "resa": "2d",
-         "audio": {"musica": True, "sfx": True}, "voce": {"modello": "chirp3-aoede", "velocita": 1.2},
+         "audio": {"musica": True, "sfx": True}, "voce": {"modello": "chirp3-charon", "velocita": 1.1},
          "copione": [{"testo": "I tuoi jeans sono andati in guerra.",
                       "scheda": {"tipo": "gancio", "titolo": "Jeans in guerra", "foto": "x.jpg"}}]}
     d.update(kw)

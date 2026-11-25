@@ -55,7 +55,8 @@ Prima → dopo:
 - "Se hai [oggetto], [conseguenza assurda ma vera]."
 
 ## Tono (brainrot)
-- **Voce a 1.2** (Antonio, 2026-11-24): veloce, carica, esagerata. I sottotitoli a blocco aiutano a capire.
+- **Voce maschile Charon a 1.1** (Antonio, 2026-11-25: "più calma… deve scandire bene ogni parola"; prima Aoede a 1.2).
+  Tono calmo e impassibile anche sulle parolacce (11-attacco-a-te). I sottotitoli a blocco aiutano a capire.
 - **Slang ammesso**: bro, fra, tipo, POV, aura, rizz, cringe, flex, red flag, "no ma", "ma che cazzo", "letteralmente".
   Senza esagerare fino a non capire niente: una frase deve reggere anche al primo ascolto.
 - **Parolacce ammesse, anche tante**: cazzo, merda, stronzata, minchia, cazzata, incazzato, fa cagare, vaffanculo.

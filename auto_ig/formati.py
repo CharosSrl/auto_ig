@@ -101,12 +101,13 @@ def valida(data: dict) -> list[str]:
     return errs
 
 
-SCENE_NARRATORE = ("cartoon2d", "schede2d")
+SCENE_NARRATORE = ("cartoon2d", "schede2d", "blocchi3d")
 
 
 def narratore(data: dict) -> bool:
-    """La gruccia narratrice (Antonio, 2026-11-21): in tutti i reel 2D, salvo `narratore: false`."""
-    return data.get("narratore") is not False and data.get("resa") == "2d" and scena(data) in SCENE_NARRATORE
+    """La gruccia narratrice (Antonio, 2026-11-21): in tutti i reel 2D e nei 3D a blocchi (2026-11-25: gli avatar sono
+    figuranti muti, parla solo lei), salvo `narratore: false`."""
+    return data.get("narratore") is not False and scena(data) in SCENE_NARRATORE
 
 
 def cta(data: dict) -> str:
