@@ -22,7 +22,7 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
    - parola forte, che è facoltativa: se c'è va anche a schermo, se manca arriva un avviso da girare ad Antonio con
      il motivo;
    - suoni;
-   - voce maschile Charon a 1.1 (la dice la gruccia narratrice);
+   - voce maschile Charon a 1.0 (la dice la gruccia narratrice);
    - durata sotto i 25 s.
 
    Nel resoconto ad Antonio riporta la riga "regole: …" che stampa.
@@ -32,7 +32,8 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 
 "Voce più veloce, linguaggio per persone brainrottate, vanno bene anche tante parolacce. Devono esserci proprio temi
 divisivi… senza scalpore la gente non si ferma a vedere i video." Regole in `scrittura/regole/10-scalpore.md`:
-- voce maschile **Charon a 1.1**, calma e scandita (Antonio, 2026-11-25; prima Aoede 1.2): il build blocca le altre;
+- voce maschile **Charon a 1.0**, naturale e con enfasi (Antonio, 2026-11-25: "metti la voce a 1x… troppo meccanico";
+  prima Aoede 1.2): il build blocca le altre. Tutto il copione si sintetizza in una chiamata sola (`voce._chirp_tutto`);
 - **facilissimo, da bambino piccolo** ("te lo devi ricordare sempre"): nella voce niente date (si dice prima, dopo,
   tanto tempo fa) né percentuali o numeri grandi (un botto, un casino, un sacco); parole semplici, frasi cortissime.
   Il numero vero solo a schermo e in caption. Il build si ferma su date e percentuali nella voce;
@@ -53,6 +54,11 @@ subito nel diario (e, se si misura, in `regole.json`). Esempi veri: `scrittura/e
 ## Gancio vivo dal fotogramma 0 (obbligatorio; Antonio, 2026-11-20: il reel jeans/acqua "è andato bene")
 
 Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO, con titolo grande e senza intestazione.
+- **Niente barra di avanzamento in alto, mai** (Antonio, 2026-11-25: "leva per sempre la barra sopra ai video"):
+  `C.barra` in `preset/cartoon2d.js` è vuota apposta e non va rimessa, in nessuna scena (2D o 3D).
+- **Nei reel 3D (`blocchi3d`) niente titolo in alto**: solo sottotitoli a blocco, gruccia e cartello finale (Antonio,
+  2026-11-25: "rimuovi il testo sopra, il dialogo sotto va più che bene"). `schermo` resta nel copione per caption
+  e controlli, ma la scena 3D non lo disegna.
 - **La voce parla già al fotogramma 0 e non c'è nessun boom iniziale** (Antonio, 2026-11-23: "appena comincia il video,
   la voce deve star quasi già parlando. Evita di fare quel boom iniziale, perché non funziona"). `voce.LEAD_IN` = 0,05 s;
   il build si ferma se la voce arriva dopo 0,15 s o c'è un impatto nei primi 0,5 s (`regole.errore_attacco`). Le prime

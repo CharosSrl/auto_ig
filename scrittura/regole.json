@@ -27,7 +27,7 @@
     "totale_max": 70
   },
   "secondi": {
-    "parole_al_secondo": 3.0,
+    "parole_al_secondo": 2.6,
     "pausa": 0.4,
     "coda": 1.0,
     "max": 25.0
@@ -180,7 +180,7 @@
     "come",
     "anche"
   ],
-  "_secondi": "Antonio, 2026-11-25: voce maschile Charon a 1.1 → circa 3,0 parole al secondo (05-ritmo-e-durata)",
+  "_secondi": "Antonio, 2026-11-25: voce maschile Charon a 1.0 (\"metti la voce a 1x\") → circa 2,6 parole al secondo (05-ritmo-e-durata)",
   "_vietate": "Antonio, 2026-11-24: slang brainrot e parolacce ammessi; restano vietati solo il tono da prof e il marketing",
   "vietate_sempre": [
     "porc[oa]\\s+(dio|madonna|cristo|ges[uù])",

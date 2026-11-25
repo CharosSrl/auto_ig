@@ -38,7 +38,7 @@ def parole(t: str) -> list[str]:
 
 
 def stima_secondi(c: dict, r: dict | None = None) -> float:
-    """Durata stimata (voce Charon 1.1, Antonio 2026-11-25): parole / velocità + pause + coda. Il build misura quella vera."""
+    """Durata stimata (voce Charon 1.0, Antonio 2026-11-25): parole / velocità + pause + coda. Il build misura quella vera."""
     s = (r or regole())["secondi"]
     testi = [b.get("voce", "") for b in c.get("battute") or []] + [c.get("cta", "")]
     n = sum(len(str(t).split()) for t in testi)

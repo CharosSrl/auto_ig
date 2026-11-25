@@ -209,7 +209,8 @@ class TestChirp(unittest.TestCase):
         d = Path(tempfile.mkdtemp())
         with mock.patch.object(voce, "CACHE_DIR", d), mock.patch.dict(os.environ, {"GOOGLE_TTS_API_KEY": "k"}), \
                 mock.patch("requests.post", post):
-            sents, _ = voce.speak(["Ciao a tutti.", "Ciao a tutti."], d / "v.wav", voice_name="chirp3-aoede")
+            sents, _ = voce.speak(["Ciao a tutti.", "Ciao a tutti."], d / "v.wav", voice_name="chirp3-aoede",
+                                  speed=1.1)                            # frase per frase (a 1.0 è tutto di fila)
         self.assertEqual(len(chiamate), 1)                                   # seconda frase uguale: dalla cache
         url, headers, body = chiamate[0]
         self.assertNotIn("k", url.split("?")[-1] if "?" in url else "")      # la chiave non va nell'URL

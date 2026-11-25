@@ -1,10 +1,10 @@
 # 05 · Ritmo e durata
 
-- **Sotto i 25 s** in tutto, CTA compresa (lezione 7; il build si ferma). Calcolo veloce: voce Charon a 1.1 (Antonio,
-  2026-11-25) ≈ 3,0 parole al secondo, più 0,4 s di pausa tra le battute, più 1 s finale. Un copione da 25 s ha circa
-  **60-65 parole** in tutto.
+- **Sotto i 25 s** in tutto, CTA compresa (lezione 7; il build si ferma). Calcolo veloce: voce Charon a 1.0 (Antonio,
+  2026-11-25: "metti la voce a 1x") ≈ 2,6 parole al secondo, più le pause tra le battute, più 1 s finale. Un copione da
+  25 s ha circa **50-55 parole** in tutto.
 - Se è troppo lungo: prima si toglie la trappola finale o la battuta che non serve alla domanda, poi si accorciano le
-  frasi. La voce resta a 1.1, non oltre.
+  frasi. La voce resta a 1.0, mai velocizzata.
 - **4-6 battute** più la CTA. Una battuta è una frase sola (al massimo due frasi brevi).
 - **Il ritmo cambia almeno una volta**: una battuta corta secca (rehook, "Tre. Due. Uno.") tra due più lunghe.
 - **Un attimo di silenzio prima della risposta**, poi il suono più forte del reel (lo fa la regia; nel copione la

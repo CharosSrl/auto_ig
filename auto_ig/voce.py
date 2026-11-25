@@ -154,6 +154,109 @@ def _chirp_synth(voce_nome: str, text: str, speed: float) -> tuple[bytes, int, i
     return _atempo(_trim(pcm, rate), rate, speed), rate, 2, 1
 
 
+def _chirp_post(nome: str, inp: dict) -> bytes:
+    """Una chiamata Chirp 3 HD (cache per testo): ritorna il WAV. La chiave sta solo nell'header, mai nell'URL."""
+    key = hashlib.sha1(f"{nome}|{sorted(inp.items())}".encode()).hexdigest()[:20]
+    cached = CACHE_DIR / f"chirp-tutto-{key}.wav"
+    if not cached.exists():
+        import base64
+        import requests
+        from .config import load_dotenv
+        load_dotenv()
+        api_key = os.environ.get("GOOGLE_TTS_API_KEY", "")
+        if not api_key:
+            raise RuntimeError("Manca GOOGLE_TTS_API_KEY nel .env (voce Chirp 3 HD)")
+        r = requests.post(CHIRP_URL, headers={"X-Goog-Api-Key": api_key},
+                          json={"input": inp, "voice": {"languageCode": "it-IT", "name": nome},
+                                "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000}}, timeout=90)
+        if r.status_code != 200:
+            raise RuntimeError(f"Google TTS {r.status_code}: {r.text[:200]}")
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        cached.write_bytes(base64.b64decode(r.json()["audioContent"]))
+    return cached.read_bytes()
+
+
+def confini(pcm: bytes, rate: int, quote: list[float], min_pausa: float = 0.12) -> list[tuple[float, float]] | None:
+    """Divide un audio con N frasi dette di fila in N tratti (inizio, fine) in secondi.
+    quote: lunghezza relativa attesa di ogni frase (caratteri). Si cercano i silenzi (energia ogni 10 ms) e se ne
+    scelgono N-1 in ordine, premiando quelli lunghi e vicini al confine atteso. None se i silenzi non bastano."""
+    import numpy as np
+    a = np.frombuffer(pcm, "<i2").astype(np.float32) / 32768
+    hop = int(rate * 0.01)
+    n = len(a) // hop
+    if n == 0:
+        return None
+    rms = np.sqrt((a[: n * hop].reshape(n, hop) ** 2).mean(axis=1))
+    zitto = rms < max(0.006, 0.06 * float(np.percentile(rms, 95)))
+    parla = np.flatnonzero(~zitto)
+    if not len(parla):
+        return None
+    i0, i1 = int(parla[0]), int(parla[-1]) + 1
+    buchi, k = [], i0
+    while k < i1:                                        # silenzi interni lunghi almeno min_pausa
+        if zitto[k]:
+            j = k
+            while j < i1 and zitto[j]:
+                j += 1
+            if (j - k) * 0.01 >= min_pausa:
+                buchi.append((k, j))
+            k = j
+        else:
+            k += 1
+    m = len(quote) - 1
+    if m == 0:
+        return [(i0 * 0.01, i1 * 0.01)]
+    if len(buchi) < m:
+        return None
+    tot, durata = sum(quote), (i1 - i0)
+    attesi, c = [], 0.0
+    for q in quote[:-1]:
+        c += q
+        attesi.append(i0 + durata * c / tot)
+    # programmazione dinamica: m buchi in ordine, punteggio = lunghezza − distanza dal confine atteso
+    punti = lambda b, e: (b[1] - b[0]) - 0.35 * abs((b[0] + b[1]) / 2 - e)   # noqa: E731
+    NEG = float("-inf")
+    best = [[NEG] * (len(buchi) + 1) for _ in range(m + 1)]
+    scelta = [[None] * (len(buchi) + 1) for _ in range(m + 1)]
+    for j in range(len(buchi) + 1):
+        best[0][j] = 0.0
+    for i in range(1, m + 1):
+        for j in range(1, len(buchi) + 1):
+            salta, prendi = best[i][j - 1], best[i - 1][j - 1] + punti(buchi[j - 1], attesi[i - 1])
+            best[i][j], scelta[i][j] = (prendi, True) if prendi >= salta else (salta, False)
+    presi, i, j = [], m, len(buchi)
+    while i > 0:
+        if scelta[i][j]:
+            presi.append(buchi[j - 1]); i -= 1
+        j -= 1
+    presi.reverse()
+    tratti, inizio = [], i0
+    for b, e in presi:
+        tratti.append((inizio * 0.01, b * 0.01 + 0.04))
+        inizio = e - 2
+    tratti.append((inizio * 0.01, i1 * 0.01))
+    if any(e - s < 0.25 for s, e in tratti):
+        return None
+    return tratti
+
+
+def _chirp_tutto(voce_nome: str, frasi: list[str]) -> tuple[bytes, int, list[tuple[float, float]]] | None:
+    """Tutto il copione in UNA chiamata (Antonio, 2026-11-25: "troppo meccanico… non mette enfasi"): l'intonazione
+    scorre da una battuta all'altra come un discorso vero. Le battute sono separate da [pause short] (campo markup
+    di Chirp 3 HD); se Google rifiuta il markup si usa il testo a capo. Ritorna (pcm, rate, tratti) o None."""
+    nome = f"it-IT-Chirp3-HD-{voce_nome.capitalize()}"
+    try:
+        dati = _chirp_post(nome, {"markup": " [pause short] ".join(frasi)})
+    except RuntimeError as e:
+        if "400" not in str(e):
+            raise
+        dati = _chirp_post(nome, {"text": "\n".join(frasi)})
+    with wave.open(io.BytesIO(dati), "rb") as rf:
+        pcm, rate = rf.readframes(rf.getnframes()), rf.getframerate()
+    tratti = confini(pcm, rate, [max(len(f), 1) for f in frasi])
+    return (pcm, rate, tratti) if tratti else None
+
+
 def _trim(pcm: bytes, rate: int, soglia: float = 0.02, prima: float = 0.03, dopo: float = 0.08) -> bytes:
     """Toglie il silenzio ai bordi (Qwen ne lascia ~0,4 s prima e ~0,55 s dopo ogni frase): ritmo da Reel."""
     import numpy as np
@@ -212,6 +315,24 @@ def tts_text(text: str, pronuncia: dict | None = None) -> str:
     return re.sub(r"\b[A-ZÀ-Ý]{2,}\b", lambda m: m.group(0).lower(), text)
 
 
+def _scrivi_tutto(tutto, lines, out_wav: Path) -> tuple[list[Sentence], float]:
+    """Scrive il wav del copione detto tutto di fila: le pause tra le battute sono quelle vere della voce."""
+    pcm, rate, tratti = tutto
+    off = tratti[0][0]
+    a, b = int(off * rate) * 2, int(tratti[-1][1] * rate) * 2
+    sentences = []
+    for (text, tone), (s, e) in zip(lines, tratti):
+        s, e = round(LEAD_IN + s - off, 3), round(LEAD_IN + e - off, 3)
+        sentences.append(Sentence(text, s, e, word_timings(text, s, e), tone))
+    out_wav.parent.mkdir(parents=True, exist_ok=True)
+    with wave.open(str(out_wav), "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(rate)
+        wf.writeframes(b"\0" * int(LEAD_IN * rate) * 2 + pcm[a:b])
+    return sentences, round(sentences[-1].end + TAIL, 2)
+
+
 def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 1.0,
           synth=None, pronuncia: dict | None = None, pausa: float = PAUSE) -> tuple[list[Sentence], float]:
     """Sintetizza il copione in un unico wav. Ritorna (frasi con tempi, durata totale video consigliata).
@@ -220,6 +341,12 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
     lines = normalize_lines(lines)
     if not lines:
         raise ValueError("Il copione è vuoto")
+    if synth is None and is_chirp(voice_name) and abs(speed - 1.0) < 1e-6 and not any(passi) and len(lines) > 1:
+        nome = voice_name.partition("-")[2] or "aoede"
+        tutto = _chirp_tutto(nome, [tts_text(t, pronuncia) for t, _ in lines])
+        if tutto:
+            return _scrivi_tutto(tutto, lines, out_wav)
+        print("avviso voce: non trovo le pause tra le battute, sintetizzo frase per frase (meno naturale)")
     if synth is None and is_chirp(voice_name):
         nome = voice_name.partition("-")[2] or "aoede"
         synth = lambda text, tone: _chirp_synth(nome, text, speed)    # noqa: E731

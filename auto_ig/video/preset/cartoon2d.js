@@ -325,11 +325,9 @@ export function carteMistero(ctx, icone, scoperte, cx, cy, s, t, { attiva = -1, 
   });
 }
 
-// Barra di avanzamento in alto (k 0..1) e contatore "1/3"
-export function barra(ctx, k, { colore = CIPRIA } = {}) {
-  ctx.save(); ctx.fillStyle = 'rgba(255,255,255,0.18)'; rr(ctx, 60, 70, W - 120, 14, 7); ctx.fill();
-  ctx.fillStyle = colore; rr(ctx, 60, 70, Math.max(14, (W - 120) * clamp(k)), 14, 7); ctx.fill(); ctx.restore();
-}
+// Barra di avanzamento in alto: TOLTA PER SEMPRE (Antonio, 2026-11-25: "leva per sempre la barra sopra ai video").
+// Resta come funzione vuota solo perché nessuna scena vecchia si rompa: non disegna niente e non va rimessa.
+export function barra() {}
 export function contatore(ctx, n, tot, cx, cy, u, { accento = CIPRIA } = {}) {
   const k = clamp(u / 0.3), sc = lerp(1.8, 1, backOut(k));
   ctx.save(); ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.rotate(0.06);

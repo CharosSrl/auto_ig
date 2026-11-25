@@ -8,7 +8,7 @@
 // Regia per frase (scheda.scena3d):
 //   {set, cast: [{chi, dove:[x,z], ry, posa, espr, da:[x,z], a:[x,z], poi:{posa, espr, dopo}}], camera: {tipo, chi, verso, ...}, effetto, su}
 //   chi: nome di RICETTE (tu, amica, amico, prof, ...) oppure comparsaN (casuale(N)).
-// Ogni frame: prima la scena 3D, poi sopra la tela 2D trasparente (titolo, barra, flash, CTA, narratore).
+// Ogni frame: prima la scena 3D, poi sopra la tela 2D trasparente (flash, CTA, narratore; niente titolo in alto né barra).
 import { start } from './common.js';
 import { tempiAtti } from '../preset/regia.js';
 import * as G from '../preset/grafica2d.js';
@@ -141,18 +141,9 @@ start({ schede: '', accento: '#ffd23f', formato: 'curiosita', durata: '12', narr
       tela.inizia();
       if (s.tipo === 'cta') {
         G.finale(ctx, Math.min(1, lt / 0.6), { testo: s.titolo || '', bottone: s.bottone, azione: s.azione, accento: acc, t });
-      } else {
-        C.barra(ctx, t / fineTot, { colore: acc });
-        if (s.titolo) {                            // titolo grande in alto: entra con un piccolo rimbalzo a ogni frase
-          const k = i === 0 ? 1 : G.entra(lt, 0, 0.35), sc = 0.85 + 0.15 * (1 - Math.pow(1 - k, 3)) + (k < 1 ? 0.06 * Math.sin(k * Math.PI) : 0);
-          ctx.save(); ctx.translate(540, 250); ctx.scale(sc, sc); ctx.globalAlpha = Math.min(1, k * 1.6);
-          ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 0;
-          for (const [ox, oy] of [[-5, 0], [5, 0], [0, -5], [0, 7], [-4, -4], [4, 4], [-4, 4], [4, -4]]) { ctx.shadowOffsetX = ox; ctx.shadowOffsetY = oy; G.testo(ctx, s.titolo, 0, 0, { size: 100, peso: 900, colore: '#1a0710', maxW: 940 }); }
-          ctx.shadowColor = 'transparent';
-          G.testo(ctx, s.titolo, 0, 0, { size: 100, peso: 900, colore: '#ffffff', maxW: 940, evidenzia: s.evidenzia || '', accento: acc });
-          ctx.restore();
-        }
       }
+      // Niente titolo in alto nel 3D (Antonio, 2026-11-25: "rimuovi il testo sopra, il dialogo sotto va più che bene"):
+      // a schermo restano solo i sottotitoli a blocco, la gruccia e il cartello finale.
       const bt = BT.filter((b) => b.t <= t).pop();
       if (bt && bt.t > 0.3) C.flash(ctx, ({ boom: 0.45, rivela: 0.3, stacco: 0.12 }[bt.k] ?? 0) * Math.exp(-(t - bt.t) * 12));
       if (NARRA) narratore(ctx, ...POSN, statoNarratore(NARRA, t, { inchino }));

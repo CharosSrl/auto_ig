@@ -351,7 +351,6 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
   }
 
   function hud(t, i, s) {
-    C.barra(ctx, t / atti.fine, { colore: acc });
     gruccia(ctx, 104, 170, 56, acc, 5);
     ctx.save(); ctx.fillStyle = '#fff'; ctx.font = '700 44px "DejaVu Serif", serif'; ctx.textBaseline = 'middle'; ctx.fillText('Cintre', 148, 170);
     G.pillola(ctx, etichetta.toUpperCase(), 445, 172, { size: 28, fondo: acc, colore: BORDEAUX, h: 52 }); ctx.restore();
@@ -385,9 +384,9 @@ start({ schede: '', colore: BORDEAUX, accento: CIPRIA, formato: 'curiosita', dur
     } else scena(s, i, t, u, bt, nb);
     ctx.restore();
 
-    // gancio con grafica viva: niente intestazione "Cintre · LO SAPEVI?" (sembra un template), solo la barra
-    if (s.tipo === 'gancio' && s.grafica) C.barra(ctx, t / atti.fine, { colore: acc });
-    else if (s.tipo !== 'cta') hud(t, i, s);
+    // gancio con grafica viva: niente intestazione "Cintre · LO SAPEVI?" (sembra un template).
+    // Niente barra di avanzamento in alto, mai (Antonio, 2026-11-25: "leva per sempre la barra sopra ai video").
+    if (!(s.tipo === 'gancio' && s.grafica) && s.tipo !== 'cta') hud(t, i, s);
     // esplosioni sulle rivelazioni e sul gancio, tendina sugli stacchi, flash
     if (bt.k === 'rivela') C.esplosione(ctx, s.tipo === 'risposta' ? 540 : L.ic, s.tipo === 'risposta' ? OPZ_Y(s.giusta ?? 0, !!s.foto) : 800, bt.dt, { seme: bt.b, ...(s.tipo === 'risposta' ? { n: 34, forza: 1300 } : {}) });
     if (bt.k === 'boom') C.esplosione(ctx, 540, 360, bt.dt, { seme: bt.b + 5, n: 30, forza: 1300 });

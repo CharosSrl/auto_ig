@@ -126,4 +126,5 @@ narratore e i fondali di `scena2d`.
   - `camera.js`: primo piano, quinta, campo largo, orbita…;
   - `ricette.js`: 9 personaggi pronti e `casuale(seed)` per le comparse.
 - Laboratorio: `auto_ig/video/laboratorio/avatar.html?foglio=personaggi|capelli|facce|bocche|occhi|sopra|sotto|scarpe|accessori|pose|ambienti|casuali`.
+- Nei reel 3D **niente titolo in alto**, solo sottotitoli a blocco (Antonio, 2026-11-25: "rimuovi il testo sopra").
 - Lo stile "a blocchi" è un genere: niente asset, loghi, nomi o facce di Roblox. È tutto disegnato da noi.
