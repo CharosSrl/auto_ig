@@ -10,6 +10,7 @@ import io
 import os
 import re
 import subprocess
+import time
 import wave
 from dataclasses import asdict, dataclass
 from functools import lru_cache
@@ -29,6 +30,10 @@ TONES = {
     "": {"speed": 1.0, "noise": None, "noise_w": None, "highlight": None, "scale": 108, "shake": 0},
     "arrabbiata": {"speed": 1.13, "noise": 0.85, "noise_w": 1.0, "highlight": "#FF3B30", "scale": 116, "shake": 3},
     "felice": {"speed": 0.96, "noise": 0.75, "noise_w": 0.9, "highlight": None, "scale": 112, "shake": 0},
+    # i 4 toni di Antonio (2026-11-26) per la voce Gemini: normale, curiosa, arrabbiata (sopra), triste
+    "normale": {"speed": 1.0, "noise": None, "noise_w": None, "highlight": None, "scale": 108, "shake": 0},
+    "curiosa": {"speed": 1.0, "noise": None, "noise_w": None, "highlight": "#7CF2C8", "scale": 112, "shake": 0},
+    "triste": {"speed": 0.95, "noise": None, "noise_w": None, "highlight": "#8FB8FF", "scale": 104, "shake": 0},
 }
 
 
@@ -174,6 +179,87 @@ def _chirp_post(nome: str, inp: dict) -> bytes:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         cached.write_bytes(base64.b64decode(r.json()["audioContent"]))
     return cached.read_bytes()
+
+
+# --- Gemini-TTS (Gemini API di AI Studio): recita il tono chiesto a parole ------------------------------
+# modello: "gemini-charon". Antonio, 2026-11-26: "la qualità di quello di ora è veramente scarsa… avevo pensato a 4
+# toni diversi": arrabbiata (rimproveri, indignazione), triste (momenti tristi, imbarazzo), normale (storytelling),
+# curiosa (domande). Ogni battuta ha il suo `tono` e si sintetizza con la sua istruzione di stile.
+# Chiave in .env: GEMINI_API_KEY (AI Studio, progetto cintre-voice), solo nell'header, mai nell'URL. Su Cloud TTS
+# lo stesso modello passa da Vertex e una chiave semplice non basta (403 aiplatform.endpoints.predict, 2026-11-27).
+# A consumo: circa mezzo centesimo a reel. Le battute già fatte stanno in .voci/cache.
+GEMINI_MODELLI = ("gemini-2.5-flash-preview-tts", "gemini-2.5-flash-tts")
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent"
+GEMINI_BASE = ("Sei un ragazzo italiano di vent'anni che racconta una storia a un amico: voce naturale, pronuncia "
+               "italiana perfetta, ritmo da reel, mai da speaker.")
+GEMINI_TONI = {
+    "": "Tono normale da racconto: sciolto, sicuro, un filo ironico.",
+    "normale": "Tono normale da racconto: sciolto, sicuro, un filo ironico.",
+    "curiosa": "Tono curioso: fai la domanda incuriosito, con l'intonazione che sale alla fine, come chi vuole davvero sapere.",
+    "arrabbiata": "Tono arrabbiato e indignato, come chi rimprovera un amico: deciso, energico, ma senza urlare.",
+    "triste": "Tono triste e imbarazzato: più piano, un po' abbattuto, come chi ammette una figuraccia.",
+    "felice": "Tono felice e divertito, col sorriso nella voce.",
+}
+
+
+def is_gemini(name: str) -> bool:
+    return str(name).startswith("gemini-")
+
+
+def gemini_prompt(text: str, tone: str) -> str:
+    return (f"{GEMINI_BASE} {GEMINI_TONI.get(tone, GEMINI_TONI[''])}\n"
+            f"Leggi ad alta voce SOLO questo testo, parola per parola, senza aggiungere niente:\n{text}")
+
+
+def _gemini_post(voce_nome: str, prompt: str) -> bytes:
+    """Una chiamata alla Gemini API: ritorna il PCM 16 bit mono a 24 kHz."""
+    import base64
+    import requests
+    from .config import load_dotenv
+    load_dotenv()
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        raise RuntimeError("Manca GEMINI_API_KEY nel .env (voce Gemini-TTS, chiave di AI Studio)")
+    body = {"contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {
+                "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voce_nome.capitalize()}}}}}
+    errore = ""
+    for modello in GEMINI_MODELLI:
+        for tentativo in range(6):          # 429 = troppe richieste al minuto: si aspetta quanto dice Google e si riprova
+            r = requests.post(GEMINI_URL.format(modello), headers={"x-goog-api-key": api_key}, json=body, timeout=180)
+            if r.status_code != 429 or tentativo == 5:
+                break
+            attesa = 30.0
+            try:
+                for d in r.json()["error"].get("details", []):
+                    if str(d.get("retryDelay", "")).endswith("s"):
+                        attesa = float(d["retryDelay"][:-1]) + 2
+            except (ValueError, KeyError):
+                pass
+            print(f"avviso voce: Gemini-TTS limita le richieste al minuto, aspetto {attesa:.0f} s")
+            time.sleep(min(attesa, 90))
+        if r.status_code == 200:
+            parti = r.json()["candidates"][0]["content"]["parts"]
+            return base64.b64decode(next(p["inlineData"]["data"] for p in parti if "inlineData" in p))
+        errore = f"Gemini-TTS {modello} {r.status_code}: {r.text[:300]}"
+        if r.status_code != 404:
+            break
+    raise RuntimeError(errore)
+
+
+def _gemini_synth(voce_nome: str, text: str, tone: str) -> tuple[bytes, int, int, int]:
+    """Una battuta letta da Gemini-TTS con l'istruzione del suo tono (dalla cache se già fatta)."""
+    prompt = gemini_prompt(text, tone)
+    key = hashlib.sha1(f"{GEMINI_MODELLI[0]}|{voce_nome}|{prompt}".encode()).hexdigest()[:20]
+    cached = CACHE_DIR / f"gemini-{key}.wav"
+    if not cached.exists():
+        pcm = _gemini_post(voce_nome, prompt)
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        with wave.open(str(cached), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(24000); w.writeframes(pcm)
+    with wave.open(str(cached), "rb") as rf:
+        pcm, rate = rf.readframes(rf.getnframes()), rf.getframerate()
+    return _trim(pcm, rate), rate, 2, 1
 
 
 def _silenzi(pcm: bytes, rate: int, min_pausa: float):
@@ -493,7 +579,11 @@ def speak(lines, out_wav: Path, voice_name: str = DEFAULT_VOICE, speed: float = 
             frasi = allinea_whisper(out_wav, frasi)       # tempi veri delle parole, sempre (Antonio 2026-11-26)
             return frasi, round(frasi[-1].end + TAIL, 2)
         print("avviso voce: non trovo le pause tra le battute, sintetizzo frase per frase (meno naturale)")
-    if synth is None and is_chirp(voice_name):
+    if synth is None and is_gemini(voice_name):       # un'istruzione di tono per battuta: frase per frase
+        nome = voice_name.partition("-")[2] or "charon"
+        synth = lambda text, tone: _gemini_synth(nome, text, tone)    # noqa: E731
+        pausa = min(pausa, 0.3)
+    elif synth is None and is_chirp(voice_name):
         nome = voice_name.partition("-")[2] or "aoede"
         synth = lambda text, tone: _chirp_synth(nome, text, speed)    # noqa: E731
     elif synth is None and is_qwen(voice_name):

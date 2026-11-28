@@ -60,8 +60,9 @@ audio: {{musica: {audio}, sfx: {audio}}}   # base musicale e effetti sonori gene
 
 # Voce (locale) e copione: una riga = una frase detta e mostrata a schermo
 voce:
-  modello: chirp3-charon  # la voce di Cintre (maschile, dal 2026-11-25): Google Chirp 3 HD (GOOGLE_TTS_API_KEY nel .env, gratis fino a 1M car./mese)
-                          # | qwen3-vivian (Qwen3-TTS locale, lenta) | it_IT-paola-medium (Piper, istantanea)
+  modello: gemini-charon  # la voce di Cintre (Antonio, 2026-11-28): Charon con Gemini-TTS, un tono per battuta
+                          # (GEMINI_API_KEY nel .env, circa mezzo centesimo a reel)
+                          # | chirp3-charon (riserva: Chirp 3 HD, GOOGLE_TTS_API_KEY, senza toni) | qwen3-vivian (Qwen3-TTS locale, lenta) | it_IT-paola-medium (Piper, istantanea)
   velocita: 1.0           # 1.0 nei reel (Antonio, 2026-11-25: "metti la voce a 1x", naturale)
   pausa: 0.5              # silenzio tra le frasi (default 0.35)
   # pronuncia: {{Cintre: "Sèntr"}}   # solo audio: come leggere certe parole

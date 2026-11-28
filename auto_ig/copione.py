@@ -172,6 +172,15 @@ def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
         difficili = [w for w in parole(b["voce"]) if len(w) >= 12 and not w[0].isdigit()]
         if difficili:
             av.append(f"battuta {i}: parole lunghe ({', '.join(difficili)}): le capirebbe un bambino? (10-scalpore)")
+    # toni della voce (Antonio, 2026-11-28): con gemini-charon ogni battuta si recita nel suo tono
+    toni = set(r.get("toni", []))
+    for i, b in enumerate(bt, 1):
+        if b.get("ritmo") is not None:
+            continue
+        if not b.get("tono"):
+            av.append(f"battuta {i}: manca 'tono' ({' | '.join(sorted(toni))}): la voce la legge piatta (03-lingua)")
+        elif toni and b["tono"] not in toni:
+            errs.append(f"battuta {i}: tono '{b['tono']}' non valido ({' | '.join(sorted(toni))}) (03-lingua)")
     for i, b in enumerate(bt, 1):
         n = len(b["voce"].split())
         if b["ruolo"] not in ("rehook", "conto") and not P["battuta_min"] <= n <= P["battuta_max"]:

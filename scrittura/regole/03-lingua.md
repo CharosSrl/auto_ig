@@ -32,7 +32,19 @@ La voce di Google non ha un comando per l'enfasi: recita la punteggiatura. Quind
 - **Esclamazioni** sulla reazione: "Uguali!" Virgole dove si respira, non dove vuole la grammatica.
 - **Interiezioni vere**, una o due per reel: "eh", "no vabbè", "cioè", "ok", "bro".
 - **Frasi spezzate in due** quando c'è una sorpresa: "Uno l'ha fatto. Davvero."
-- Il copione si sintetizza **tutto in una volta** (`voce._chirp_tutto`), così l'intonazione scorre da una battuta
-  all'altra: le battute devono legarsi come un discorso solo.
+- Con la riserva Chirp il copione si sintetizza **tutto in una volta** (`voce._chirp_tutto`), così l'intonazione
+  scorre da una battuta all'altra: le battute devono legarsi come un discorso solo.
+
+## Un tono per battuta (Antonio, 2026-11-28: la voce Gemini con i toni "è molto meglio")
+La voce è `gemini-charon`: Gemini-TTS recita ogni battuta nel tono scritto nel campo `tono` del copione.
+`copione controlla` avvisa se una battuta non ce l'ha (la legge piatta) e si ferma su un tono che non esiste.
+- **curiosa**: le domande, il gancio a domanda, il rehook ("Ma di che colore è davvero?").
+- **normale**: il racconto e la risposta ("Una mamma lo fotografa per un matrimonio.").
+- **arrabbiata**: rimproveri e indignazione ("E litigano tutti, pure le star!").
+- **triste**: imbarazzo e momenti giù ("Quasi tutti dicevano bianco e oro… pure tu, eh?").
+- `felice` esiste, ma va usato poco.
+
+Si alternano: due battute di fila nello stesso tono, se non è normale, perdono forza. La punteggiatura conta
+ancora, perché il tono decide il colore della frase e i puntini decidono dove respira.
 
 **Prova finale:** se il copione, letto ad alta voce, non lo racconteresti a un amico, va riscritto.

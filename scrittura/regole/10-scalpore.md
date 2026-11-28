@@ -56,8 +56,9 @@ Prima → dopo:
 
 ## Tono (brainrot)
 - **Voce maschile Charon a 1.0** (Antonio, 2026-11-25: "più calma… deve scandire bene ogni parola", poi "metti la voce a
-  1x… troppo meccanico"; prima Aoede a 1.2).
-  Tono calmo e impassibile anche sulle parolacce (11-attacco-a-te). I sottotitoli a blocco aiutano a capire.
+  1x… troppo meccanico"; prima Aoede a 1.2). Dal 2026-11-28 è Charon con Gemini-TTS (`gemini-charon`), con un tono per
+  battuta: curiosa, normale, arrabbiata, triste (03-lingua). Di base resta calma e impassibile anche sulle parolacce
+  (11-attacco-a-te); l'arrabbiata serve per l'indignazione, non per urlare tutto il reel. I sottotitoli a blocco aiutano a capire.
 - **Slang ammesso**: bro, fra, tipo, POV, aura, rizz, cringe, flex, red flag, "no ma", "ma che cazzo", "letteralmente".
   Senza esagerare fino a non capire niente: una frase deve reggere anche al primo ascolto.
 - **Parolacce ammesse, anche tante**: cazzo, merda, stronzata, minchia, cazzata, incazzato, fa cagare, vaffanculo.

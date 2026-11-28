@@ -102,6 +102,18 @@ class CopioneTest(unittest.TestCase):
         c["battute"][1]["voce"] = "Prima era dei maschi, poi un botto di negozi lo cambia."
         self.assertNotIn("brainrot", self.errori(c))
 
+    def test_tono_per_battuta(self):
+        """Antonio, 2026-11-28: voce gemini-charon, ogni battuta col suo tono."""
+        c = buono()
+        for b in c["battute"]:
+            b["tono"] = "normale"
+        c["battute"][0].pop("tono")
+        errs, av = copione.controlla(c)
+        self.assertTrue(any("battuta 1: manca 'tono'" in x for x in av), av)
+        self.assertFalse(any("battuta 2: manca 'tono'" in x for x in av))
+        c["battute"][0]["tono"] = "isterica"
+        self.assertIn("tono 'isterica' non valido", self.errori(c))
+
     def test_parola_forte_detta_e_scritta(self):
         c = buono()
         c["battute"][0]["schermo"] = "Donne in Prada?"

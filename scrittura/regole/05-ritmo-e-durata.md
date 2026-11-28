@@ -1,7 +1,8 @@
 # 05 · Ritmo e durata
 
 - **Sotto i 25 s** in tutto, CTA compresa (lezione 7; il build si ferma). Calcolo veloce: voce Charon a 1.0 (Antonio,
-  2026-11-25: "metti la voce a 1x") ≈ 2,6 parole al secondo, più le pause tra le battute, più 1 s finale. Un copione da
+  2026-11-25: "metti la voce a 1x") ≈ 2,6 parole al secondo, più le pause tra le battute, più 1 s finale. Con
+  `gemini-charon` ogni battuta è sintetizzata a parte e le pause sono al massimo 0,3 s. Un copione da
   25 s ha circa **50-55 parole** in tutto.
 - Se è troppo lungo: prima si toglie la trappola finale o la battuta che non serve alla domanda, poi si accorciano le
   frasi. La voce resta a 1.0, mai velocizzata.

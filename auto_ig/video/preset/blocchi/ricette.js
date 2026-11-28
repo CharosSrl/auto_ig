@@ -31,6 +31,13 @@ export const RICETTE = {
   sorella: { pelle: 2, capelli: 'coda', colCapelli: '#7a3b1e', occhi: 'grandi', colOcchi: '#2f6b3a',
     sopra: { tipo: 'maglione', colore: '#c7a6f0', colore2: '#ffffff' }, sotto: { tipo: 'pantaloncini', colore: '#3e5f95' },
     scarpe: { tipo: 'crocs', colore: '#8fd6b4' }, accessori: ['telefono'] },
+  // "the dress" (2026-11-26): la mamma col vestito com'è davvero (blu con pizzo nero) e come lo vedeva mezzo mondo
+  mamma: { pelle: 1, capelli: 'chignon', colCapelli: '#6b3f22', occhi: 'ciglia',
+    sopra: { tipo: 'canotta', colore: '#2a47c8', colore2: '#111111', stampa: 'righe' }, sotto: { tipo: 'gonna', colore: '#2a47c8' },
+    scarpe: { tipo: 'tacchi', colore: '#111111' }, accessori: ['orecchini'] },
+  mammaOro: { pelle: 1, capelli: 'chignon', colCapelli: '#6b3f22', occhi: 'ciglia',
+    sopra: { tipo: 'canotta', colore: '#eee8da', colore2: '#c9a23a', stampa: 'righe' }, sotto: { tipo: 'gonna', colore: '#eee8da' },
+    scarpe: { tipo: 'tacchi', colore: '#c9a23a' }, accessori: ['orecchini'] },
   conduttore: { pelle: 2, capelli: 'corti', colCapelli: '#1f140c', occhi: 'tondi', sopracciglia: 'folte',
     sopra: { tipo: 'giacca', colore: '#2b3a67', colore2: '#ffffff' }, sotto: { tipo: 'pantaloni', colore: '#2b3a67' },
     scarpe: { tipo: 'stivali', colore: '#1d1d1f' } },

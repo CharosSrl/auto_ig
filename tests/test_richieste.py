@@ -71,7 +71,9 @@ class TestToni(unittest.TestCase):
         lines = voce.normalize_lines(["Ciao.", {"testo": "Basta!", "tono": "Arrabbiata"}, {"testo": " "}])
         self.assertEqual(lines, [("Ciao.", ""), ("Basta!", "arrabbiata")])
         with self.assertRaises(ValueError):
-            voce.normalize_lines([{"testo": "x", "tono": "triste"}])
+            voce.normalize_lines([{"testo": "x", "tono": "isterica"}])
+        for t in ("normale", "curiosa", "triste"):            # i 4 toni di Antonio (2026-11-26)
+            self.assertEqual(voce.normalize_lines([{"testo": "x", "tono": t}]), [("x", t)])
         s = [voce.Sentence("Basta adesso!", 0.5, 2.0, voce.word_timings("Basta adesso!", 0.5, 2.0), "arrabbiata"),
              voce.Sentence("Che bello.", 2.5, 3.5, voce.word_timings("Che bello.", 2.5, 3.5), "")]
         ev = [l for l in voce.build_ass(s, "#E8C4C0").splitlines() if l.startswith("Dialogue:")]

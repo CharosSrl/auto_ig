@@ -32,6 +32,8 @@
     "coda": 1.0,
     "max": 25.0
   },
+  "_toni": "Antonio, 2026-11-28: voce gemini-charon, ogni battuta col suo tono. curiosa = domande e rehook; normale = racconto e risposta; arrabbiata = rimproveri e indignazione; triste = imbarazzo e momenti giù",
+  "toni": ["normale", "curiosa", "arrabbiata", "triste", "felice"],
   "cta_obbligatoria": "Segui la pagina e metti like!",
   "_cta": "Antonio, 2026-11-22: la CTA di TUTTI i video è seguire la pagina e mettere like (06-cta-e-caption).",
   "strutture_valutate": 3,

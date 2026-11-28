@@ -8,7 +8,7 @@ esplicitamente; per cambiarla si cambia il codice e glielo si dice.
 - parola forte: SOLO se è il cuore vero della storia (Antonio, 2026-11-19: obbligarla produceva ganci forzati, sempre
   "guerra"). Se c'è, va detta e scritta censurata nel gancio (m*rte); se manca è un avviso, da dire ad Antonio con il motivo;
 - suoni: effetti e base sempre accesi;
-- voce: maschile, Charon (chirp3-charon) a 1.0 (Antonio, 2026-11-25: "una voce maschile, anche più calma, che deve scandire
+- voce: maschile, Charon a 1.0, con Gemini-TTS e un tono per battuta (gemini-charon dal 2026-11-28; riserva chirp3-charon) (Antonio, 2026-11-25: "una voce maschile, anche più calma, che deve scandire
   bene ogni parola"; poi "metti la voce a 1x… troppo meccanico"; prima Aoede a 1.2). La dice la gruccia narratrice;
 - durata: sotto i 25 s (controllata dopo la voce, prima del render);
 - attacco: la voce parla già al fotogramma 0 (≤ 0,15 s) e all'inizio non c'è nessun boom/impatto (Antonio, 2026-11-23:
@@ -25,7 +25,11 @@ from . import censura
 
 FORMATI_REEL = ("quiz", "curiosita")
 MAX_SECONDI = 25.0
-VOCE = "chirp3-charon"  # Antonio, 2026-11-25: voce maschile, calma e scandita (prima chirp3-aoede)
+# Antonio, 2026-11-28: Charon con Gemini-TTS, che recita i 4 toni (arrabbiata, triste, normale, curiosa), è la voce
+# fissa ("è molto meglio"). Chirp 3 HD Charon resta come riserva se Gemini non risponde (prima chirp3-aoede).
+VOCE = "gemini-charon"
+VOCE_RISERVA = "chirp3-charon"
+VOCI = (VOCE, VOCE_RISERVA)
 VELOCITA = 1.0          # Antonio, 2026-11-25: "metti la voce a 1x" (a 1.1 lo stiramento la rendeva meccanica)
 
 
@@ -80,8 +84,8 @@ def errori(data: dict) -> list[str]:
     if not (au.get("sfx") and au.get("musica")):
         errs.append("audio: {musica: true, sfx: true} (effetti a tempo con ogni evento, skill regia-reel)")
     v = data.get("voce") or {}
-    if v.get("modello") != VOCE:
-        errs.append(f"voce.modello deve essere {VOCE} (la voce di Cintre)")
+    if v.get("modello") not in VOCI:
+        errs.append(f"voce.modello deve essere {' o '.join(VOCI)} (la voce di Cintre)")
     if abs(float(v.get("velocita", 1.0)) - VELOCITA) > 1e-6:
         errs.append(f"voce.velocita deve essere {VELOCITA} (Antonio, 2026-11-25: voce maschile calma e scandita)")
     return errs

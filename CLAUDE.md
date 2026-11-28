@@ -22,7 +22,7 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
    - parola forte, che è facoltativa: se c'è va anche a schermo, se manca arriva un avviso da girare ad Antonio con
      il motivo;
    - suoni;
-   - voce maschile Charon a 1.0 (la dice la gruccia narratrice);
+   - voce maschile Charon a 1.0 con Gemini-TTS (`gemini-charon`, un tono per battuta; la dice la gruccia narratrice);
    - durata sotto i 25 s.
 
    Nel resoconto ad Antonio riporta la riga "regole: …" che stampa.
@@ -33,7 +33,11 @@ Claude prepara le bozze dei contenuti. Antonio li approva e li mette in coda dal
 "Voce più veloce, linguaggio per persone brainrottate, vanno bene anche tante parolacce. Devono esserci proprio temi
 divisivi… senza scalpore la gente non si ferma a vedere i video." Regole in `scrittura/regole/10-scalpore.md`:
 - voce maschile **Charon a 1.0**, naturale e con enfasi (Antonio, 2026-11-25: "metti la voce a 1x… troppo meccanico";
-  prima Aoede 1.2): il build blocca le altre. Tutto il copione si sintetizza in una chiamata sola (`voce._chirp_tutto`);
+  prima Aoede 1.2): il build blocca le altre. **Dal 2026-11-28 è `gemini-charon`** (Gemini-TTS, `GEMINI_API_KEY` nel
+  `.env`, solo nell'header `x-goog-api-key`; Antonio: "è molto meglio"). Ogni battuta ha il suo `tono`: curiosa per
+  domande e rehook, normale per racconto e risposta, arrabbiata per rimproveri e indignazione, triste per l'imbarazzo
+  (`scrittura/regole/03-lingua.md`). `copione controlla` avvisa se manca. Riserva: `chirp3-charon`, tutto il copione
+  in una chiamata (`voce._chirp_tutto`), senza toni;
 - **sottotitoli sempre in sync con faster-whisper** (Antonio, 2026-11-26: "ora è in sync… dovrai usarlo per tutti i
   prossimi video"): `voce.speak` prende i tempi veri di ogni parola con `allinea_whisper` (modello small, offline).
   Se nel build compare "avviso voce: faster-whisper non disponibile" o "whisper riconosce solo…", va sistemato

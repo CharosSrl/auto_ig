@@ -72,6 +72,45 @@ class SpeakTuttoTest(unittest.TestCase):
             self.assertEqual(len(frasi), 2)
 
 
+class GeminiTest(unittest.TestCase):
+    def test_un_tono_per_battuta_chiave_nell_header(self):
+        chiamate = []
+
+        class R:
+            status_code = 200
+            def json(self):
+                import base64
+                pcm = base64.b64encode(audio([(0.6, 1)])).decode()          # PCM senza intestazione
+                return {"candidates": [{"content": {"parts": [{"inlineData": {"mimeType": "audio/L16", "data": pcm}}]}}]}
+
+        def finto_post(url, headers, json, timeout):
+            chiamate.append((url, headers, json))
+            return R()
+
+        import requests
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(voce, "CACHE_DIR", Path(d)), \
+                mock.patch.object(requests, "post", finto_post), mock.patch.dict("os.environ", {"GEMINI_API_KEY": "k"}), \
+                mock.patch.object(voce, "allinea_whisper", lambda wav, frasi: frasi):
+            frasi, _ = voce.speak([{"testo": "Ma davvero?", "tono": "curiosa"}, {"testo": "Basta!", "tono": "arrabbiata"}],
+                                  Path(d) / "v.wav", "gemini-charon", 1.0)
+        self.assertEqual(len(chiamate), 2)
+        url, head, body = chiamate[0]
+        self.assertNotIn("key=", url)                                   # mai la chiave nell'URL
+        self.assertEqual(head, {"x-goog-api-key": "k"})
+        voce_cfg = body["generationConfig"]["speechConfig"]["voiceConfig"]["prebuiltVoiceConfig"]
+        self.assertEqual(voce_cfg, {"voiceName": "Charon"})
+        self.assertIn("curioso", body["contents"][0]["parts"][0]["text"])
+        self.assertIn("Ma davvero?", body["contents"][0]["parts"][0]["text"])
+        self.assertIn("arrabbiato", chiamate[1][2]["contents"][0]["parts"][0]["text"])
+        self.assertEqual([f.tone for f in frasi], ["curiosa", "arrabbiata"])
+
+    def test_senza_chiave_errore_chiaro(self):
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(voce, "CACHE_DIR", Path(d)), \
+                mock.patch.dict("os.environ", {"GEMINI_API_KEY": ""}), mock.patch("auto_ig.config.load_dotenv", lambda: None):
+            with self.assertRaisesRegex(RuntimeError, "GEMINI_API_KEY"):
+                voce._gemini_synth("charon", "Ciao.", "")
+
+
 class ParoleSullAudioTest(unittest.TestCase):
     def test_pause_vere_e_consonanti(self):
         # "La mattina dopo?" 0,9 s con una chiusura da consonante (0,1 s) | pausa 0,3 | "Le rimetti." 0,6 | pausa 0,3 | "Ancora umide." 0,7
