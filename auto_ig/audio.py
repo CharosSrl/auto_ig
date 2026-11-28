@@ -171,21 +171,48 @@ def _tastiera_sintetica(dur: float = 1.0) -> np.ndarray:
     return out
 
 
+def strappo(dur: float = 0.5, seme: int = 5) -> np.ndarray:
+    """Lo strappo del velcro: tanti clic fitti e ruvidi che salgono e scendono (2026-11-28)."""
+    n = int(dur * SR)
+    rng = np.random.default_rng(seme)
+    t = np.arange(n) / n
+    dens = 0.02 + 0.06 * np.sin(np.pi * t)
+    x = (rng.random(n) < dens) * rng.uniform(-1, 1, n) + 0.18 * _rumore(n, seme + 1)
+    x = x - _passabasso(x, 0.2)                                        # passa-alto: ruvido, non sordo
+    return x / (np.abs(x).max() + 1e-9) * np.sin(np.pi * np.clip(t * 1.05, 0, 1)) ** 0.5
+
+
+def bau(seme: int = 8) -> np.ndarray:
+    """Due abbai corti di un cane (sintetici): tono che scende, armoniche saturate, un filo di soffio."""
+    def uno(k: float) -> np.ndarray:
+        t = _t(0.16)
+        f = (560 - 240 * (t / t[-1])) * k
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        s = np.tanh(2.2 * sum(a * np.sin(h * ph) for h, a in ((1, 1.0), (2, 0.6), (3, 0.45), (4, 0.25))))
+        return (s + 0.35 * _passabasso(_rumore(len(t), seme), 0.3)) * _env(len(t), 0.004, 0.05)
+    out = np.zeros(int(0.45 * SR))
+    a, b = uno(1.0), uno(0.94)
+    out[:len(a)] += a
+    i = int(0.21 * SR)
+    out[i:i + len(b)] += 0.85 * b
+    return out
+
+
 # --- Campioni CC0 (auto_ig/sfx, vedi CREDITI.md) con ripiego sintetico -----------------------------
 SFX_DIR = Path(__file__).resolve().parent / "sfx"
 RIPIEGO = {"scatto": lambda: np.pad(tic(), (0, int(0.2 * SR) - len(tic()))) + 0.6 * whoosh(0.2), "pop": lambda: pop(), "tic": lambda: tic(),
            "conferma": lambda: ding(), "pop_morbido": lambda: pop(), "whoosh": lambda: whoosh(),
            "swish": lambda: whoosh(0.15), "tastiera": lambda: _tastiera_sintetica(3.0),
-           "impatto": lambda: boom(), "riser": lambda: riser()}
+           "impatto": lambda: boom(), "riser": lambda: riser(), "strappo": lambda: strappo(), "bau": lambda: bau()}
 # livelli (ampiezza di picco) per suono: la voce resta davanti (~0.9)
 LIV_SUONI = {"scatto": 0.45, "impatto": 0.5, "whoosh": 0.26, "swish": 0.12, "pop": 0.3, "tic": 0.35,
-             "riser": 0.22, "conferma": 0.24, "tastiera": 0.2, "pop_morbido": 0.25}
+             "riser": 0.22, "conferma": 0.24, "tastiera": 0.2, "pop_morbido": 0.25, "strappo": 0.42, "bau": 0.34}
 
 
 def campione(nome: str, cartella: Path | None = None) -> np.ndarray:
     """Suono `nome`: il campione CC0 in auto_ig/sfx se c'è, sennò la versione sintetica."""
     p = (cartella or SFX_DIR) / f"{nome}.wav"
-    if p.exists() and nome not in ("impatto", "riser"):
+    if p.exists() and nome not in ("impatto", "riser", "strappo", "bau"):
         return leggi_wav(p)
     return RIPIEGO.get(nome, RIPIEGO["whoosh"])()
 

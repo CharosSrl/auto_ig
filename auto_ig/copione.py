@@ -65,6 +65,17 @@ def _schema(c: dict, r: dict) -> list[str]:
     return errs
 
 
+def _nodi(x):
+    """Tutti i dict dentro x (ricorsivo): la regia 3D è annidata (cast, oggetti, camere, azioni)."""
+    if isinstance(x, dict):
+        yield x
+        for v in x.values():
+            yield from _nodi(v)
+    elif isinstance(x, list):
+        for v in x:
+            yield from _nodi(v)
+
+
 def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
     """(errori, avvisi). Errori = il copione va riscritto (il build si ferma). Avvisi = da valutare e dire ad Antonio.
     cta_fissa=False: video già fatto (CTA fissa 2026-11-22, campo scalpore 2026-11-24): le regole nuove sono solo avvisi."""
@@ -172,6 +183,15 @@ def controlla(c: dict, cta_fissa: bool = True) -> tuple[list[str], list[str]]:
         difficili = [w for w in parole(b["voce"]) if len(w) >= 12 and not w[0].isdigit()]
         if difficili:
             av.append(f"battuta {i}: parole lunghe ({', '.join(difficili)}): le capirebbe un bambino? (10-scalpore)")
+    # regia frase per frase (Antonio, 2026-11-28: "ogni frase deve avere una animazione ad-hoc", nuovo standard 3D):
+    # ogni battuta 3D ha almeno un'azione, un oggetto o uno stacco che parte su una parola detta (12-regia)
+    if any(isinstance((b.get("scheda") or {}).get("scena3d"), dict) for b in bt):
+        for i, b in enumerate(bt, 1):
+            s3 = (b.get("scheda") or {}).get("scena3d")
+            if not isinstance(s3, dict) or not any("parola" in n for n in _nodi(s3)):
+                (errs if cta_fissa else av).append(
+                    f"battuta {i}: nessuna animazione sulle parole. Nel 3D ogni frase ha la sua azione, oggetto o stacco "
+                    "che parte su una parola detta ({\"parola\": \"...\"}) (12-regia, Antonio 2026-11-28)")
     # toni della voce (Antonio, 2026-11-28): con gemini-charon ogni battuta si recita nel suo tono
     toni = set(r.get("toni", []))
     for i, b in enumerate(bt, 1):

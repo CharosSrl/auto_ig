@@ -38,6 +38,14 @@ export const RICETTE = {
   mammaOro: { pelle: 1, capelli: 'chignon', colCapelli: '#6b3f22', occhi: 'ciglia',
     sopra: { tipo: 'canotta', colore: '#eee8da', colore2: '#c9a23a', stampa: 'righe' }, sotto: { tipo: 'gonna', colore: '#eee8da' },
     scarpe: { tipo: 'tacchi', colore: '#c9a23a' }, accessori: ['orecchini'] },
+  // l'inventore del velcro (2026-11-28): giacca da montagna verde, pantaloni di velluto marroni, scarponi
+  inventore: { pelle: 0, capelli: 'corti', colCapelli: '#5a3a22', occhi: 'tondi', sopracciglia: 'folte',
+    sopra: { tipo: 'giacca', colore: '#3f6b3a', colore2: '#f1e6cf' }, sotto: { tipo: 'pantaloni', colore: '#7a5232' },
+    scarpe: { tipo: 'stivali', colore: '#4a2e1c' } },
+  // chi non lo prendeva sul serio
+  tessitore: { pelle: 2, capelli: 'pelato', colCapelli: '#8a8a8a', occhi: 'sottili', sopracciglia: 'folte',
+    sopra: { tipo: 'camicia', colore: '#f1efe8', colore2: '#2b3a67' }, sotto: { tipo: 'pantaloni', colore: '#2b2b33' },
+    scarpe: { tipo: 'stivali', colore: '#1d1d1f' }, accessori: ['occhiali'] },
   conduttore: { pelle: 2, capelli: 'corti', colCapelli: '#1f140c', occhi: 'tondi', sopracciglia: 'folte',
     sopra: { tipo: 'giacca', colore: '#2b3a67', colore2: '#ffffff' }, sotto: { tipo: 'pantaloni', colore: '#2b3a67' },
     scarpe: { tipo: 'stivali', colore: '#1d1d1f' } },

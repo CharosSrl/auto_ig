@@ -236,8 +236,11 @@ def _gemini_post(voce_nome: str, prompt: str) -> bytes:
                         attesa = float(d["retryDelay"][:-1]) + 2
             except (ValueError, KeyError):
                 pass
+            if attesa > 150:                # non è il limite al minuto: è finita la quota del giorno
+                raise RuntimeError(f"Gemini-TTS: quota giornaliera finita, torna tra circa {attesa / 3600:.1f} ore. "
+                                   "Le battute già fatte restano in cache; per provare subito usa voce.modello: chirp3-charon")
             print(f"avviso voce: Gemini-TTS limita le richieste al minuto, aspetto {attesa:.0f} s")
-            time.sleep(min(attesa, 90))
+            time.sleep(attesa)
         if r.status_code == 200:
             parti = r.json()["candidates"][0]["content"]["parts"]
             return base64.b64decode(next(p["inlineData"]["data"] for p in parti if "inlineData" in p))

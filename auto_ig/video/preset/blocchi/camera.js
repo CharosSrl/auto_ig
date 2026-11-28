@@ -66,7 +66,8 @@ export function inquadra(THREE, cam, s, u = 0, t = 0) {
       mira = testa.clone().add(V(0, -1.6, 0)); pos = mira.clone().add(V(s.lato === -1 ? -1 : 1, 0, 0).multiplyScalar(0).add(V(0, 0.8, s.dist || 13))); break;
     }
     case 'dettaglio': {
-      mira = s.punto.clone(); pos = mira.clone().add(V(0.4, 0.6, (s.dist || 4) * (1 - 0.15 * ease(u)))); fov = s.fov || 34; break;
+      const dd = (s.dist || 4) * (1 - 0.15 * ease(u)), aa = s.angolo ?? 0.1;     // angolo: giro intorno all'oggetto
+      mira = s.punto.clone(); pos = mira.clone().add(V(Math.sin(aa) * dd, s.alto ?? 0.6, Math.cos(aa) * dd)); fov = s.fov || 34; break;
     }
     default: mira = testa; pos = testa.clone().add(V(0, 0, 8));
   }

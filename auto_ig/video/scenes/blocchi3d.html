@@ -8,6 +8,13 @@
 // Regia per frase (scheda.scena3d):
 //   {set, cast: [{chi, dove:[x,z], ry, posa, espr, da:[x,z], a:[x,z], poi:{posa, espr, dopo}}], camera: {tipo, chi, verso, ...}, effetto, su}
 //   chi: nome di RICETTE (tu, amica, amico, prof, ...) oppure comparsaN (casuale(N)).
+// Regia FRASE PER FRASE (Antonio, 2026-11-28: "ogni frase deve avere una animazione ad-hoc"): ogni cosa può partire
+// su una parola detta. Nel copione si scrive {parola: "spinose"}; auto_ig/regia3d.py ci mette `al` (secondi dall'inizio
+// della frase, dai tempi veri di whisper) e il suono dell'evento.
+//   cast[].azioni: [{al, posa, espr, sguardo}]   pose una dopo l'altra, 0,25 s di dissolvenza tra l'una e l'altra
+//   cast[].parte: {al}                          quando parte la camminata da → a (default: subito)
+//   oggetti: [{tipo, id, dove, entra:{al, come}, azioni:[{al, fai}], ...}]   (preset/blocchi/oggetti3d.js)
+//   camere: [{tipo, chi, ..., al}]             stacchi di camera dentro la frase (chi può essere anche l'id di un oggetto)
 // Ogni frame: prima la scena 3D, poi sopra la tela 2D trasparente (flash, CTA, narratore; niente titolo in alto né barra).
 import { start } from './common.js';
 import { tempiAtti } from '../preset/regia.js';
@@ -21,6 +28,7 @@ import { creaAmbiente } from '../preset/blocchi/ambienti.js';
 import { inquadra } from '../preset/blocchi/camera.js';
 import { mescolaPose, easeInOut } from '../preset/blocchi/pose.js';
 import { creaEffetto } from '../preset/blocchi/effetti.js';
+import { creaOggetto } from '../preset/blocchi/oggetti3d.js';
 
 const ESEMPIO = [
   { tipo: 'gancio', titolo: 'Stesse scarpe ogni giorno?', evidenzia: 'scarpe', scena3d: { set: 'cameretta', cast: [{ chi: 'tu', da: [-4, -6], a: [0, 1.5], espr: 'felice' }], camera: { tipo: 'dalBasso', chi: 'tu' } } },
@@ -28,7 +36,8 @@ const ESEMPIO = [
   { tipo: 'rehook', titolo: 'Ancora umide', scena3d: { set: 'aula', cast: [{ chi: 'amica', dove: [0, 1], posa: 'facepalm', espr: 'schifata' }], camera: { tipo: 'primoPiano', chi: 'amica' } } },
   { tipo: 'cta', titolo: 'Segui la pagina e metti like!', azione: 'segui_like' },
 ];
-const AZIONI_A_TEMPO = new Set(['indica', 'conserte', 'facepalm', 'salta', 'gira', 'saluta', 'spallucce', 'esulta', 'disperato']);
+const AZIONI_A_TEMPO = new Set(['indica', 'conserte', 'facepalm', 'salta', 'gira', 'saluta', 'spallucce', 'esulta', 'disperato',
+  'ride', 'piegato', 'strappa', 'guardaGiu', 'triste', 'mostra']);
 const PASSO = 1.7;              // lunghezza di un passo: la fase della camminata viene dallo spazio percorso
 
 start({ schede: '', accento: '#ffd23f', formato: 'curiosita', durata: '12', narratore: '' }, (THREE, p, renderer) => {
@@ -54,9 +63,13 @@ start({ schede: '', accento: '#ffd23f', formato: 'curiosita', durata: '12', narr
       const prima = REGIA_PREC[i - 1];
       d.set = prima.set;
       d.cast = prima.cast.map((c, k) => ({ chi: c.chi, dove: c.a || c.dove || [k ? 2.4 : -2.2, 1.5], ry: k ? -0.3 : 0.3, posa: 'balla', espr: 'risata' }));
+      d.oggetti = (prima.oggetti || []).filter((o) => o.tipo === 'cane' || o.tipo === 'scarpaVelcro').map((o) => ({ ...o, entra: null, azioni: [], da: null, a: null, dove: o.a || o.dove }));   // il cane resta a far festa
       d.camera = d.cast.length > 1 ? { tipo: 'gruppo', chi: d.cast[0].chi, verso: d.cast[1].chi, dist: 24 } : { tipo: 'figura', chi: d.cast[0].chi, dist: 22 };
     }
-    if (!d.cast || !d.cast.length) d.cast = [{ chi: 'tu', dove: [0, 1.5], posa: s.tipo === 'cta' ? 'balla' : 'fermo', espr: s.tipo === 'rehook' ? 'sorpresa' : 'neutra' }];
+    if (!d.cast) d.cast = [];
+    if (!d.cast.length && !(d.oggetti && d.oggetti.length)) d.cast = [{ chi: 'tu', dove: [0, 1.5], posa: s.tipo === 'cta' ? 'balla' : 'fermo', espr: s.tipo === 'rehook' ? 'sorpresa' : 'neutra' }];
+    if (!d.camera && d.camere && d.camere.length) d.camera = d.camere[0];
+    if (!d.camera && !d.cast.length) d.camera = { tipo: 'orbita', centro: [0, 2, 0] };
     if (!d.camera) {
       const chi = d.cast[0].chi;
       d.camera = i === 0 ? { tipo: 'dalBasso', chi } : s.tipo === 'rehook' ? { tipo: 'primoPiano', chi } : s.tipo === 'cta' ? { tipo: 'orbita', chi }
@@ -80,6 +93,13 @@ start({ schede: '', accento: '#ffd23f', formato: 'curiosita', durata: '12', narr
     return AV[chi];
   };
   REGIA.forEach((d) => { set(d.set); d.cast.forEach((c) => avatar(c.chi)); });
+  // oggetti di scena: uno per frase (stesso id in frasi diverse = oggetti diversi, ognuno con la sua regia)
+  const OGG = REGIA.map((d) => {
+    const lista = {};
+    const mondo = { avatar, oggetto: (id) => lista[id] };
+    for (const def of d.oggetti || []) { const o = creaOggetto(THREE, def, mondo); lista[def.id || def.tipo] = o; }
+    return lista;
+  });
   const EFF = {};
   const effetto = (tipo) => (EFF[tipo] ||= creaEffetto(THREE, tipo));
 
@@ -103,24 +123,34 @@ start({ schede: '', accento: '#ffd23f', formato: 'curiosita', durata: '12', narr
       d.cast.forEach((c, k) => {
         const av = avatar(c.chi); if (av.root.parent !== scene) scene.add(av.root);
         const seme = k * 3 + c.chi.length;
-        let posa = c.posa || 'fermo', o = { u: 1, energia: 0.7 }, espr = c.espr || 'neutra';
+        let posa = c.posa || 'fermo', o = { u: 1, energia: 0.7 }, espr = c.espr || 'neutra', sg = c.sguardo ?? 0;
         if (c.da && c.a) {                         // cammina da → a: easing all'avvio e all'arrivo, piedi che non scivolano
-          const tc = c.durata ?? dur * 0.85, kk = easeInOut(Math.min(1, lt / tc));
+          const tp = c.parte?.al ?? 0, tc = c.durata ?? (dur - tp) * 0.85, kk = easeInOut(Math.max(0, Math.min(1, (lt - tp) / tc)));
           const dx = c.a[0] - c.da[0], dz = c.a[1] - c.da[1], L = Math.hypot(dx, dz);
           const x = c.da[0] + dx * kk, z = c.da[1] + dz * kk, ry = Math.atan2(dx, dz);
-          av.mettiA(x, z, kk < 1 ? ry : (c.ry ?? ry));
-          if (kk < 1) { posa = c.corre ? 'corre' : 'cammina'; o = { fase: (L * kk) / PASSO * Math.PI, ampiezza: Math.min(1, 0.4 + (1 - Math.abs(2 * kk - 1)) * 0.8) }; }
+          av.mettiA(x, z, kk > 0 && kk < 1 ? ry : kk <= 0 ? (c.ryPrima ?? ry) : (c.ry ?? ry));
+          if (kk > 0 && kk < 1) { posa = c.corre ? 'corre' : 'cammina'; o = { fase: (L * kk) / PASSO * Math.PI, ampiezza: Math.min(1, 0.4 + (1 - Math.abs(2 * kk - 1)) * 0.8) }; }
           else posa = c.posa || 'fermo';
         } else av.mettiA((c.dove || [0, 1.5])[0], (c.dove || [0, 1.5])[1], c.ry ?? 0);
         if (AZIONI_A_TEMPO.has(posa)) o = { u: Math.min(1, Math.max(0, lt - (c.ritardo || 0)) / Math.min(1.6, dur)) };
-        // "poi": cambia posa/espressione a metà frase, con 0,25 s di dissolvenza tra le pose
-        if (c.poi && lt >= (c.poi.dopo ?? dur * 0.5)) {
+        const az = (c.azioni || []).filter((a) => (a.al ?? 0) <= lt);
+        if (az.length && !(c.da && c.a && posa !== (c.posa || 'fermo'))) {
+          // regia frase per frase: l'ultima azione partita, in dissolvenza da quella prima
+          const uo = (p, t0) => (AZIONI_A_TEMPO.has(p) ? { u: Math.min(1, (lt - t0) / 1.2) } : { u: 1, energia: 0.7 });
+          // solo le azioni che cambiano posa contano per la dissolvenza; le altre cambiano faccia o sguardo
+          const conPosa = [{ posa, al: c.ritardo || 0 }, ...az.filter((a) => a.posa)];
+          const cur = conPosa[conPosa.length - 1], prev = conPosa.length > 1 ? conPosa[conPosa.length - 2] : cur;
+          const w = Math.min(1, (lt - (cur.al ?? 0)) / 0.25);
+          if (w < 1 && prev !== cur && prev.posa !== cur.posa) mescolaPose(av, [[prev.posa, 1 - w, uo(prev.posa, prev.al ?? 0)], [cur.posa, w, uo(cur.posa, cur.al ?? 0)]], t);
+          else av.posa(cur.posa, t, uo(cur.posa, cur.al ?? 0));
+          for (const a of az) { if (a.espr) espr = a.espr; if (a.sguardo != null) sg = a.sguardo; }
+        } else if (c.poi && lt >= (c.poi.dopo ?? dur * 0.5)) {
           const lt2 = lt - (c.poi.dopo ?? dur * 0.5), w = Math.min(1, lt2 / 0.25);
           const p2 = c.poi.posa || posa, o2 = AZIONI_A_TEMPO.has(p2) ? { u: Math.min(1, lt2 / 1.2) } : { u: 1, energia: 0.7 };
           mescolaPose(av, [[posa, 1 - w, o], [p2, w, o2]], t);
           espr = c.poi.espr || espr;
         } else av.posa(posa, t, o);
-        av.faccia({ espr, palpebra: ammicca(t, seme), sguardo: [c.sguardo ?? 0, 0] });
+        av.faccia({ espr, palpebra: ammicca(t, seme), sguardo: [sg, 0] });
       });
       // effetto (germi che escono dalle scarpe di chi è indicato)
       for (const [tipo, e] of Object.entries(EFF)) if (e.gruppo.parent && tipo !== d.effetto) e.gruppo.parent.remove(e.gruppo);
@@ -128,12 +158,27 @@ start({ schede: '', accento: '#ffd23f', formato: 'curiosita', durata: '12', narr
         const e = effetto(d.effetto); if (e.gruppo.parent !== scene) scene.add(e.gruppo);
         const chiE = avatar(d.su || d.cast[0].chi); e.aggiorna(lt - (d.ritardoEffetto || 0.2), V(chiE.root.position.x, 0, chiE.root.position.z + 0.3));
       }
-      // camera
-      const cs = { ...d.camera, chi: d.camera.chi ? avatar(d.camera.chi) : null, verso: d.camera.verso ? avatar(d.camera.verso) : null, colpi };
-      if (cs.tipo === 'dettaglio') cs.punto = d.camera.punto ? V(...d.camera.punto) : (cs.chi ? V(cs.chi.root.position.x, 0.6, cs.chi.root.position.z + 0.4) : V(0, 0.6, 0));
+      // oggetti della frase (gli altri escono di scena)
+      const OG = OGG[i];
+      for (const [k, lista] of OGG.entries()) if (k !== i) for (const o of Object.values(lista)) if (o.gruppo.parent) o.gruppo.parent.remove(o.gruppo);
+      for (const o of Object.values(OG)) { if (o.gruppo.parent !== scene) scene.add(o.gruppo); o.aggiorna(lt, t); }
+      // camera: stacchi dentro la frase (camere[].al), ognuna col suo movimento
+      let camD = d.camera, cu = u;
+      if (d.camere && d.camere.length) {
+        let j = 0; while (j + 1 < d.camere.length && lt >= (d.camere[j + 1].al ?? 0)) j++;
+        camD = d.camere[j];
+        const a0 = camD.al ?? 0, a1 = j + 1 < d.camere.length ? d.camere[j + 1].al : dur;
+        cu = Math.min(1, Math.max(0, (lt - a0) / Math.max(0.4, a1 - a0)));
+      }
+      const ogCam = camD.chi && OG[camD.chi];
+      const cs = { ...camD, chi: camD.chi && !ogCam ? avatar(camD.chi) : null, verso: camD.verso ? avatar(camD.verso) : null, colpi };
+      if (ogCam) { const pt = ogCam.mondoPunto(V()); if (camD.offset) pt.add(V(...camD.offset)); cs.punto = pt; cs.centro = pt.clone(); }
+      if (Array.isArray(camD.centro)) cs.centro = V(...camD.centro);
+      if (Array.isArray(camD.punto)) cs.punto = V(...camD.punto);
+      if (cs.tipo === 'dettaglio' && !cs.punto) cs.punto = d.camera.punto ? V(...d.camera.punto) : (cs.chi ? V(cs.chi.root.position.x, 0.6, cs.chi.root.position.z + 0.4) : V(0, 0.6, 0));
       if (cs.tipo === 'campoLargo' && !cs.centro) cs.centro = V(0, 1.5, 0);
       if (cs.tipo === 'quinta' && !cs.verso) cs.tipo = 'mezzoBusto';
-      inquadra(THREE, cam, cs, u, t);
+      inquadra(THREE, cam, cs, cu, t);
       // 1) scena 3D
       renderer.autoClear = true; renderer.render(scene, cam); renderer.autoClear = false;
 

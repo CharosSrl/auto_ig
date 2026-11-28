@@ -6,7 +6,8 @@
 // Testa: x positiva = guarda giù, y = gira. Busto: x positiva = si piega in avanti.
 
 export const POSE_NOMI = ['fermo', 'parla', 'cammina', 'corre', 'indica', 'conserte', 'facepalm', 'salta', 'gira', 'balla',
-  'saluta', 'spallucce', 'telefono', 'pensa', 'maniFianchi', 'seduto', 'esulta', 'disperato'];
+  'saluta', 'spallucce', 'telefono', 'pensa', 'maniFianchi', 'seduto', 'esulta', 'disperato',
+  'ride', 'piegato', 'strappa', 'guardaGiu', 'triste', 'mostra'];
 
 const cl = (x) => Math.min(1, Math.max(0, x));
 export const easeOut = (x) => 1 - Math.pow(1 - cl(x), 3);
@@ -104,6 +105,34 @@ const POSE = {
   disperato: (t, o) => {                                                 // mani in testa
     const k = easeOut((o.u ?? 1) / 0.3), p = vivo(zero(), t);
     p.bSx = -2.75 * k; p.bSz = 0.5 * k; p.bDx = -2.75 * k; p.bDz = -0.5 * k; p.tx = 0.15 * k; p.tz = 0.12 * sin(t * 6) * k; return p;
+  },
+  // --- 2026-11-28: azioni per la regia frase per frase ---
+  ride: (t, o) => {                                                      // risata: testa indietro, mani alla pancia, sussulti
+    const k = easeOut((o.u ?? 1) / 0.2), p = vivo(zero(), t);
+    p.tx = -0.28 * k + 0.07 * sin(t * 17) * k; p.bx = -0.06 * k; p.y = 0.05 * Math.abs(sin(t * 8.5)) * k;
+    p.bSx = -0.85 * k; p.bSz = 0.55 * k; p.bDx = -0.85 * k; p.bDz = -0.55 * k; return p;
+  },
+  piegato: (t, o) => {                                                   // si china a guardare (microscopio, tavolo)
+    const k = easeInOut((o.u ?? 1) / 0.35), p = vivo(zero(), t, 0.4);
+    p.bx = 0.5 * k; p.tx = 0.3 * k; p.bSx = -0.95 * k; p.bDx = -0.95 * k; p.bSz = 0.2 * k; p.bDz = -0.2 * k;
+    p.bDx += 0.08 * sin(t * 2.3) * k; return p;                         // la mano gira la messa a fuoco
+  },
+  strappa: (t, o) => {                                                   // si stacca le palline dai pantaloni, a strattoni
+    const k = easeOut((o.u ?? 1) / 0.25), p = vivo(zero(), t, 0.5), tir = Math.max(0, sin(t * 7.5));
+    p.bx = 0.42 * k; p.tx = 0.38 * k; p.ty = -0.15 * k;
+    p.bDx = (-0.45 + 0.4 * tir) * k; p.bDz = (-0.32 - 0.12 * tir) * k; p.bSz = -0.35 * k; p.bSx = 0.15 * k; return p;
+  },
+  guardaGiu: (t, o) => {                                                 // guarda le sue scarpe
+    const k = easeOut((o.u ?? 1) / 0.3), p = vivo(zero(), t);
+    p.tx = 0.55 * k; p.bx = 0.14 * k; p.bSx = -0.2 * k; p.bDx = -0.2 * k; return p;
+  },
+  triste: (t, o) => {                                                    // spalle giù, testa bassa, dondola piano
+    const k = easeInOut((o.u ?? 1) / 0.5), p = vivo(zero(), t, 0.5);
+    p.tx = 0.32 * k; p.bx = 0.1 * k; p.sy = 1 - 0.03 * k; p.bSz = 0.05 * k; p.bDz = -0.05 * k; p.ty += 0.1 * sin(t * 0.8) * k; return p;
+  },
+  mostra: (t, o) => {                                                    // tiene una cosa davanti con due mani
+    const k = easeBack((o.u ?? 1) / 0.3), p = vivo(zero(), t);
+    p.bSx = -1.4 * k; p.bDx = -1.4 * k; p.bSz = 0.22 * k; p.bDz = -0.22 * k; p.tx = 0.1 * k; return p;
   },
 };
 

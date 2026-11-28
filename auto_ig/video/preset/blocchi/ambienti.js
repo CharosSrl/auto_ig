@@ -4,7 +4,7 @@
 // I personaggi stanno intorno all'origine e guardano verso +z (verso la camera).
 import { boxTondo, plastica, tono, tela, rnd } from './geometria.js';
 
-export const AMBIENTI = ['citta', 'aula', 'cameretta', 'negozio', 'parco', 'tg'];
+export const AMBIENTI = ['citta', 'aula', 'cameretta', 'negozio', 'parco', 'tg', 'montagna', 'laboratorio', 'macro'];
 
 function luci(THREE, scene, renderer, { cielo = '#9fd3ff', terra = '#7cbf5a', sole = 2.6, caldo = false } = {}) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
@@ -199,6 +199,54 @@ const COSTRUTTORI = {
     insegna(THREE, g, o.insegna || 'CNTR', 0, 2.1, 4.25, 5, 1.2, { sfondo: '#1e5bd8' });
     return { cielo: '#0b1f4a', interno: true };
   },
+  // 2026-11-28 (reel velcro): sentiero di montagna con i cespugli di palline spinose
+  montagna(THREE, g) {
+    pavimento(THREE, g, 400, 400, '#78bf55');
+    const sent = new THREE.Mesh(new THREE.PlaneGeometry(200, 5), P(THREE, '#d9c08a')); sent.rotation.x = -Math.PI / 2; sent.position.set(0, 0.03, 1.5); sent.receiveShadow = true; g.add(sent);
+    const r = rnd(21);
+    for (const [x, z, s, h] of [[-40, -70, 26, 34], [-8, -85, 34, 46], [30, -75, 28, 38], [62, -90, 30, 40], [-70, -95, 30, 42]]) {
+      const m = new THREE.Mesh(new THREE.ConeGeometry(s, h, 7), P(THREE, '#7f93ad', { flatShading: true })); m.position.set(x, h / 2 - 1, z); g.add(m);
+      const n = new THREE.Mesh(new THREE.ConeGeometry(s * 0.36, h * 0.36, 7), P(THREE, '#ffffff', { flatShading: true })); n.position.set(x, h - 1 - h * 0.18 + 0.2, z); g.add(n);
+    }
+    const pino = (x, z, s = 1) => {
+      const a = new THREE.Group(); a.position.set(x, 0, z); a.scale.setScalar(s); g.add(a);
+      cubo(THREE, a, 0.7, 2, 0.7, '#7a4b2a', 0, 1, 0, { r: 0.1 });
+      for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(2.4 - i * 0.6, 2.6, 7), P(THREE, ['#2f7d4a', '#378c52', '#41995a'][i], { flatShading: true })); c.position.y = 2.6 + i * 1.5; c.castShadow = true; a.add(c); }
+    };
+    for (let i = 0; i < 16; i++) pino(-46 + i * 6.2 + r() * 2, -14 - r() * 18, 1 + r() * 0.8);
+    for (const x of [-16, 18, 26]) pino(x, -6 - r() * 3, 1.2);
+    // cespugli di bardana: tondi verdi con le palline marroni
+    for (const [x, z] of [[-6, -1.8], [-1.5, -2.6], [4.5, -2.0], [9, -2.4], [-10, -2.2]]) {
+      const c = new THREE.Group(); c.position.set(x, 0, z); g.add(c);
+      for (let i = 0; i < 4; i++) cubo(THREE, c, 2.2 - i * 0.3, 1.6, 2, ['#4f9a3c', '#5aa847', '#468c36'][i % 3], (r() - 0.5) * 1.6, 0.8 + i * 0.35, (r() - 0.5) * 0.6, { r: 0.6 });
+      for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16, 0), P(THREE, '#8d7a2c', { flatShading: true })); b.position.set((r() - 0.5) * 2.4, 0.8 + r() * 1.6, 0.6 + r() * 0.5); c.add(b); }
+    }
+    for (let i = 0; i < 6; i++) { const n = new THREE.Group(); n.position.set(-40 + i * 16, 26 + r() * 8, -60); g.add(n); for (let k = 0; k < 3; k++) cubo(THREE, n, 6 - k, 2.2, 3, '#ffffff', k * 3 - 3, k === 1 ? 1 : 0, 0, { r: 0.9, ombra: false }); }
+    return { cielo: '#a9dcff', nebbia: ['#d4ecff', 70, 190] };
+  },
+  // lo studio di casa: tavolo da lavoro, lampada, libreria, finestra sulle montagne
+  laboratorio(THREE, g) {
+    pavimento(THREE, g, 34, 34, '#ffffff', 0, texParquet(THREE, '#b98652'));
+    cubo(THREE, g, 34, 16, 0.5, '#e9dcc2', 0, 8, -12, { r: 0 });
+    cubo(THREE, g, 0.5, 16, 34, '#e0d0b2', -16, 8, 4, { r: 0 }); cubo(THREE, g, 0.5, 16, 34, '#e0d0b2', 16, 8, 4, { r: 0 });
+    cubo(THREE, g, 34, 1.4, 0.6, '#8a5a3a', 0, 0.7, -11.6, { r: 0.05 });
+    const lib = new THREE.Group(); lib.position.set(-10, 0, -10.2); g.add(lib);
+    cubo(THREE, lib, 7, 11, 2.2, '#8a5a3a', 0, 5.5, 0);
+    const r = rnd(5), col = ['#d8262f', '#2f6fd1', '#f6d36b', '#2f8f6b', '#c7a6f0', '#f5a66b'];
+    for (let p = 0; p < 4; p++) { cubo(THREE, lib, 6.6, 0.2, 2.0, '#6b4329', 0, 1.6 + p * 2.6, 0.2); for (let k = 0; k < 8; k++) cubo(THREE, lib, 0.55, 1.6 + r() * 0.5, 1.6, col[(k + p) % 6], -2.8 + k * 0.78, 2.6 + p * 2.6, 0.3, { r: 0.04 }); }
+    finestra(THREE, g, 7, 9, -11.7, 6, 5);
+    const vista = tela(THREE, 512, 420, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#9fd3ff'); gr.addColorStop(1, '#e6f4ff'); c.fillStyle = gr; c.fillRect(0, 0, w, h); c.fillStyle = '#7f93ad'; c.beginPath(); c.moveTo(0, h); c.lineTo(w * 0.3, h * 0.35); c.lineTo(w * 0.55, h * 0.7); c.lineTo(w * 0.78, h * 0.25); c.lineTo(w, h); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(w * 0.72, h * 0.36); c.lineTo(w * 0.78, h * 0.25); c.lineTo(w * 0.84, h * 0.36); c.fill(); });
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 4.6), new THREE.MeshBasicMaterial({ map: vista })); v.position.set(7, 9, -11.55); g.add(v);
+    return { cielo: '#e9dcc2', interno: true };
+  },
+  // il mondo visto al microscopio: fondo scuro con un alone e bollicine che galleggiano
+  macro(THREE, g) {
+    const fondo = tela(THREE, 512, 512, (c, w, h) => { const gr = c.createRadialGradient(w / 2, h * 0.45, 20, w / 2, h / 2, w * 0.7); gr.addColorStop(0, '#3b5f7a'); gr.addColorStop(0.6, '#16283d'); gr.addColorStop(1, '#070d18'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
+    const s = new THREE.Mesh(new THREE.SphereGeometry(60, 32, 16), new THREE.MeshBasicMaterial({ map: fondo, side: THREE.BackSide })); g.add(s);
+    const r = rnd(8);
+    for (let i = 0; i < 40; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.05 + r() * 0.12, 8, 6), new THREE.MeshBasicMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.25 + r() * 0.3 })); b.position.set((r() - 0.5) * 30, r() * 14, -6 - r() * 14); g.add(b); }
+    return { cielo: '#0b1626', interno: true };
+  },
 };
 
 export function creaAmbiente(THREE, scene, renderer, nome = 'citta', o = {}) {
@@ -206,7 +254,7 @@ export function creaAmbiente(THREE, scene, renderer, nome = 'citta', o = {}) {
   const info = (COSTRUTTORI[nome] || COSTRUTTORI.citta)(THREE, g, o) || {};
   scene.background = new THREE.Color(info.cielo || '#9fd3ff');
   if (info.nebbia) scene.fog = new THREE.Fog(info.nebbia[0], info.nebbia[1], info.nebbia[2]);
-  const L = luci(THREE, scene, renderer, { cielo: nome === 'tg' ? '#9fb8ff' : '#bfe3ff', terra: ['citta', 'parco'].includes(nome) ? '#7cbf5a' : '#c9a37a', sole: info.interno ? 1.8 : 2.6 });
+  const L = luci(THREE, scene, renderer, { cielo: nome === 'tg' ? '#9fb8ff' : '#bfe3ff', terra: ['citta', 'parco', 'montagna'].includes(nome) ? '#7cbf5a' : '#c9a37a', sole: info.interno ? 1.8 : 2.6 });
   const posti = { centro: [0, 2], sinistra: [-3.2, 2], destra: [3.2, 2], dietro: [0, -4], lontano: [10, -2] };
   if (nome === 'tg') Object.assign(posti, { centro: [0, -0.6], sinistra: [-3.2, -0.6], destra: [3.2, -0.6] });
   return { gruppo: g, luci: L, posti, nome, aggiorna() {} };

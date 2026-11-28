@@ -114,6 +114,15 @@ class CopioneTest(unittest.TestCase):
         c["battute"][0]["tono"] = "isterica"
         self.assertIn("tono 'isterica' non valido", self.errori(c))
 
+    def test_regia_frase_per_frase_3d(self):
+        """Antonio, 2026-11-28: nel 3D ogni frase ha la sua animazione sulle parole."""
+        c = buono()
+        for b in c["battute"]:
+            b["scheda"] = {"scena3d": {"cast": [{"chi": "tu", "azioni": [{"parola": b["voce"].split()[0], "posa": "indica"}]}]}}
+        self.assertNotIn("animazione sulle parole", self.errori(c))
+        c["battute"][2]["scheda"] = {"scena3d": {"set": "parco"}}
+        self.assertIn("battuta 3: nessuna animazione sulle parole", self.errori(c))
+
     def test_parola_forte_detta_e_scritta(self):
         c = buono()
         c["battute"][0]["schermo"] = "Donne in Prada?"

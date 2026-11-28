@@ -29,7 +29,7 @@ from typing import Callable
 
 import yaml
 
-from . import audio, censura, copione, formati, labiale, queue, regole, voce
+from . import audio, censura, copione, formati, labiale, queue, regia3d, regole, voce
 from .config import MEDIA_DIR, ROOT
 from .images import slugify
 
@@ -230,6 +230,10 @@ def build(folder: Path, render_fn=None, speak_fn=voce.speak,
     sk = [(r.get("scheda") if isinstance(r, dict) else None) or {} for r in righe]
     bt = audio.battute(sentences, sk)              # cambi visivi: stessi istanti per scena ed effetti sonori
     ev = audio.suoni(sentences, sk, bt)            # un suono per ogni evento a schermo (skill regia-reel)
+    if formati.scena(data) == "blocchi3d":         # regia frase per frase: animazioni sulle parole vere (2026-11-28)
+        for x in regia3d.risolvi(righe, sentences):
+            log(f"avviso regia: {x}")
+        ev = sorted(ev + regia3d.suoni(righe, sentences), key=lambda e: e[0])
     if err := regole.errore_attacco(data, sentences[0].start if sentences else 0.0, ev):
         raise ValueError(f"{folder.name}: {err}")  # voce da subito, niente boom iniziale (Antonio, 2026-11-23)
     au = data.get("audio") or {}

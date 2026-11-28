@@ -88,6 +88,15 @@ Il primo fotogramma non è mai una foto ferma: è una grafica GIÀ IN MOVIMENTO,
   ora e spunte blu, barra "Messaggio". È già così in `infografica2d.js` (`chat`): non tornare a uno stile "nostro",
   e mai logo o nome dell'app.
 
+## Regia frase per frase nei reel 3D (Antonio, 2026-11-28: "fallo diventare il nuovo standard")
+
+Ogni battuta 3D ha la sua animazione, fatta per quella frase: azioni del cast, oggetti di scena e stacchi di camera
+partono sulla parola detta (`"parola": "spinose"` nella `scena3d`). `auto_ig/regia3d.py` usa i tempi veri di whisper
+e mette ogni suono nello stesso istante. Se la storia nomina un oggetto che non esiste, lo si costruisce in
+`preset/blocchi/oggetti3d.js`. `copione controlla` si ferma se una battuta 3D non ha animazioni sulle parole.
+Regole ed elenco di pose, oggetti e camere: `scrittura/regole/12-regia-frase-per-frase.md`. Esempio:
+`richieste/2026-11-28-velcro-cane-3d`.
+
 ## Disegni belli: skill `illustrazione-2d` (Antonio, 2026-11-25: "devono essere bellissimi, accattivanti")
 
 Ogni icona, oggetto o personaggio nuovo si fa con la skill `illustrazione-2d`:

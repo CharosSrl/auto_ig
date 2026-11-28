@@ -8,7 +8,8 @@ suoni e animazione restano nelle skill `regia-reel`, `animazione-personaggi-2d` 
 1. `regole/08-errori-di-antonio.md`: le correzioni di Antonio, per non ripetere gli errori.
 2. `regole/10-scalpore.md` (svolta del 2026-11-24: gancio divisivo, brainrot, parolacce) e `regole/11-attacco-a-te.md`
    (2026-11-25: il gancio attacca chi guarda, voce maschile calma), poi
-   `regole/01-struttura.md` → `07-varieta.md` e `09-attenzione.md`, in ordine.
+   `regole/01-struttura.md` → `07-varieta.md` e `09-attenzione.md`, in ordine. Per i reel 3D anche
+   `regole/12-regia-frase-per-frase.md` (2026-11-28: ogni frase ha la sua animazione sulle parole).
 3. `../marca/lezioni.md`: i dati degli Insights. Se una lezione nuova contraddice una regola qui, vince la lezione
    e si aggiorna la regola.
 4. Un esempio in `esempi/` dello stesso formato.
